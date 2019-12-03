@@ -1392,79 +1392,60 @@ goto swh
 
 
 :updateswh
-cd\
 echo.
-echo Note: Download will only work with Google Chrome. We're trying to make it compatible with Microsoft Edge, Mozilla Firefox, Internet Explorer and Opera
+echo SWH is now checking for updates... If an update is founded, SWH will install automatically
+echo This process may take some time
+if not %admin%==1 (goto swh_adminUpdate)
+echo 'Set your settings > "%pathswh%\Temp\SWH_Downloader.vbs"
+echo     strFileURL = "https://raw.githubusercontent.com/anic17/SWH/master/SWH.bat" >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo     strHDLocation = "SWH.bat" >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo    ' Fetch the file >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo     Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP") >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo     objXMLHTTP.open "GET", strFileURL, false>> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo     objXMLHTTP.send() >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo     If objXMLHTTP.Status = 200 Then >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo       Set objADOStream = CreateObject("ADODB.Stream") >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo       objADOStream.Open >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo       objADOStream.Type = 1 'adTypeBinary >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo       objADOStream.Write objXMLHTTP.ResponseBody >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo       objADOStream.Position = 0    'Set the stream position to the start >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo       Set objFSO = Createobject("Scripting.FileSystemObject") >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo         If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile strHDLocation >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo       Set objFSO = Nothing >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo       objADOStream.SaveToFile strHDLocation>> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo       objADOStream.Close >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo       Set objADOStream = Nothing >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo     End if >> "%pathswh%\Temp\SWH_Downloader.vbs"
+echo     Set objXMLHTTP = Nothing >> "%pathswh%\Temp\SWH_Downloader.vbs"
 echo.
-if exist "%programfiles(x86)%\Google\Chrome\Application\chrome.exe" (set havingchrome=1) else (set havingchrome=0)
-if %havingchrome%==1 (goto updating) else (goto nothavechrome)
-
-:updating
-if exist "%pathswh%\SWH.bat" (move "%pathswh%\SWH.bat" "%pathswh%\OldSWH">nul)
-set dir=%pathswh%\Temp
-set swhdownloader=%dir%\SWH_Updater.bat
-echo SWH is being downloaded...
+rem This VBScript downloading script was founded on: https://serverfault.com/questions/29707/download-file-from-vbscript
+start wscript.exe "%pathswh%\Temp\SWH_Downloader.vbs"
 echo.
-echo @echo off > %swhdownloader%
-echo mode con: cols=15 lines=1 >> %swhdownloader%
-echo start /min chrome.exe http://bit.ly/2NtI9jW >> %swhdownloader%
-echo :afterdownload >> %swhdownloader%
-echo :waitingdownload >> %swhdownloader%
-echo timeout /t 7 /nobreak^>nul >> %swhdownloader%
-echo cd /d %userprofile%\Downloads >> %swhdownloader%
-echo if exist "*.part" (ren "*.part" "SWH.bat") >> %swhdownloader%
-echo if exist "*.crdownload" (ren "*.crdownload" "SWH.bat") >> %swhdownloader%
-echo taskkill /f /im chrome.exe >> %swhdownloader%
-echo move SWH.bat %localappdata%\ScriptingWindowsHost >> %swhdownloader%
-echo taskkill /im firefox.exe >> %swhdownloader%
-echo taskkill /f /im chrome.exe >> %swhdownloader%
-echo taskkill /im iexplore.exe >> %swhdownloader%
-echo taskkill /im MicrosoftEdge.exe >> %swhdownloader%
-echo taskkill /im Opera.exe >> %swhdownloader%
-echo set /a downloadedswh=%downloadedswh%+1 >> %swhdownloader%
-echo if "%downloadedswh%"=="2" (taskkill /f /im chrome.exe^&exit) >> %swhdownloader%
-start /wait /min cmd.exe /c %swhdownloader%
-del "%swhdownloader%" /q>nul
-if exist "%pathswh%\SWH.bat" (goto succefullyinstalleddownload) else (goto failedupdate)
-
-:failedupdate
-echo SWH failed to update
-echo Please check your Internet connection.
-echo swh=msgbox("SWH failed to update. Please check your Internet connection",4112,"SWH failed to update") > "%pathswh%\Temp\FUpdated.vbs"
-start /wait wscript.exe "%pathswh%\Temp\FUpdated.vbs"
+if exist "%pathswh%\Temp\SWH.bat" (del "%pathswh%\Temp\SWH.bat" /q)
+:chking_IfUpdatedSWH
+if exist "%pathswh%\Temp\SWH.bat" (goto supdated)
+goto :chking_IfUpdatedSWH
+:supdated
+move "%pathswh%\SWH.bat" "%pathswh%\OldSWH\SWH.bat">nul
+move "%pathswh%\Temp\SWH.bat" "%pathswh%\SWH.bat">nul
+echo SWH has been updated!
+echo swh=Msgbox("SWH has succefully been updated",4160,"SWH has succefully been updated") > %pathswh%\Temp\SUpdated.vbs
+start /wait wscript.exe "%pathswh%\Temp\SUpdated.vbs"
 echo.
-cd /d "%cdirectory%"
 goto swh
-:succefullyinstalleddownload
-echo SWH was succefully updated.
-echo swh=msgbox("SWH was succefully updated",4160,"SWH was succefully updated") > "%pathswh%\Temp\Suptated.vbs"
-start /wait wscript.exe "%pathswh%\Temp\Suptated.vbs"
+:swh_adminUpdate
+echo Set WshShell = WScript.CreateObject("WScript.Shell") > %pathswh%\Temp\AdminSWH.vbs
+echo If WScript.Arguments.Length = 0 Then >> %pathswh%\Temp\AdminSWH.vbs
+echo   Set ObjShell = CreateObject("Shell.Application") >> %pathswh%\Temp\AdminSWH.vbs
+echo   ObjShell.ShellExecute "wscript.exe" _ >> %pathswh%\Temp\AdminSWH.vbs
+echo     , """" ^& WScript.ScriptFullName ^& """ /admin", , "RunAs",1 >> %pathswh%\Temp\AdminSWH.vbs
+echo   WScript.Quit >> %pathswh%\Temp\AdminSWH.vbs
+echo End if >> %pathswh%\Temp\AdminSWH.vbs
+echo Set ObjShell = CreateObject("WScript.Shell") >> %pathswh%\Temp\AdminSWH.vbs
+echo objShell.Run "cmd.exe /c %pathswh%\SWH.bat /c updateswh" >> %pathswh%\Temp\AdminSWH.vbs
 echo.
-cd /d "%cdirectory%"
-goto swh
-
-:nothavechrome
-echo SWH don't founded Google Chrome. You can update SWH manually
-echo.
-set /p suremanualdownload=Do you want to update SWH manually? (y/n): 
-if /i %suremanualdownload%==y (goto updatingmanual) else (
-	echo.
-	cd /d "%cdirectory%"
-	goto swh
-)
-
-:updatingmanual
-echo.
-echo Instructions:
-echo 1) Download the file "SWH.bat"
-echo 2) Copy it to %pathswh%
-echo 3) Run it
-echo.
-echo SWH will be updated
-echo.
-cd /d "%cdirectory%"
-goto swh
-
+start WScript.exe "%pathswh%\Temp\AdminSWH.vbs"
+exit /B
 
 
 
