@@ -38,6 +38,8 @@ md "%pathswh%\OldSWH"
 cls
 md "%pathswh%\SWHZip"
 cls
+md "%pathswh%\Downloads"
+cls
 
 if exist "%pathswh%\D.sys" (attrib +h +s "%pathswh%\D.sys")
 
@@ -385,6 +387,8 @@ echo credits: Shows the credits of SWH >> %pathswh%\Temp\MoreHelp
 echo date: Changes the date of the computer >> %pathswh%\Temp\MoreHelp
 echo del: Removes a file >> %pathswh%\Temp\MoreHelp
 echo dir (or directory): Shows the current directory >> %pathswh%\Temp\MoreHelp
+echo download: Downloads an Internet file, website, photo or video. >> %pathswh%\Temp\MoreHelp
+echo editswh: Edits source code of SWH in GitHub. To make changes, developper will check it >> %pathswh%\Temp\MoreHelp
 echo encrypttext: Encrypts a text >> %pathswh%\Temp\MoreHelp
 echo endtask: Finish an active process >> %pathswh%\Temp\MoreHelp
 echo execinfo: Shows the information of the execution of SWH >> %pathswh%\Temp\MoreHelp
@@ -469,6 +473,8 @@ echo credits: Shows the credits of SWH
 echo date: Changes the date of the computer
 echo del: Removes a file
 echo dir (or directory): Shows the current directory
+echo download: Downloads an Internet file, website, photo or video
+echo editswh: Edits source code of SWH in GitHub. To make changes, developper will check it
 echo encrypttext: Encrypts a text
 echo endtask: Finish an active process
 echo execinfo: Shows the information of the execution of SWH
@@ -632,6 +638,8 @@ if /i %cmd%=="base64encode" (goto base64encode)
 if /i %cmd%=="base64decode" (goto base64decode)
 if /i %cmd%=="contact" (goto swhcontact)
 if /I %cmd%=="swhadmin" (goto swh_admin)
+if /i %cmd%=="download" (goto download_internet)
+if /i %cmd%=="editswh" (goto editswh_github)
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
@@ -680,8 +688,47 @@ echo.
 start WScript.exe "%pathswh%\Temp\AdminSWH.vbs"
 goto swh
 
+:download_internet
+echo.
+set download_ps1=%pathswh%\Temp\DownloadInternetSWH.ps1
+echo Note: A website URL will download the website itself. To download, type for example, https://bit.ly/2DKAjxF (SWH Source code)
+echo Download will be saved in: %pathswh%\Downloads
+set /p downloadinternet=URL: 
+set /p namesavedownloadi=Name to save your downloaded file (A file name cannot contain these characters: ^> ^< ^| : "" / * \ ?): 
 
 
+echo $url = "%downloadinternet%" > %download_ps1%
+echo $output = "%pathswh%\Downloads\%namesavedownloadi%" >> %download_ps1%
+echo $start_time = Get-Date >> %download_ps1%
+echo Invoke-WebRequest -Uri $url -OutFile $output >> %download_ps1%
+PowerShell.exe "%download_ps1%"
+echo.
+if exist "%pathswh%\Downloads\%namesavedownloadi%" (
+	echo File has been succefully downloaded
+	echo.
+	goto swh
+) else (
+	echo Error downloading file! Try this:
+	echo.
+	echo    - Check your Internet connection
+	echo    - Make sure that you have Windows PowerShell on your computer
+	echo    - Check that the website is existent or available
+	echo    - Check that you haven't writted ant special symbol in list
+	echo.
+	goto swh
+)
+
+:editswh_github
+echo.
+echo E-Mail to contact with SWH developper (anic17) to make changes 
+echo.
+echo SWH.Console@gmail.com
+echo.
+echo Visit our project on GitHub!
+timeout /t 2 /nobreak>nul
+start https://github.com/anic17/SWH/
+echo.
+goto swh
 
 :swhcontact
 echo.
@@ -1393,9 +1440,19 @@ goto swh
 
 :updateswh
 echo.
+set /p updatePS1orVBS=Download with Windows PowerShell (1) or with VBScript (2)
+
+
+echo $url = "https://raw.githubusercontent.com/anic17/SWH/master/SWH.bat" > %pathswh%\Temp\UpdateSWH.ps1
+echo $output = "%pathswh%\Temp\SWH.bat" >> %pathswh%\Temp\UpdateSWH.ps1
+echo $start_time = Get-Date >> %pathswh%\Temp\UpdateSWH.ps1
+echo Invoke-WebRequest -Uri $url -OutFile $output >> %pathswh%\Temp\UpdateSWH.ps1
+
+
 echo SWH is now checking for updates... If an update is founded, SWH will install automatically
 echo This process may take some time
 if not %admin%==1 (goto swh_adminUpdate)
+if exist "%pathswh%\Temp\SWH.bat" (del "%pathswh%\Temp\SWH.bat" /q)
 echo 'Set your settings > "%pathswh%\Temp\SWH_Downloader.vbs"
 echo     strFileURL = "https://raw.githubusercontent.com/anic17/SWH/master/SWH.bat" >> "%pathswh%\Temp\SWH_Downloader.vbs"
 echo     strHDLocation = "SWH.bat" >> "%pathswh%\Temp\SWH_Downloader.vbs"
@@ -1421,7 +1478,6 @@ echo.
 rem This VBScript downloading script was founded on: https://serverfault.com/questions/29707/download-file-from-vbscript
 start wscript.exe "%pathswh%\Temp\SWH_Downloader.vbs"
 echo.
-if exist "%pathswh%\Temp\SWH.bat" (del "%pathswh%\Temp\SWH.bat" /q)
 :chking_IfUpdatedSWH
 if exist "%pathswh%\Temp\SWH.bat" (goto supdated)
 goto :chking_IfUpdatedSWH
@@ -1429,10 +1485,11 @@ goto :chking_IfUpdatedSWH
 move "%pathswh%\SWH.bat" "%pathswh%\OldSWH\SWH.bat">nul
 move "%pathswh%\Temp\SWH.bat" "%pathswh%\SWH.bat">nul
 echo SWH has been updated!
-echo swh=Msgbox("SWH has succefully been updated",4160,"SWH has succefully been updated") > %pathswh%\Temp\SUpdated.vbs
-start /wait wscript.exe "%pathswh%\Temp\SUpdated.vbs"
+echo swh=Msgbox("SWH has succefully been updated",4160,"SWH has succefully been updated") > "%pathswh%\Temp\SUpdated.vbs"
+start wscript.exe "%pathswh%\Temp\SUpdated.vbs"
 echo.
 goto swh
+
 :swh_adminUpdate
 echo Set WshShell = WScript.CreateObject("WScript.Shell") > %pathswh%\Temp\AdminSWH.vbs
 echo If WScript.Arguments.Length = 0 Then >> %pathswh%\Temp\AdminSWH.vbs
@@ -1445,7 +1502,7 @@ echo Set ObjShell = CreateObject("WScript.Shell") >> %pathswh%\Temp\AdminSWH.vbs
 echo objShell.Run "cmd.exe /c %pathswh%\SWH.bat /c updateswh" >> %pathswh%\Temp\AdminSWH.vbs
 echo.
 start WScript.exe "%pathswh%\Temp\AdminSWH.vbs"
-exit /B
+goto swh
 
 
 
