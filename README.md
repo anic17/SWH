@@ -19,6 +19,18 @@ Also, SWH has a mode to be compatible with Recovery OS mode.
 Only type "bootmode" and SWH will be running perfectly.
 
 To view command list, type "help". If you cannot view all commands, type first "more" and then "help"
+To update, type "updateswh"
+
+You can also use parameters to run in console, ex:
+
+	- "SWH.bat" /c updateswh
+	- "SWH.bat" /admin
+	- "SWH.bat" /?
+	- "SWH.bat /h"
+
+
+To uninstall SWH, delete the 3 directories and do not run SWH.
+
 
 :D
 
