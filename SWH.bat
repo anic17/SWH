@@ -694,20 +694,16 @@ set download_ps1=%pathswh%\Temp\DownloadInternetSWH.ps1
 echo Note: A website URL will download the website itself. To download, type for example, https://bit.ly/2DKAjxF (SWH Source code)
 echo Download will be saved in: %pathswh%\Downloads
 set /p downloadinternet=URL: 
-set /p namesavedownloadi=Name to save your downloaded file (A file name cannot contain these characters: ^> ^< ^| : "" / * \ ?): 
+set /p namesavedownloadinternet=Name to save your downloaded file (A file name cannot contain these characters: ^> ^< ^| : "" / * \ ?): 
 
 
 echo $url = "%downloadinternet%" > %download_ps1%
-echo $output = "%pathswh%\Downloads\%namesavedownloadi%" >> %download_ps1%
+echo $output = "%localappdata%\ScriptingWindowsHost\Downloads\%namesavedownloadinternet%" >> %download_ps1%
 echo $start_time = Get-Date >> %download_ps1%
 echo Invoke-WebRequest -Uri $url -OutFile $output >> %download_ps1%
 PowerShell.exe "%download_ps1%"
 echo.
-if exist "%pathswh%\Downloads\%namesavedownloadi%" (
-	echo File has been succefully downloaded
-	echo.
-	goto swh
-) else (
+if exist "%pathswh%\Downloads\%namesavedownloadinternet%" (echo File has been succefully downloaded & echo. & goto opendownloaddirY_N) else (
 	echo Error downloading file! Try this:
 	echo.
 	echo    - Check your Internet connection
@@ -717,6 +713,18 @@ if exist "%pathswh%\Downloads\%namesavedownloadi%" (
 	echo.
 	goto swh
 )
+:opendownloaddirY_N
+set /p opendownloaddir=Open SWH Downloads directory? (y/n): 
+if /i "%opendownloaddir%"=="y" (start explorer.exe "%pathswh%\Downloads" &echo. &goto swh)
+if /i "%opendownloaddir%"=="n" (echo. &goto swh) else (
+	echo.
+	echo Select a valid option!
+	echo.
+	goto swh
+)
+
+
+
 
 :editswh_github
 echo.
