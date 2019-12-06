@@ -402,6 +402,7 @@ echo ipconfig: Shows the IP and his configuration >> %pathswh%\Temp\MoreHelp
 echo more: Makes a pause in a long text every time the page ends >> %pathswh%\Temp\MoreHelp
 echo msg: Makes a message box on the screen >> %pathswh%\Temp\MoreHelp
 echo networkconnections: Shows the network connections >> %pathswh%\Temp\MoreHelp
+echo networkmsg: Chats with a computer on the same network than you >> %pathswh%\Temp\MoreHelp
 echo path: Changes the actual path of SWH >> %pathswh%\Temp\MoreHelp
 echo powershell: Starts Windows PowerShell in the current directory >> %pathswh%\Temp\MoreHelp
 echo project: Makes a programmation script with Scripting Windows Host (Coming soon) >> %pathswh%\Temp\MoreHelp
@@ -489,6 +490,7 @@ echo ipconfig: Shows the IP and his configuration
 echo more: Makes a pause in a long text every time the page ends
 echo msg: Makes a message box on the screen
 echo networkconnections: Shows the network connections
+echo networkmsg: Chats with a computer on the same network than you
 echo news: Shows the news of SWH %ver%
 echo path: Changes the actual path of SWH
 echo powershell: Starts Windows PowerShell in the current directory
@@ -640,6 +642,7 @@ if /i %cmd%=="contact" (goto swhcontact)
 if /I %cmd%=="swhadmin" (goto swh_admin)
 if /i %cmd%=="download" (goto download_internet)
 if /i %cmd%=="editswh" (goto editswh_github)
+if /i %cmd%=="networkmsg" (goto networkmsg)
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
@@ -748,6 +751,40 @@ echo Contact >> %pathswh%\SWH_History.txt
 goto swh
 
 
+:networkmsg
+echo.
+echo Note: Two computers will need SWH in message mode and needs administrator permission the first time
+echo.
+set /p networkchatcomputer=Computer to send message: 
+net share SWH_Chat=%pathswh% & echo Sharing SWH chat directory...
+
+echo Message (Type "Send" to send message): 
+:ntworkmsg_text
+set networkchatmsg=[{CLSID:SWH-SendMessage-Key:g438tfhqon57wg4rejonwr8og5ut9w430ntung805-ENTER}]
+set /p networkchatmsg=
+if "%networkchatmsg%"=="[{CLSID:SWH-SendMessage-Key:g438tfhqon57wg4rejonwr8og5ut9w430ntung805-ENTER}]" (echo. >> "%pathswh%\Temp\Chat%networkchatcomputer%")
+if "%networkchatmsg%"=="Send" (goto sendnetwork_msg) else (echo %networkchatmsg% >> "%pathswh%\Temp\Chat%networkchatcomputer%")
+
+:sendnetwork_msg
+copy "%pathswh%\Temp\Chat%networkchatcomputer%" "\\%networkchatcomputer%\SWH_Chat\Sended%networkchatcomputer%">nul
+if exist "\\%networkchatcomputer%\SWH_Chat\Sended%networkchatcomputer%" (echo Message sent &goto ntworkmsg_text)
+
+
+
+
+
+
+if exist "%pathswh%\Temp\Sended%networkchatcomputer%" (goto received_msg_chat)
+:received_msg_chat
+echo.
+type "%pathswh%\Temp\Sended%networkchatcomputer%"
+echo.
+goto ntworkmsg_text
+
+
+
+
+
 
 :viewstartlog
 echo.
@@ -760,9 +797,6 @@ goto swh
 echo.
 echo What's new on SWH %ver%?
 echo.
-echo Guaranteed decryption system:
-echo Now the text decryptor works correctly, so encrypted data is guaranteed that you can decrypt it.
-echo.
 echo Encrypted password:
 echo In previous versions, the password was visible in his password file.
 echo Now it is encrypted, making SWH access only for people that know the password
@@ -770,7 +804,7 @@ echo.
 echo More functions, less size:
 echo SWH %ver% tries to be more accessible with only %sizeSWHkB% kB, and with a lot of functions.
 echo.
-echo Added slash parameters:
+echo Added parameters:
 echo Now you can run SWH with parameters like %~nx0 /admin or %~nx0 /c ^<command^>
 echo This is very useful to automatize tasks
 echo.
@@ -1098,17 +1132,13 @@ goto swh
 
 :incommand
 echo Incorrect command: %cmd% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
-cd\
 echo %incotext%
 echo.
-cd /d "%cdirectory%"
-goto swh
+ swh
 
 :cmdClip
 set /p texttclip=Text to copy in the clipboard: 
-cd\
 echo %texttclip% | clip
-cd /d "%cdirectory%"
 echo.
 echo %texttclip% copied to the clipboard
 echo.
@@ -1116,9 +1146,7 @@ goto swh
 
 :winver
 ver
-cd\
 echo.
-cd /d "%cdirectory%"
 goto swh
 
 :accessonlyuser
@@ -1139,7 +1167,7 @@ if %userblock%==1 (
 )
 :blockusers
 set /p userblock=Are you sure you want to block SWH for all users except "%username%"? (y/n): 
-if /i %userblock%==y (
+if /i "%userblock%"=="y" (
 	echo %username%> %programfiles%\SWH\ApplicationData\BU.dat
 	echo All users except "%username%" has been blocked
 	echo.
@@ -1392,11 +1420,9 @@ echo.
 goto swh
 
 :swhver
-cd\
 echo.
 if "%securever%"=="%ver%" (echo SWH Version: %ver%) else (set ver=%securever%&echo SWH Version: %ver%)
 echo.
-cd /d "%cdirectory%"
 goto swh
 
 :read
@@ -2270,19 +2296,15 @@ echo.
 goto swh
 
 :trexgame
-cd /d %localappdata%\ScriptingWindowsHost
-if exist T-RexGame.html (
+if exist %pathswh%\T-RexGame.html (
 	goto CHKchromeins
-	start T-RexGame.html
+	start %pathswh%\T-RexGame.html
 	echo.
-	cd /d %cdirectory%
 	echo T-RexGame.html: played >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
 	goto swh
 ) else (
 	goto nostartTREX
 )
-:CHKchromeins
-if exist %programfiles%\Google
 
 :nostartTREX
 echo T-Rex: Error: %localappdata%\ScriptingWindowsHost\T-RexGame.html not founded >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
@@ -2290,7 +2312,6 @@ echo Error! File %localappdata%\ScriptingWindowsHost\T-RexGame.html not founded.
 echo SWH=MsgBox("File T-RexGame.html not founded",4112,"SWH can't found the T-rex Game file") > "%pathswh%\Temp\ErrorT-Rex.vbs"
 start /wait wscript.exe "%pathswh%\Temp\ErrorT-Rex.vbs"
 echo.
-cd /d %cdirectory%
 goto swh
 
 :cancelshutdown
@@ -2307,8 +2328,8 @@ goto swh
 :cd
 set /p chdirectory=Directory to access: 
 if exist %chdirectory% (
-	cd /d %chdirectory% 
-	set chdirectory=%cd%
+	cd /d %chdirectory%
+	set cdirectory=%cd%
 	echo.
 	goto swh
 ) else (
