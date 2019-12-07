@@ -2,7 +2,7 @@ An easy-to-use terminal, created by anic17.
 
 Wrotten in Batch, VBScript and PowerShell.
 
-The file size is 100 kB, and doesn't need any installation. Only downlaod the file and run it.
+The file size is 102 kB, and doesn't need any installation. Only downlaod the file and run it.
 
 
 NOTE:
