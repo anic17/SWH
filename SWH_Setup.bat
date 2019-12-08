@@ -1,4 +1,21 @@
 @echo off
+mode con: cols=15 lines=1
+echo SWH_TestFileAdmin > %windir%\SWH_TestFileAdmin.tmp
+if not exist %windir%\SWH_TestFileAdmin.tmp (set admin=0) else (set admin=1 & del "%WinDir%\SWH_TestFileAdmin.tmp" /q /f)
+if not %admin%==0 (goto startSetup)
+:RunSWHSetupAsAdmin
+echo Set WshShell = WScript.CreateObject("WScript.Shell") > %tmp%\AdminSWH.vbs
+echo If WScript.Arguments.Length = 0 Then >> %tmp%\AdminSWH.vbs
+echo   Set ObjShell = CreateObject("Shell.Application") >> %tmp%\AdminSWH.vbs
+echo   ObjShell.ShellExecute "wscript.exe" _ >> %tmp%\AdminSWH.vbs
+echo     , """" ^& WScript.ScriptFullName ^& """ /config:RunAsAdmin", , "RunAs",1 >> %tmp%\AdminSWH.vbs
+echo   WScript.Quit >> %tmp%\AdminSWH.vbs
+echo End if >> %tmp%\AdminSWH.vbs
+echo Set ObjShell = CreateObject("WScript.Shell") >> %tmp%\AdminSWH.vbs
+echo objShell.Run "cmd.exe /c %~0",vbHide >> %tmp%\AdminSWH.vbs
+start "WScript.exe" "%tmp%\AdminSWH.vbs"
+timeout /t 2 /nobreak>nul
+exit /B
 :startSetup
 if exist "%tmp%\cancelswh.tmp" (del "%tmp%\cancelswh.tmp" /q)
 set nx=%~nx0
@@ -6,16 +23,12 @@ set dp=%~dp0
 md %tmp%\SWH_Setup
 set route=%tmp%
 cd /d %route%
-mode con: cols=15 lines=1
 if exist Setup.vbs (del Setup.vbs /q)
 rem Scripting Windows Host Setup
 rem Made by anic17
-rem Copyright 2019 SWH 
 set swhPath=%localappdata%\ScriptingWindowsHost
 set dir=%~dp0
 title Scripting Windows Host Installer
-echo SWH_TestFileAdmin > %windir%\SWH_TestFileAdmin.tmp
-if not exist %windir%\SWH_TestFileAdmin.tmp (goto erroradmin) else (del %windir%\SWH_TestFileAdmin.tmp /q /f)
 if exist %localappdata%\ScriptingWindowsHost\SWH.* (goto uninstall)
 :install
 cd /d %tmp%
@@ -24,7 +37,6 @@ rem Cancel button
 echo taskkill /f /im wscript.exe > "%tmp%\RestartSWHSetup.bat"
 echo start wscript.exe "%tmp%\Setup.vbs" >> "%tmp%\RestartSWHSetup.bat"
 echo exit >> "%tmp%\RestartSWHSetup.bat"
-
 
 
 set download_ps1=%tmp%\SWH_Setup\DownloadSWH.ps1
@@ -110,12 +122,6 @@ if exist "%tmp%\cancelswh.tmp" (
 del %tmp%\Setup.vbs /q
 del %tmp%\license.txt /q
 del %tmp%\RestartSWHSetup.bat
-exit /b
-
-:erroradmin
-echo erroradmin=Msgbox("Please run SWH Setup as administrator",4112,"Please run SWH Setup as administrator") > erroradmin.vbs
-start /wait wscript.exe erroradmin.vbs
-del erroradmin.vbs /q
 exit /b
 
 :uninstall
