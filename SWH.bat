@@ -253,8 +253,6 @@ echo [%date% %time%] Failed to access SWH. Reason: Incorrect Password: %password
 pause>nul
 cls
 goto putpassword
-
-
 :startingswhpassword
 cd /d "%programfiles%\SWH\ApplicationData"
 echo [%date% %time%] - Password=0 >> %pathswh%\StartLog.log
@@ -316,14 +314,12 @@ if exist Size.opt (
 ) else (
 	echo [%date% %time%] - Unexistant Setting: %pathswh%\Settings\Size.opt >> %pathswh%\StartLog.log
 )
-
 if exist ConsoleText.opt (
 	for /f "tokens=1,2* delims=," %%c in (ConsoleText.opt) do (set commandtoexecute=%%c)
 	echo [%date% %time%] - Loaded Setting: %pathswh%\Settings\ConsoleText.opt >> %pathswh%\StartLog.log
 ) else (
 	echo [%date% %time%] - Unexistant Setting: %pathswh%\Settings\ConsoleText.opt >> %pathswh%\StartLog.log
 )
-
 if exist DefaultTitle.opt (
 	for /f "tokens=1,2* delims=," %%t in (DefaultTitle.opt) do (set title=%%t &title %title%)
 	echo [%date% %time%] - Loaded Setting: %pathswh%\Settings\DefaultTitle.opt >> %pathswh%\StartLog.log
@@ -331,7 +327,6 @@ if exist DefaultTitle.opt (
 	echo [%date% %time%] - Unexistant Setting: %pathswh%\Settings\DefaultTitle.opt >> %pathswh%\StartLog.log
 	set title=%title%
 )
-
 if exist DefaultDirectory.opt (
 	for /f "tokens=1,2* delims=," %%d in (DefaultDirectory.opt) do (cd /d %%d &set cdirectory=%%d)
 	echo [%date% %time%] - Loaded Setting: %pathswh%\Settings\DefaultDirectory.opt >> %pathswh%\StartLog.log
@@ -340,7 +335,6 @@ if exist DefaultDirectory.opt (
 	set cdirectory=%userprofile%
 	echo [%date% %time%] - Unexistant Setting: %pathswh%\Settings\DefaultDirectory.opt >> %pathswh%\StartLog.log
 )
-
 if exist IncorrectCommand.opt (
 	for /f "tokens=1,2* delims=," %%e in (IncorrectCommand.opt) do (set incotext=%%e)
 	echo [%date% %time%] - Loaded Setting: %pathswh%\Settings\IncorrectCommand.opt >> %pathswh%\StartLog.log
@@ -706,13 +700,13 @@ echo $start_time = Get-Date >> %download_ps1%
 echo Invoke-WebRequest -Uri $url -OutFile $output >> %download_ps1%
 PowerShell.exe "%download_ps1%"
 echo.
-if exist "%pathswh%\Downloads\%namesavedownloadinternet%" (echo File has been succefully downloaded & echo. & goto opendownloaddirY_N) else (
+if exist "%pathswh%\Downloads\%namesavedownloadinternet%" (echo File has been successfully downloaded & echo. & goto opendownloaddirY_N) else (
 	echo Error downloading file! Try this:
 	echo.
 	echo    - Check your Internet connection
 	echo    - Make sure that you have Windows PowerShell on your computer
 	echo    - Check that the website is existent or available
-	echo    - Check that you haven't writted ant special symbol in list
+	echo    - Check that you haven't writted a special symbol in list
 	echo.
 	goto swh
 )
@@ -976,7 +970,7 @@ echo 	objShell.Run "cmd.exe /c mkdir %localappdata%\ScriptingWindowsHost\Temp" >
 echo 	objShell.Run "cmd.exe /c mkdir %tmp%\SWH_Setup" >> Setup.vbs
 echo 	objShell.Run "cmd.exe /c xcopy %~0 %tmp%\SWH_Setup /o /x /k /q /y" >> Setup.vbs >> Setup.vbs
 echo 	objShell.Run "cmd.exe /c xcopy %userprofile%\Downloads\*SWH*.* %localappdata%\ScriptingWindowsHost /o /x /k /q /y" >> Setup.vbs
-echo 	objShell.Run "cmd.exe /c xcopy %0 %localappdata%\ScriptingWindowsHost\SWH.bat /o /x /k /q /y" >> Setup.vbsecho 	finish=MsgBox("SWH was succefully installed on your computer",4160,"SWH was succefully installed on your computer") >> Setup.vbs
+echo 	objShell.Run "cmd.exe /c xcopy %0 %localappdata%\ScriptingWindowsHost\SWH.bat /o /x /k /q /y" >> Setup.vbsecho 	finish=MsgBox("SWH was successfully installed on your computer",4160,"SWH was successfully installed on your computer") >> Setup.vbs
 echo 	launch=MsgBox("Launch SWH",4132,"Launch SWH") >> Setup.vbs
 echo 	if launch = vbYes Then >> Setup.vbs
 echo 		objShell.Run "cmd.exe /c %localappdata%\ScriptingWindowsHost\SWH" >> Setup.vbs
@@ -1028,7 +1022,7 @@ echo 	sureunins=msgbox("Are you sure you want to uninstall SWH?",4388,"Are you s
 echo 		if sureunins = vbYes Then >> Setup.vbs
 echo 		objShell.Run "cmd.exe /c rd %localappdata%\ScriptingWindowsHost /s /q" >> Setup.vbs
 echo 		objShell.Run "reg.exe delete HKCU\Software\ScriptingWindowsHost /va /f" >> Setup.vbs
-echo 		unins=msgbox("SWH was succefully removed from your computer",4160,"SWH was succefully removed from your computer") >> Setup.vbs
+echo 		unins=msgbox("SWH was successfully removed from your computer",4160,"SWH was successfully removed from your computer") >> Setup.vbs
 echo 		WScript.Quit >> Setup.vbs
 echo 		objShell.Run "taskkill.exe /f /im wscript.exe" >> Setup.vbs
 echo 	End If >> Setup.vbs
@@ -1134,7 +1128,7 @@ goto swh
 echo Incorrect command: %cmd% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
 echo %incotext%
 echo.
- swh
+goto swh
 
 :cmdClip
 set /p texttclip=Text to copy in the clipboard: 
@@ -1403,7 +1397,7 @@ if "%removingpasswordchk%"=="%psd%" (goto removingpsd) else (goto errorremovingp
 :removingpsd
 del "%programfiles%\SWH\ApplicationData\PS.dat" /q
 echo.
-echo Password succefully removed
+echo Password successfully removed
 echo.
 goto swh
 
@@ -1414,10 +1408,18 @@ echo.
 goto swh
 
 :adminpermission
+SETLOCAL EnableDelayedExpansion
+for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do (
+  set "DEL=%%a"
+)
 echo.
-echo Please run SWH as administrator.
-echo.
-goto swh
+call :ColorText 0C "Pl"
+call :ColorText 0C "ea"
+call :ColorText 0C "se run S"
+call :ColorText 0C "WH as adm" 
+call :ColorText 0C "inistrator."
+Endlocal
+echo. & goto swh
 
 :swhver
 echo.
@@ -1474,68 +1476,26 @@ goto swh
 
 :updateswh
 echo.
-set /p updatePS1orVBS=Download with Windows PowerShell (1) or with VBScript (2)
 
 
 echo $url = "https://raw.githubusercontent.com/anic17/SWH/master/SWH.bat" > %pathswh%\Temp\UpdateSWH.ps1
 echo $output = "%pathswh%\Temp\SWH.bat" >> %pathswh%\Temp\UpdateSWH.ps1
 echo $start_time = Get-Date >> %pathswh%\Temp\UpdateSWH.ps1
 echo Invoke-WebRequest -Uri $url -OutFile $output >> %pathswh%\Temp\UpdateSWH.ps1
+echo Dowloading SWH...
+powershell.exe "%pathswh%\Temp\UpdateSWH.ps1"
+if exist "%pathswh%\Temp\SWH.bat" (goto supdated) else (goto errorupdatingswh)
 
-
-echo SWH is now checking for updates... If an update is founded, SWH will install automatically
-echo This process may take some time
-if not %admin%==1 (goto swh_adminUpdate)
-if exist "%pathswh%\Temp\SWH.bat" (del "%pathswh%\Temp\SWH.bat" /q)
-echo 'Set your settings > "%pathswh%\Temp\SWH_Downloader.vbs"
-echo     strFileURL = "https://raw.githubusercontent.com/anic17/SWH/master/SWH.bat" >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo     strHDLocation = "SWH.bat" >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo    ' Fetch the file >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo     Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP") >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo     objXMLHTTP.open "GET", strFileURL, false>> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo     objXMLHTTP.send() >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo     If objXMLHTTP.Status = 200 Then >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo       Set objADOStream = CreateObject("ADODB.Stream") >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo       objADOStream.Open >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo       objADOStream.Type = 1 'adTypeBinary >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo       objADOStream.Write objXMLHTTP.ResponseBody >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo       objADOStream.Position = 0    'Set the stream position to the start >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo       Set objFSO = Createobject("Scripting.FileSystemObject") >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo         If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile strHDLocation >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo       Set objFSO = Nothing >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo       objADOStream.SaveToFile strHDLocation>> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo       objADOStream.Close >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo       Set objADOStream = Nothing >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo     End if >> "%pathswh%\Temp\SWH_Downloader.vbs"
-echo     Set objXMLHTTP = Nothing >> "%pathswh%\Temp\SWH_Downloader.vbs"
+:errorupdatingswh
 echo.
-rem This VBScript downloading script was founded on: https://serverfault.com/questions/29707/download-file-from-vbscript
-start wscript.exe "%pathswh%\Temp\SWH_Downloader.vbs"
-echo.
-:chking_IfUpdatedSWH
-if exist "%pathswh%\Temp\SWH.bat" (goto supdated)
-goto :chking_IfUpdatedSWH
+echo Error: Cannot update SWH! Check your Internet connection
 :supdated
 move "%pathswh%\SWH.bat" "%pathswh%\OldSWH\SWH.bat">nul
 move "%pathswh%\Temp\SWH.bat" "%pathswh%\SWH.bat">nul
 echo SWH has been updated!
-echo swh=Msgbox("SWH has succefully been updated",4160,"SWH has succefully been updated") > "%pathswh%\Temp\SUpdated.vbs"
+echo swh=Msgbox("SWH has successfully been updated",4160,"SWH has successfully been updated") > "%pathswh%\Temp\SUpdated.vbs"
 start wscript.exe "%pathswh%\Temp\SUpdated.vbs"
 echo.
-goto swh
-
-:swh_adminUpdate
-echo Set WshShell = WScript.CreateObject("WScript.Shell") > %pathswh%\Temp\AdminSWH.vbs
-echo If WScript.Arguments.Length = 0 Then >> %pathswh%\Temp\AdminSWH.vbs
-echo   Set ObjShell = CreateObject("Shell.Application") >> %pathswh%\Temp\AdminSWH.vbs
-echo   ObjShell.ShellExecute "wscript.exe" _ >> %pathswh%\Temp\AdminSWH.vbs
-echo     , """" ^& WScript.ScriptFullName ^& """ /admin", , "RunAs",1 >> %pathswh%\Temp\AdminSWH.vbs
-echo   WScript.Quit >> %pathswh%\Temp\AdminSWH.vbs
-echo End if >> %pathswh%\Temp\AdminSWH.vbs
-echo Set ObjShell = CreateObject("WScript.Shell") >> %pathswh%\Temp\AdminSWH.vbs
-echo objShell.Run "cmd.exe /c %pathswh%\SWH.bat /c updateswh" >> %pathswh%\Temp\AdminSWH.vbs
-echo.
-start WScript.exe "%pathswh%\Temp\AdminSWH.vbs"
 goto swh
 
 
@@ -1592,9 +1552,6 @@ echo.
 start wscript.exe "%pathswh%\Decrypt.vbs"
 cd /d "%cdirectory%"
 goto swh
-
-
-
 
 
 
@@ -1802,7 +1759,7 @@ echo.
 goto swh
 :SettingsSize
 set /p settingssizesave=Are you sure that you would change the default console size? (y/n): 
-if %settingssizesave%==y (goto savingsettingssize1) else (
+if "%settingssizesave%"=="y" (goto savingsettingssize1) else (
 	echo.
 	goto swh
 )
@@ -2288,7 +2245,7 @@ if /i "%clearhist%"=="y" (goto clearhist) else (
 )
 :clearhist
 del %pathswh%\SWH_History.txt /q>nul
-echo SWH=MsgBox("History was succefully cleared",4160,"Done!") > SWHClHist.vbs
+echo SWH=MsgBox("History was successfully cleared",4160,"Done!") > SWHClHist.vbs
 start /wait SWHClHist.vbs
 echo History:CLEARED >> %pathswh%\SWH_History.txt
 cd /d "%cdirectory%"
@@ -2430,30 +2387,20 @@ echo Clear >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History
 goto swh
 
 :color
-set textcolor=DOS_SWH.BAT
-set backgroundcolor=DOS_SWH.BAT
 set /p textcolor=Color of text: 
 set /p backgroundcolor=Color of background: 
-if "%backgroundcolor%"=="%textcolor%" (
-	if "%textcolor%"=="%backgroundcolor%"=="DOS_SWH.BAT" (
-		echo You need to enter valid values to change the color.
-		echo.
-		goto swh
-		echo Color: Error: No valid values to change the color (%backgroundcolor%%textcolor%)
-	) else (
-		goto nochangecolor1	
-	)
-	:nochangecolor
+if /I "%backgroundcolor%"=="%textcolor%" (
 	echo.
-	echo Two colors can't be the same. Choose different colors.
-	echo.
-	echo Color: Error: Two colors are the same (%backgroundcolor%%textcolor%)
-	goto swh
-) else (
-	color %backgroundcolor%%textcolor%
+	echo Two colors cannot be the same.
+	echo Use different colors
 	echo.
 	goto swh
 )
+color %backgroundcolor%%textcolor%
+echo.
+goto swh
+
+
 :del
 echo.
 echo Warning! Use with precaution!
@@ -2948,3 +2895,9 @@ goto commandPROJECT
 echo "startswh" is not a valid optin for SWH Projects
 echo.
 goto commandPROJECT
+
+:ColorText
+echo off
+<nul set /p ".=%DEL%" > "%~2"
+findstr /v /a:%1 /R "^$" "%~2" nul
+del "%~2" > nul 2>&1
