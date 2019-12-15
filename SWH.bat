@@ -368,6 +368,7 @@ echo bugs: Can see the bugs of SWH >> %pathswh%\Temp\MoreHelp
 echo calc (or calculator): Starts SWH calculator >> %pathswh%\Temp\MoreHelp
 echo cancelshutdown: Cancels the programmed shutdown >> %pathswh%\Temp\MoreHelp
 echo cd: Go to a specific directory >> %pathswh%\Temp\MoreHelp
+echo checkprocess: Checks if a specified process is running on system >> %pathswh%\Temp\MoreHelp
 echo clear: Clears the screen of SWH >> %pathswh%\Temp\MoreHelp
 echo clearhistory: Clears the SWH command history >> %pathswh%\Temp\MoreHelp
 echo cleartemp: Clears the temporary files of your computer in %tmp% >> %pathswh%\Temp\MoreHelp
@@ -455,6 +456,7 @@ echo bugs: Can see the bugs of SWH
 echo calc (or calculator): Starts SWH calculator
 echo cancelshutdown: Cancels the scheduled shutdown
 echo cd: Go to a specific directory
+echo checkprocess: Checks if a specified process is running on system
 echo clear: Clears the screen of SWH
 echo clearhistory: Clears the SWH command history
 echo cleartemp: Clears the temporary files of your computer in %tmp%
@@ -637,6 +639,7 @@ if /I %cmd%=="swhadmin" (goto swh_admin)
 if /i %cmd%=="download" (goto download_internet)
 if /i %cmd%=="editswh" (goto editswh_github)
 if /i %cmd%=="networkmsg" (goto networkmsg)
+if /i %cmd%=="checkprocess" (goto checkprocess)
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
@@ -692,8 +695,6 @@ echo Note: A website URL will download the website itself. To download, type for
 echo Download will be saved in: %pathswh%\Downloads
 set /p downloadinternet=URL: 
 set /p namesavedownloadinternet=Name to save your downloaded file (A file name cannot contain these characters: ^> ^< ^| : "" / * \ ?): 
-
-
 echo $url = "%downloadinternet%" > %download_ps1%
 echo $output = "%localappdata%\ScriptingWindowsHost\Downloads\%namesavedownloadinternet%" >> %download_ps1%
 echo $start_time = Get-Date >> %download_ps1%
@@ -734,7 +735,6 @@ timeout /t 2 /nobreak>nul
 start https://github.com/anic17/SWH/
 echo.
 goto swh
-
 :swhcontact
 echo.
 echo E-Mail to contact with SWH developper (anic17)
@@ -742,6 +742,46 @@ echo.
 echo SWH.Console@gmail.com
 echo.
 echo Contact >> %pathswh%\SWH_History.txt
+goto swh
+
+
+:checkprocess
+echo.
+echo Note: A permanent check will use some computer ressources.
+echo.
+set /p chkss_permanenetornot=Permanent check (1) or instant check (2): 
+if "%chkss_permanenetornot%"=="1" goto permanentchk_SS
+if "%chkss_permanenetornot%"=="2" (goto instantchk_SS) else (
+	echo.
+	echo Please choose a valid option
+	echo.
+	goto swh
+)
+
+:permanentchk_SS
+echo.
+set /p permanent_chkss=Process to check: 
+echo.
+:permanent_Process_Loop
+tasklist /fi "imagename eq %permanent_chkss%" > %pathswh%\Temp\CheckProcessPermanent.chk
+cd /d "%pathswh%\Temp"
+for %%i in (checkprocesspermanent.chk) do (set permanent_processCHK_size=%%~zi)
+if %permanent_processCHK_size% gtr 100 (echo Founded process: %permanent_chkss%) else (echo Cannot find process %permanent_chkss%)
+timeout /t 1 /nobreak>nul
+cd /d "%cdirectory%"
+goto permanent_Process_Loop
+
+
+:instantchk_SS
+echo.
+set /p instant_chkss=Process to check: 
+tasklist /fi "imagename eq %instant_chkSS%" > %pathswh%\Temp\CheckProcessInstant.chk
+cd /d "%pathswh%\Temp"
+echo.
+for %%i in (CheckProcessInstant.chk) do (set instant_processCHK_size=%%~zi)
+if %instant_processCHK_size% gtr 100 (echo Founded process: %instant_chkss%) else (echo Cannot find process %instant_chkss%)
+cd /d "%cdirectory%"
+echo.
 goto swh
 
 
@@ -861,192 +901,21 @@ goto swh
 
 
 :startSetup
-if %admin%==0 (goto erroradminsetup) else goto InstallingSetup
-
-:erroradminsetup
-echo erroradmin=Msgbox("Please run SWH Setup as administrator",4112,"Please run SWH Setup as administrator") > "%tmp%\erroradmin.vbs"
-start /wait wscript.exe "%tmp%\erroradmin.vbs"
-del "%tmp%\erroradmin.vbs" /q
 echo.
-echo Please run SWH as administrator to start setup
-echo.
-cd /d %cdirectory%
-goto swh
-
-
-:InstallingSetup
-if exist "%tmp%\cancelswh.tmp" (del "%tmp%\cancelswh.tmp" /q)
-set nx=%~nx0
-set dp=%~dp0
-set route=%tmp%
-cd /d %route%
-if exist Setup.vbs (del Setup.vbs /q)
-rem Scripting Windows Host Setup
-rem Made by anic17
-rem Copyright 2019 SWH 
-set swhPath=%localappdata%\ScriptingWindowsHost
-set dir=%~dp0
-title Scripting Windows Host Installer
-echo SWH_TestFileAdmin > %windir%\SWH_TestFileAdmin.tmp
-if not exist %windir%\SWH_TestFileAdmin.tmp (goto erroradmin) else (del %windir%\SWH_TestFileAdmin.tmp /q /f)
-if exist %localappdata%\ScriptingWindowsHost\SWH.* (goto uninstall)
-if exist %userprofile%\Downloads\SWH.* (goto install) else (goto ErrorExtracting)
-
-:install
-cd /d %tmp%
-rem License
-echo Scripting Windows Host license: > "%tmp%\license.txt"
-echo. >> "%tmp%\license.txt"
-echo. >> "%tmp%\license.txt"
-echo To install SWH, you must agree terms of service of SWH >> "%tmp%\license.txt"
-echo. >> "%tmp%\license.txt"
-echo Terms of service: >> "%tmp%\license.txt"
-echo. >> "%tmp%\license.txt"
-echo SWH is a  >> "%tmp%\license.txt"
-echo . >> "%tmp%\license.txt"
-echo SWH is a console. A console is a program that you type commands and it executes it. >> "%tmp%\license.txt"
-echo But SWH is a console that it makes programming easier that never! >> "%tmp%\license.txt"
-echo. >> "%tmp%\license.txt"
-echo If you need help when you have installed SWH, please type "help" on SWH >> "%tmp%\license.txt"
-echo. >> "%tmp%\license.txt"
-echo Copyright (c) 2019 anic17. All rights reserved >> "%tmp%\license.txt"
-rem End license
-
-rem Cancel button
-echo taskkill /f /im wscript.exe > "%tmp%\RestartSWHSetup.bat"
-echo start wscript.exe "%tmp%\Setup.vbs" >> "%tmp%\RestartSWHSetup.bat"
-echo exit >> "%tmp%\RestartSWHSetup.bat"
-
-
-rem Setup Starts
-rem Setup.vbs
-
-echo strScriptHost = LCase(Wscript.FullName) > Setup.vbs
-echo If Right(strScriptHost, 11) = "cscript.exe" Then >> Setup.vbs
-echo 	cscript=msgbox("Please run SWH Setup with wscript.exe",4112,"Please run SWH Setup with wscript.exe") >> Setup.vbs
-echo 	CScript.Quit >> Setup.vbs
-echo End If >> Setup.vbs
-echo Set objShell = WScript.CreateObject("WScript.Shell") >> Setup.vbs
-echo setupfirst=msgbox("Welcome to the Scripting Windows Host setup. This wizard will install SWH on your computer. Click OK to install SWH.",4353,"Scripting Windows Host Setup") >> Setup.vbs
-echo if setupfirst = vbCancel then >> Setup.vbs
-echo 	cancelFirstSetup=msgbox("Are you sure you want to close SWH Setup?",4148,"Close SWH Setup?") >> Setup.vbs
-echo 	if cancelFirstSetup = vbYes Then >> Setup.vbs
-echo 		WScript.Quit >> Setup.vbs
-echo 		objShell.Run "taskkill.exe /f /im Wscript.exe" >> Setup.vbs
-echo 	End If >> Setup.vbs
-echo 	If cancelFirstSetup = vbNo Then >> Setup.vbs
-echo 		Set objFSO = createobject("scripting.filesystemobject")  >> Setup.vbs
-echo 		Set exitYN = objfso.createtextfile("cancelswh.tmp",true) >> Setup.vbs  
-echo 		exitYN.writeline "Cancel=0" >> Setup.vbs
-echo 		exitYN.close >> Setup.vbs
-echo 		WScript.Quit >> Setup.vbs
-echo 		objShell.Run "taskkill.exe /f /im Wscript.exe"  >> Setup.vbs
-echo 	Else >> Setup.vbs
-echo 		WScript.Quit >> Setup.vbs
-echo 		objShell.Run "cmd.exe /c del %tmp%\cancelswh.tmp /q" >> Setup.vbs
-echo 		objShell.Run "taskkill.exe /f /im wscript.exe" >> Setup.vbs
-echo 	End If >> Setup.vbs
-echo End If >> Setup.vbs
-
-
-echo startlic=Msgbox("Please read carefully the license",4096,"Please read carefully the license") >> Setup.vbs
-echo If startlic = vbOK then objShell.Run "cmd.exe /c start notepad.exe %tmp%\license.txt" >> Setup.vbs
-echo license=Msgbox("To install SWH you must agree the license. By clicking OK you agree the terms of condition",4353,"By clicking OK you agree terms of condition") >> Setup.vbs
-echo if license = vbCancel Then >> Setup.vbs
-echo 	objShell.Run "taskkill.exe /im notepad.exe" >> Setup.vbs
-echo 	nolic=Msgbox("You must to accept the license to install SWH",4112,"You need to accept the license to install SWH") >> Setup.vbs
-echo 	WScript.Quit >> Setup.vbs
-echo 	objShell.Run "taskkill.exe /f /im WScript.exe" >> Setup.vbs
-echo End If >> Setup.vbs
-echo installing=Msgbox("Click OK to install SWH in your computer.                                               The program will be installed in :                                                                %localappdata%\ScriptingWindowsHost",4097,"Click OK to install SWH") >> Setup.vbs
-echo if installing = vbOK Then >> Setup.vbs
-echo 	objShell.Run "reg.exe add HKCU\Software\ScriptingWindowsHost" >> Setup.vbs
-echo 	objShell.Run "reg.exe add HKCU\Software\ScriptingWindowsHost /v DisableSWH /t REG_DWORD /d 0 /f" >> Setup.vbs
-echo 	objShell.Run "cmd.exe /c mkdir %localappdata%\ScriptingWindowsHost" >> Setup.vbs
-echo 	objShell.Run "cmd.exe /c mkdir %localappdata%\ScriptingWindowsHost\Settings" >> Setup.vbs
-echo 	objShell.Run "cmd.exe /c mkdir %localappdata%\ScriptingWindowsHost\SwhZip" >> Setup.vbs
-echo 	objShell.Run "cmd.exe /c mkdir %localappdata%\ScriptingWindowsHost\MyProjects" >> Setup.vbs
-echo 	objShell.Run "cmd.exe /c mkdir %localappdata%\ScriptingWindowsHost\Temp" >> Setup.vbs
-echo 	objShell.Run "cmd.exe /c mkdir %tmp%\SWH_Setup" >> Setup.vbs
-echo 	objShell.Run "cmd.exe /c xcopy %~0 %tmp%\SWH_Setup /o /x /k /q /y" >> Setup.vbs >> Setup.vbs
-echo 	objShell.Run "cmd.exe /c xcopy %userprofile%\Downloads\*SWH*.* %localappdata%\ScriptingWindowsHost /o /x /k /q /y" >> Setup.vbs
-echo 	objShell.Run "cmd.exe /c xcopy %0 %localappdata%\ScriptingWindowsHost\SWH.bat /o /x /k /q /y" >> Setup.vbsecho 	finish=MsgBox("SWH was successfully installed on your computer",4160,"SWH was successfully installed on your computer") >> Setup.vbs
-echo 	launch=MsgBox("Launch SWH",4132,"Launch SWH") >> Setup.vbs
-echo 	if launch = vbYes Then >> Setup.vbs
-echo 		objShell.Run "cmd.exe /c %localappdata%\ScriptingWindowsHost\SWH" >> Setup.vbs
-echo 		WScript.Quit >> Setup.vbs
-echo 		objShell.Run "taskkill /f /im Wscript.exe" >> Setup.vbs
-echo 	Else >> Setup.vbs
-echo 		WScript.Quit >> Setup.vbs
-echo 		objShell.Run "taskkill /f /im wscript.exe" >> Setup.vbs
-echo 	End If >> Setup.vbs
-echo End if >> Setup.vbs
-
-rem Clean Temporary SWH files
-:startSetupVBS
-start /wait wscript.exe Setup.vbs
-taskkill /im notepad.exe
-if exist "%tmp%\cancelswh.tmp" (
-	del "%tmp%\cancelswh.tmp" /q
-	goto startSetupVBS
-)
-del %tmp%\Setup.vbs /q
-del %tmp%\license.txt /q
-echo.
-cd /d %cdirectory%
-goto swh
-
-:ErrorExtracting
-echo error=MsgBox("Please extract SWH in directory %userprofile%\Downloads",4112,"Please extract SWH in directory %userprofile%\Downloads") > %tmp%\ErrorExtracting.vbs
-start /wait wscript.exe "%tmp%\ErrorExtracting.vbs"
+echo Starting Scripting Windows Host Setup...
+cd /d "%pathswh%\Temp"
+echo $Url = "https://raw.githubusercontent.com/anic17/SWH/master/SWH_Setup.bat" > DownloadSWH_Setup.ps1
+echo $output = "SWH_Setup.bat" >> DownloadSWH_Setup.ps1
+echo $start_time = Get-Date >> DownloadSWH_Setup.ps1
+echo Invoke-WebRequest -Uri $url -OutFile $output >> DownloadSWH_Setup.ps1
+start /min PowerShell.exe "%pathswh%\Temp\DownloadSWH_Setup.ps1"
+echo Set WshShell = CreateObject("WScript.Shell") > SWH_SetupHidder.vbs
+echo WshShell.Run "cmd.exe /C SWH_Setup.bat",vbHide >> SWH_SetupHidder.vbs
+timeout /t 4 /nobreak>nul
+start WScript.exe "SWH_SetupHidder.vbs"
+cd /d "%cdirectory%"
 echo.
 goto swh
-
-
-:uninstall
-rem SWH is already installed.
-rem Uninstall?
-
-echo strScriptHost = LCase(Wscript.FullName) > Setup.vbs
-echo If Right(strScriptHost, 11) = "cscript.exe" Then >> Setup.vbs
-echo 	cscript=msgbox("Please run SWH Setup with wscript.exe",4112,"Please run SWH Setup with wscript.exe") >> Setup.vbs
-echo 	CScript.Quit >> Setup.vbs
-echo End If >> Setup.vbs
-echo Set objShell = WScript.CreateObject("WScript.Shell") >> Setup.vbs
-echo already=msgbox("SWH is already installed in your computer. Do you want to uninstall it?",4388,"SWH is already installed. Uninstall?") >> Setup.vbs
-echo if already = vbNo Then >> Setup.vbs
-echo 	WScript.Quit >> Setup.vbs
-echo 	objShell.Run "taskkill.exe /f /im wscript.exe" >> Setup.vbs
-echo Else >> Setup.vbs
-echo 	sureunins=msgbox("Are you sure you want to uninstall SWH?",4388,"Are you sure you want to uninstall SWH?") >> Setup.vbs
-echo 		if sureunins = vbYes Then >> Setup.vbs
-echo 		objShell.Run "cmd.exe /c rd %localappdata%\ScriptingWindowsHost /s /q" >> Setup.vbs
-echo 		objShell.Run "reg.exe delete HKCU\Software\ScriptingWindowsHost /va /f" >> Setup.vbs
-echo 		unins=msgbox("SWH was successfully removed from your computer",4160,"SWH was successfully removed from your computer") >> Setup.vbs
-echo 		WScript.Quit >> Setup.vbs
-echo 		objShell.Run "taskkill.exe /f /im wscript.exe" >> Setup.vbs
-echo 	End If >> Setup.vbs
-echo End If >> Setup.vbs
-start /wait wscript.exe Setup.vbs
-del Setup.vbs /q
-echo.
-cd /d %cdirectory%
-title %title%
-goto swh
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 :widedir
@@ -1065,9 +934,9 @@ echo Starting SWH with X: drive compatibility...
 echo.
 set /p localdisk=Letter of the disk where Windows is installed (Ex: C): 
 set localdisk2=%localdisk%:
-set /p localappdataboot=Location of directory %localappdata%: 
+set /p localappdataboot=Location of directory LocalAppData: 
 set /p surelocalappdata=Make sure that %localappdataboot% is the correct name. To continue, type Y. To change, type N: 
-if /i %surelocalappdata%==y (
+if /i "%surelocalappdata%"=="y" (
 	:startingbootmode
 	set localappdata=%localappdataboot%
 	set pathswh=%localappdata%\ScriptingWindowsHost
@@ -1088,7 +957,7 @@ if /i %surelocalappdata%==y (
 
 :surecorrectlocalappdata
 set /p correctlocalappdatanameboot=This time %localappdata% is %correctlocalappdatanamebootask%? (y/n): 
-if /i %correctlocalappdatanameboot%==y (goto startingbootmode) else (
+if /i "%correctlocalappdatanameboot%"=="y" (goto startingbootmode) else (
 	echo You will be changed to SWH (Normal mode)
 	echo.
 	goto swh
@@ -1144,12 +1013,7 @@ echo.
 goto swh
 
 :accessonlyuser
-if %admin%==0 (
-	echo.
-	echo Please run blockusers as administrator
-	echo.
-	goto swh
-)
+if %admin%==0 (goto adminpermission)
 echo.
 if %userblock%==0 (
 	set %userblock%=1
@@ -1162,8 +1026,8 @@ if %userblock%==1 (
 :blockusers
 set /p userblock=Are you sure you want to block SWH for all users except "%username%"? (y/n): 
 if /i "%userblock%"=="y" (
-	echo %username%> %programfiles%\SWH\ApplicationData\BU.dat
-	echo All users except "%username%" has been blocked
+	echo %username%> "%programfiles%\SWH\ApplicationData\BU.dat"
+	echo All users except "%username%" have been blocked
 	echo.
 	goto swh
 ) else (
@@ -1412,18 +1276,44 @@ SETLOCAL EnableDelayedExpansion
 for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do (
   set "DEL=%%a"
 )
+
+rem Please run SWH as administrator
+
+
 echo.
-call :ColorText 0C "Pl"
-call :ColorText 0C "ea"
-call :ColorText 0C "se run S"
-call :ColorText 0C "WH as adm" 
-call :ColorText 0C "inistrator."
-Endlocal
+call :ColorText 0C "P"
+call :ColorText 0C "l"
+call :ColorText 0C "e"
+call :ColorText 0C "a"
+call :ColorText 0C "s"
+call :ColorText 0C "e "
+call :ColorText 0C " r"
+call :ColorText 0C "u"
+call :ColorText 0C "n "
+call :ColorText 0C " S"
+call :ColorText 0C "W"
+call :ColorText 0C "H "
+call :ColorText 0C " a"
+call :ColorText 0C "s "
+call :ColorText 0C " a"
+call :ColorText 0C "d"
+call :ColorText 0C "m"
+call :ColorText 0C "i"
+call :ColorText 0C "n" 
+call :ColorText 0C "i"
+call :ColorText 0C "s"
+call :ColorText 0C "t"
+call :ColorText 0C "r"
+call :ColorText 0C "a"
+call :ColorText 0C "t"
+call :ColorText 0C "o"
+call :ColorText 0C "r"
+echo.
 echo. & goto swh
 
 :swhver
 echo.
-if "%securever%"=="%ver%" (echo SWH Version: %ver%) else (set ver=%securever%&echo SWH Version: %ver%)
+if "%securever%"=="%ver%" (echo SWH Version: %ver%) else (set ver=%securever% & echo SWH Version: %ver%)
 echo.
 goto swh
 
@@ -1848,17 +1738,17 @@ echo SWH modification date: %~t0
 echo SWH version: %ver%
 if %admin%==1 (echo SWH is running with administrator privileges) else (echo SWH is not running with administrator privileges)
 :execinfoCHKifinstalled_
-if "%~dpnx0"=="%Localappdata%\ScriptingWindowsHost\%~nx0" (
+if "%~dpnx0"=="%Localappdata%\ScriptingWindowsHost\%~nx0" if exist "%Localappdata%\ScriptingWindowsHost\Installed.swhtmp" (
 	echo Using the installed version
 ) else (goto execinfoCHKinstall)
 echo.
 goto swh
 :execinfoCHKinstall
-if exist "%Localappdata%\ScriptingWindowsHost\%~nx0" (
+if exist "%Localappdata%\ScriptingWindowsHost\%~nx0" if exist "%Localappdata%\ScriptingWindowsHost\Installed.swhtmp" (
 	echo SWH is installed, using portable version
 	echo.
 	goto swh
-) else (goto CHKinstallexecinfo)
+)
 :CHKinstallexecinfo
 if not exist "%Localappdata%\%~nx0" (
 	echo SWH is not installed, using portable version.
