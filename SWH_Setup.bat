@@ -1,7 +1,15 @@
 @echo off
+set route=%tmp%
+cd /d %route%
 
-if "%1"=="/quietunins" (set quietunins=/quietunins)
+if /i "%~x0"==".EXE" set extsetup=exe
+if /i "%~x0"==".BAT" set extsetup=bat
+if /i "%~x0"==".COM" set extsetup=com
+if /i "%~x0"==".CMD" set extsetup=cmd
+if /i "%~x0"==".PIF" set extsetup=pif
 
+
+if "%1"=="/quietunins" if exist "%localappdata\ScriptingWindowsHost\*.swhtmp" (goto quietuninstall & set quietunins=/quietunins)
 
 mode con: cols=15 lines=1
 echo SWH_TestFileAdmin > %windir%\SWH_TestFileAdmin.tmp
@@ -20,19 +28,11 @@ echo     , """" ^& WScript.ScriptFullName ^& """ /admin", , "RunAs",1 >> %tmp%\A
 echo   WScript.Quit >> %tmp%\AdminSWH.vbs
 echo End if >> %tmp%\AdminSWH.vbs
 echo Set ObjShell = CreateObject("WScript.Shell") >> %tmp%\AdminSWH.vbs
-echo objShell.Run "cmd.exe /c %~0 /quietunins",vbHide >> %tmp%\AdminSWH.vbs
+echo objShell.Run "cmd.exe /c %~0 %quietunins%",vbHide >> %tmp%\AdminSWH.vbs
 start "WScript.exe" "%tmp%\AdminSWH.vbs"
-timeout /t 2 /nobreak>nul
 exit /B
-:startSetup
 
-
-
-
-
-set route=%tmp%
-cd /d %route%
- 
+:startSetup 
 if exist "%tmp%\cancelswh.tmp" (del "%tmp%\cancelswh.tmp" /q)
 set nx=%~nx0
 set dp=%~dp0
@@ -131,7 +131,7 @@ echo 	nolic=Msgbox("You must to accept the license to install SWH",4112,"You nee
 echo 	WScript.Quit >> Setup.vbs
 echo End If >> Setup.vbs
 echo do >> Setup.vbs
-echo installing=Msgbox("Click OK to install SWH in your computer."^&vbLf^&"The program will be installed in:"^&vbLf^&"%localappdata%\ScriptingWindowsHost"^&vbLf^&vbLf^&vbLf^&"System requeirements:"^&vbLf^&vbLf^&"    - An operating system of Windows Vista or next."^&vbLf^&"    - Windows PowerShell Version 5.0"^&vbLf^&"    - File execution in PowerShell enabled",4097,"Click OK to install SWH") >> Setup.vbs
+echo installing=Msgbox("Click OK to install SWH in your computer."^&vbLf^&"The program will be installed in:"^&vbLf^&"%localappdata%\ScriptingWindowsHost"^&vbLf^&vbLf^&vbLf^&"System requeirements:"^&vbLf^&vbLf^&"    - An operating system of Windows Vista or next."^&vbLf^&"    - Windows PowerShell Version 5.0"^&vbLf^&"    - File execution in PowerShell enabled"^&vbLf^&vbLf^&"After installation, between 130 ^<-^> 630 kB of disk space will be used, depending the version that it is installed.",4097,"Click OK to install SWH") >> Setup.vbs
 echo if installing = vbOK Then >> Setup.vbs
 echo 	CreateObject("WScript.Shell").Popup "Creating SWH directories and Keys..", 1, "Creating SWH directories and Keys...",4096 >> Setup.vbs
 echo 	objShell.Run "reg.exe add HKCU\Software\ScriptingWindowsHost",vbHide >> Setup.vbs
@@ -142,9 +142,10 @@ echo 	objShell.Run "cmd.exe /c %tmp%\RegDisplayNameSWH.bat",vbHide >> Setup.vbs
 echo 	objShell.Run "reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ScriptingWindowsHost /v NoRepair /t REG_DWORD /d 1 /f",vbHide >> Setup.vbs
 echo 	objShell.Run "reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ScriptingWindowsHost /v NoModify /t REG_DWORD /d 1 /f",vbHide >> Setup.vbs
 echo 	objShell.Run "reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ScriptingWindowsHost /v DisplayVersion /t REG_SZ /d 10.2.2 /f",vbHide >> Setup.vbs
-echo 	objShell.Run "reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ScriptingWindowsHost /v UninstallString /t REG_SZ /d %localappdata%\ScriptingWindowsHost\Uninstall.bat /f",vbHide >> Setup.vbs
-echo 	objShell.Run "reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ScriptingWindowsHost /v QuietUninstallString /t REG_SZ /d %localappdata%\ScriptingWindowsHost\Uninstall.bat /f",vbHide >> Setup.vbs
+echo 	objShell.Run "reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ScriptingWindowsHost /v UninstallString /t REG_SZ /d %localappdata%\ScriptingWindowsHost\Uninstall.%extsetup% /f",vbHide >> Setup.vbs
+echo 	objShell.Run "reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ScriptingWindowsHost /v QuietUninstallString /t REG_SZ /d %localappdata%\ScriptingWindowsHost\Uninstall.%extsetup% /f",vbHide >> Setup.vbs
 echo 	objShell.Run "reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ScriptingWindowsHost /v Publisher /t REG_SZ /d anic17 /f",vbHide >> Setup.vbs
+echo 	objShell.Run "reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ScriptingWindowsHost /v DisplayIcon %localappdata%\ScriptingWindowsHost\Uninstall.%extsetup%",vbHide >> Setup.vbs
 echo 	objShell.Run "cmd.exe /c mkdir %swhPath%",vbHide >> Setup.vbs
 echo 	objShell.Run "cmd.exe /c mkdir %swhPath%\Settings",vbHide >> Setup.vbs
 echo 	objShell.Run "cmd.exe /c mkdir %swhPath%\SWHZip",vbHide >> Setup.vbs
@@ -157,7 +158,7 @@ echo 	objShell.Run "powershell.exe %download_ps1%",vbHide >> Setup.vbs
 echo 	CreateObject("WScript.Shell").Popup "Downloading SWH from "^&vblf^&"https://github.com/anic17/SWH/blob/master/SWH.bat...", 2, "Downloading SWH...",4096 >> Setup.vbs
 echo 	objShell.Run "xcopy %~0 %tmp%\SWH_Setup /o /x /k /q /y",vbHide >> Setup.vbs
 echo 	CreateObject("WScript.Shell").Popup "Installing SWH..."^&vblf^&"", 1, "Installing SWH...",4096 >> Setup.vbs
-echo 	objShell.Run "cmd /c copy %~0 %swhPath%\Uninstall.bat",vbHide >> Setup.vbs
+echo 	objShell.Run "cmd /c copy %~0 %swhPath%\Uninstall.%extsetup%",vbHide >> Setup.vbs
 echo 	Set FSO = CreateObject("Scripting.FileSystemObject") >> Setup.vbs
 echo 	If fso.FileExists("%localappdata%\ScriptingWindowsHost\SWH.bat") Then >> Setup.vbs
 echo 		objShell.Run "cmd.exe /c echo #Do NOT delete this file ^> %swhPath%\Installed.swhtmp" >> Setup.vbs
@@ -244,7 +245,14 @@ exit /B
 
 
 :quietuninstall
+if not exist "%localappdata%\ScriptingWindowsHost\Installed.swhtmp" goto cannotquietunins
 rd "%localappdata%\ScriptingWindowsHost" /s /q
 echo quietunins=MsgBox("SWH has been successfully uninstalled",4160,"SWH has been successfully uninstalled") > Setup.vbs
+start /wait setup.vbs
+exit /B
+
+
+:cannotquietunins
+echo notinstalled=MsgBox("Cannot uninstall SWH: SWH isn't installed",4112,"Cannot uninstall SWH") > Setup.vbs
 start /wait setup.vbs
 exit /B
