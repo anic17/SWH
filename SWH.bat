@@ -95,14 +95,7 @@ cls
 ::Parameters receptor
 if /I "%1"=="/p" (goto Params_PasswordSWH)
 if exist "%programfiles%\SWH\ApplicationData\PS.dat" (goto
-
-
-
-
-
-
-
-	)
+)
 if /I "%1"=="/?" (goto usageParams_Slash)
 if /I "%1"=="/h" (goto usageParams_Slash)
 if /I "%1"=="/admin" (goto runSWH_Admin)
@@ -721,7 +714,25 @@ if /i "%opendownloaddir%"=="n" (echo. &goto swh) else (
 	goto swh
 )
 
+:errornotdisk
+cd /d "%homedrive%"
+choice /c:rf /n /m "Error reading current drive. Retry or fail?"
+if errorlevel 2 goto failnotdisk
+if errorlevel 1 goto retrynotdisk
 
+
+:retrynotdisk
+if not exist "%errordisk_%" goto errornotdisk
+cd /d "%errordisk_%"
+echo.
+goto swh
+
+:failnotdisk
+echo.
+echo Changing to a local drive...
+cd /d "%homedrive%\"
+echo.
+goto swh
 
 
 :editswh_github
@@ -1757,7 +1768,6 @@ if not exist "%Localappdata%\%~nx0" (
 )
 
 
-
 :resetsettings
 echo.
 set /p rsettings=Are you sure that you would reset ALL settings? (y/n): 
@@ -1888,10 +1898,11 @@ title Scripting Windows Host File Compressor
 echo Welcome to the Scripting Windows Host file compressor.
 :startcompress123
 set direc=%cd%
+::Starts old code of SWHZip
 set direcTest="%direc%"
 if %direcTest%=="{CLSID-SWH-SWHZIP12456vW7vrCt67Bt78R7vyu7vcr5659ov93590fcb598-5tc54t3c3d3h6s5yf-x35yv45yc335y}" (goto specifyDIRSWHZIP)
 if exist %direc% (
-	cd %direc%
+	cd /d %direc%
 	goto ftc12
 ) else (
 	echo.
@@ -1904,31 +1915,44 @@ echo.
 echo Please specify a directory
 echo.
 goto swh
+::Ends old code of SWHZip
 
-
+::
 :ftc12
-echo.
-set /p ftc=File to compress (You can autocomplete file name with Tab key): 
-if exist %ftc% (
-	goto surecompressing14
-) else (
-	echo %ftc% file doesn't exist!
-	echo Please check "%ftc%" is the correct name.
-	echo.
-	goto swh
-)
-:surecompressing14
-echo.
+echo Set toolkit = CreateObject("VbsEdit.Toolkit") > %pathswh%\Temp\SelectFileSWHZip.vbs
+echo files=toolkit.OpenFileDialog("%userprofile%\Desktop","",False,"Open a file to be compressed with SWHZip") >> %pathswh%\Temp\SelectFileSWHZip.vbs
+echo If UBound(files)^>=0 Then >> %pathswh%\Temp\SelectFileSWHZip.vbs
+
+echo Set objFSO= createObject("Scripting.FileSystemObject") >> %pathswh%\Temp\SelectFileSWHZip.vbs
+echo Set swhzipselect = objfso.createtextfile("%pathswh%\Temp\SelectFileSWHZip.txt",true) >> %pathswh%\Temp\SelectFileSWHZip.vbs
+echo swhzipselect.writeline files(0) >> %pathswh%\Temp\SelectFileSWHZip.vbs
+echo swhzipselect.close >> %pathswh%\Temp\SelectFileSWHZip.vbs
+
+echo Else >> %pathswh%\Temp\SelectFileSWHZip.vbs
+echo   Wscript.Quit >> %pathswh%\Temp\SelectFileSWHZip.vbs
+echo End If >> %pathswh%\Temp\SelectFileSWHZip.vbs
+
+start /wait WScript.exe "%pathswh%\Temp\SelectFileSWHZip.vbs"
+cd /d "%pathswh%\Temp"
+for /f "tokens=1,2* delims=," %%a in (SelectFileSWHZip.txt) do (set ftc=%%a)
+::
 set ext=swhzip
-set /p surecmpr=Are you sure that you would to compress %ftc% to the name of %ftc%.swhzip? (y/n): 
-if /i "%surecmpr%"=="y" (goto cmprssing)
-if /i "%surecmpr%"=="N" (goto cancelcmprs) else (goto impocmprs)
+goto cmprssing
+
+::More old code
+rem :surecompressing14
+rem echo.
+rem set /p surecmpr=Are you sure that you would to compress %ftc% to the name of %ftc%.swhzip? (y/n): 
+rem if /i "%surecmpr%"=="y" (goto cmprssing)
+rem if /i "%surecmpr%"=="N" (goto cancelcmprs) else (goto impocmprs)
+::Ends more old code
+
 :cmprssing
 echo.
 echo Compressing... Please wait
 
 
-md "%pathswh%\SWHZip\%ftc%"
+@md "%pathswh%\SWHZip\%ftc%"
 
 
 powershell -Command Compress-Archive %ftc% %ftc%.zip>nul
@@ -2078,6 +2102,7 @@ echo NetworkConnections: net view >> C:\Users\%username%\AppData\Local\Scripting
 goto swh
 
 :searchfiles
+set cdirectory=%cd%
 set /p searchfiles=File or folder to search: 
 echo.
 echo Searching %searchfiles%... Please wait.
@@ -2365,7 +2390,7 @@ if /i "%taskkillprocessf%"=="System" (goto accessdeniedEndTask)
 if /i "%taskkillprocessf%"=="Registry" (goto accessdeniedEndTask)
 if /i "%taskkillprocessf%"=="svchost.exe" (echo Access denied) else (taskkill /f /im %taskkillprocessf%)
 echo.
-echo EndTask:%taskkillprocessf% Forced>> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo EndTask:%taskkillprocessf% Forced >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
 goto swh
 :tskillnfIM
 set /p taskkillprocessnf=Process to finish (IM): 
@@ -2387,7 +2412,7 @@ goto swh
 set /p taskkillprocessPIDf=Process to finish (PID): 
 taskkill.exe /f /pid %taskkillprocessPIDf%
 echo.
-echo EndTask:%taskkillprocessPIDf% Forced>> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo EndTask:%taskkillprocessPIDf% Forced >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
 goto swh
 :tskillnfPID
 set /p taskkillprocessPIDnf=Process to finish (PID): 
@@ -2503,7 +2528,7 @@ set /p newdatemonth=Month:
 set /p newdateyear=Year: 
 echo.
 set /p surenewdate=Are you sure that you would change the date? (y/n) 
-if %surenewdate%==y (
+if "%surenewdate%"=="y" (
 	date %newdateday%-%newdatemonth%-%newdateyear%
 	echo.
 	echo Date:%newdateday%-%newdatemonth%-%newdateyear% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
@@ -2522,7 +2547,7 @@ set /p newhourS=Seconds:
 set /p newhourMIN=Minutes: 
 set /p newhourH=Hours: 
 echo surenewhour=Are you sure that you would change the hour? (y/n) 
-if %surenewhour%==y (
+if "%surenewhour%"=="y" (
 	time %newhourH%:%newhourMIN%:%newhourS%
 	echo.
 	echo Time:%newhourH%:%newhourMIN%:%newhourS%>> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
@@ -2545,7 +2570,7 @@ echo.
 echo Credits:
 echo.
 echo Developper: anic17
-echo Coded with: Batch, VBScript, Power
+echo Coded with: Batch, VBScript, PowerShell
 echo.
 echo Credits >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
 echo (c) Copyright 2019 SWH. All rights reserved
@@ -2554,6 +2579,7 @@ echo.
 goto swh
 
 :dir
+if not exist "\" (echo. & set errordisk_=%cd% & goto errornotdisk)
 dir
 echo.
 echo dir:%cd% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
@@ -2572,7 +2598,7 @@ if not exist %filetorename% (
 )
 :yesrename
 set /p newnamefile=New name of %filetorename%: 
-if %filetorename%==%newnamefile% (
+if "%filetorename%"=="%newnamefile%" (
 	echo The two names are the same.
 	echo Please write a different name.
 	echo.
@@ -2787,7 +2813,6 @@ echo.
 goto commandPROJECT
 
 :ColorText
-echo off
 <nul set /p ".=%DEL%" > "%~2"
 findstr /v /a:%1 /R "^$" "%~2" nul
 del "%~2" > nul 2>&1
