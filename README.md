@@ -2,7 +2,8 @@ An easy-to-use terminal, created by anic17.
 
 Wrotten in Batch, VBScript and PowerShell.
 
-The file size is 102 kB, and doesn't need any installation. Only downlaod the file and run it.
+The file size is 91,5 kB, and doesn't need any installation. Only downlaod the file and run it.
+To usé all functions, install SWH via SWH_Setup.bat.
 
 
 NOTE:
@@ -27,9 +28,6 @@ You can also use parameters to run in console, ex:
 	- "SWH.bat" /admin
 	- "SWH.bat" /?
 	- "SWH.bat /h"
-
-
-To uninstall SWH, delete the 3 directories and do not run SWH.
 
 
 :D
