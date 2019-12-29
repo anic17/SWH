@@ -43,7 +43,7 @@ rem Made by anic17
 set swhPath=%localappdata%\ScriptingWindowsHost
 set dir=%~dp0
 title Scripting Windows Host Installer
-if exist %localappdata%\ScriptingWindowsHost\SWH*.* (goto uninstall)
+if exist "%localappdata%\ScriptingWindowsHost\SWH*.bat" if exist "%swhPath%\Installed.swhtmp" (goto uninstallchk)
 :install
 cd /d "%tmp%"
 rem Cancel button
@@ -59,18 +59,31 @@ echo $output = "%swhPath%\SWH.bat" >> %download_ps1%
 echo $start_time = Get-Date >> %download_ps1%
 echo Invoke-WebRequest -Uri $url -OutFile $output >> %download_ps1%
 
+set download_icon=%tmp%\SWH_Setup\DownloadIcon.ps1
+
+echo $Url = "https://raw.githubusercontent.com/anic17/SWH/data/IconSWH.ico" > %download_icon%
+echo $output = "%swhPath%\Icon\IconSWH.ico" >> %download_icon%
+echo $start_time = Get-Date >> %download_icon%
+echo Invoke-WebRequest -Uri $url -OutFile $output >> %download_icon%
+
+::https://raw.githubusercontent.com/anic17/SWH/data/IconSWH.ico
+
 
 
 rem Setup Starts
 rem Setup.vbs
 
 
+echo @cd /d "%userprofile%\Desktop%"
+echo @ren "SWH Console.lnk" "SWH.lnk" > LnkSWH.bat
+echo @timeout /t 2 /nobreak^>nul >> LnkSWH.bat
+echo @ren "SWH.lnk" "SWH Console.lnk" >> LnkSWH.bat
 
 echo @taskkill /f /fi "windowtitle eq Starting SWH Setup..."^>nul > KillMsgStartSetup.bat
 
 
 
-
+echo #Do NOT modify this file, this file contains installation information;: InstallDir=C:\Users\andre\AppData\Local\ScriptingWindowsHost; UninstallSWH=C:\Users\andre\AppData\Local\ScriptingWindowsHost\Uninstall.bat; Version=bat version> %swhPath%\Installed.swhtmp
 
 
 echo Set oFSO = CreateObject("Scripting.FileSystemObject") >> Setup.vbs
@@ -84,10 +97,9 @@ echo If ReturnCode ^<^> 0 Then  >> Setup.vbs
 echo 	oLogFile.WriteLine "Internet=Disconnected"  >> Setup.vbs
 echo 	Set objShell = CreateObject("WScript.Shell") >> Setup.vbs
 echo 	objShell.Run "cmd.exe /c KillMsgStartSetup.bat",vbHide >> Setup.vbs
-echo 	nointernet=msgbox("Error! Cannot connect to the Internet. SWH Setup downloads the files to ensure that you install the newest version",4112,"Cannot connect to the Internet") >> Setup.vbs
+echo 	nointernet=msgbox("Error! Cannot connect to the Internet. SWH Setup downloads the files to ensure that you install the newest version."^&vbLf^&"If you are connected to the Internet, try running SWH Setup another time.",4112,"Cannot connect to the Internet") >> Setup.vbs
 echo End If >> Setup.vbs
 echo oLogFile.Close >> Setup.vbs
-
 
 if exist IResult.txt del IResult.txt
 start /wait "wscript.exe" "Setup.vbs"
@@ -96,7 +108,7 @@ del Setup.vbs /q
 del IResult.txt /q
 del KillMsgStartSetup.bat /q
 
-echo @reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ScriptingWindowsHost /v DisplayName /t REG_SZ /d "Scripting Windows Host" /f > RegDisplayNameSWH.bat
+echo @reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ScriptingWindowsHost /v DisplayName /t REG_SZ /d "Scripting Windows Host Console" /f > RegDisplayNameSWH.bat
 
 
 
@@ -107,8 +119,8 @@ echo 	cscript=msgbox("Please run SWH Setup with wscript.exe",4112,"Please run SW
 echo 	CScript.Quit >> Setup.vbs
 echo End If >> Setup.vbs
 echo Dim FSO >> Setup.vbs
-echo Set objShell = WScript.CreateObject("WScript.Shell") >> Setup.vbs
-echo setupfirst=msgbox("Welcome to the Scripting Windows Host setup."^&vbLf^&vbLf^&"This wizard will install Scripting Windows Host on your computer."^&vbLf^&"Click OK to install Scripting Windows Host"^&vbLf^&vbLf^&"It is recomended to close all applications before installing Scripting Windows Host"^&vbLf^&vbLf^&vbLf^&"Created by anic17."^&vbLf^&"https://github.com/anic17/SWH",4353,"Scripting Windows Host Setup") >> Setup.vbs
+echo Set objShell = WScript.CreateObject("WScript.Shell") >> Setup.startSetupVBS
+echo setupfirst=msgbox("Welcome to the Scripting Windows Host setup."^&vbLf^&vbLf^&"This wizard will %rebadinstall%install Scripting Windows Host on your computer."^&vbLf^&"Click OK to %rebadinstall%install Scripting Windows Host. %badinstall%"^&vbLf^&vbLf^&"It is recomended to close all applications before %rebadinstall%installing"^&vbLf^&"Scripting Windows Host."^&vbLf^&vbLf^&vbLf^&"Created by anic17."^&vbLf^&"https://github.com/anic17/SWH",4353,"Scripting Windows Host Setup") >> Setup.vbs
 echo if setupfirst = vbCancel then >> Setup.vbs
 echo 	cancelFirstSetup=msgbox("Are you sure you want to close SWH Setup?",4148,"Close SWH Setup?") >> Setup.vbs
 echo 	if cancelFirstSetup = vbYes Then >> Setup.vbs
@@ -125,15 +137,20 @@ echo 		objShell.Run "cmd.exe /c del %tmp%\cancelswh.tmp /q",vbHide >> Setup.vbs
 echo 		WScript.Quit >> Setup.vbs
 echo 	End If >> Setup.vbs
 echo End If >> Setup.vbs
+if "%rebadinstall%"=="re" goto nextBadIns1
 echo license=Msgbox("To install SWH you must agree the license. By clicking OK you agree the terms of condition."^&vbLf^&""^&vbLf^&"Scripting Windows Host License:"^&vbLf^&vbLf^&"You can modify SWH and his sub-tools, but only to make SWH better for everyone."^&vbLf^&"If you don't know what you are installing, you need to know that you are installing a terminal, like CMD, PowerShell, Bash..."^&vbLf^&"But the thing that makes SWH special is that is the easiest way to use a terminal."^&vbLf^&"If you need help when you are using SWH, type 'help' to view command list."^&vbLf^&""^&vblf^&"2019, anic17",4353,"By clicking OK you agree terms of condition") >> Setup.vbs
 echo if license = vbCancel Then >> Setup.vbs
-echo 	nolic=Msgbox("You must to accept the license to install SWH",4112,"You need to accept the license to install SWH") >> Setup.vbs
+echo 	nolic=Msgbox("You must to agree the license to install SWH",4112,"You must agree the license to install SWH") >> Setup.vbs
 echo 	WScript.Quit >> Setup.vbs
 echo End If >> Setup.vbs
+:nextBadIns1
 echo do >> Setup.vbs
-echo installing=Msgbox("Click OK to install SWH in your computer."^&vbLf^&"The program will be installed in:"^&vbLf^&"%localappdata%\ScriptingWindowsHost"^&vbLf^&vbLf^&vbLf^&"System requeirements:"^&vbLf^&vbLf^&"    - An operating system of Windows Vista or next."^&vbLf^&"    - Windows PowerShell Version 5.0"^&vbLf^&"    - File execution in PowerShell enabled"^&vbLf^&vbLf^&"After installation, between 130 ^<-^> 630 kB of disk space will be used, depending the version that it is installed.",4097,"Click OK to install SWH") >> Setup.vbs
+echo installing=Msgbox("Click OK to %rebadinstall%install SWH in your computer."^&vbLf^&"The program will be %rebadinstall%installed in:"^&vbLf^&"%localappdata%\ScriptingWindowsHost"^&vbLf^&vbLf^&vbLf^&"System requeirements:"^&vbLf^&vbLf^&"    - An operating system of Windows Vista or next."^&vbLf^&"    - Windows PowerShell Version 5.0"^&vbLf^&"    - File execution in PowerShell enabled"^&vbLf^&vbLf^&"After %rebadinstall%tinstallation, 630 kB of disk space will be used.",4097,"Click OK to install SWH") >> Setup.vbs
 echo if installing = vbOK Then >> Setup.vbs
+if "%rebadinstall%"=="re" goto nextBadIns2
 echo 	CreateObject("WScript.Shell").Popup "Creating SWH directories and Keys..", 1, "Creating SWH directories and Keys...",4096 >> Setup.vbs
+:nextBadIns2
+echo Set objShell = WScript.CreateObject("WScript.Shell") >> Setup.vbs
 echo 	objShell.Run "reg.exe add HKCU\Software\ScriptingWindowsHost",vbHide >> Setup.vbs
 echo 	objShell.Run "reg.exe add HKCU\Software\ScriptingWindowsHost /v DisableSWH /t REG_DWORD /d 0 /f",vbHide >> Setup.vbs
 echo 	objShell.Run "reg.exe add HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ScriptingWindowsHost",vbHide >> Setup.vbs
@@ -153,23 +170,43 @@ echo 	objShell.Run "cmd.exe /c mkdir %swhPath%\MyProjects",vbHide >> Setup.vbs
 echo 	objShell.Run "cmd.exe /c mkdir %swhPath%\Temp",vbHide >> Setup.vbs
 echo 	objShell.Run "cmd.exe /c mkdir %swhPath%\Downloads",vbHide >> Setup.vbs
 echo 	objShell.Run "cmd.exe /c mkdir %swhPath%\OldSWH",vbHide >> Setup.vbs
+echo 	objShell.Run "cmd.exe /c mkdir %swhPath%\Icon",vbHide >> Setup.vbs
 echo 	objShell.Run "cmd.exe /c mkdir %tmp%\SWH_Setup",vbHide >> Setup.vbs
-echo 	objShell.Run "powershell.exe %download_ps1%",vbHide >> Setup.vbs
-echo 	CreateObject("WScript.Shell").Popup "Downloading SWH from "^&vblf^&"https://github.com/anic17/SWH/blob/master/SWH.bat...", 2, "Downloading SWH...",4096 >> Setup.vbs
+echo 	objShell.Run "powershell.exe %download_ps1%",vbHide,True >> Setup.vbs
+if "%rebadinstall%"=="re" goto nextBadIns3
+echo 	CreateObject("WScript.Shell").Popup "Downloading SWH from "^&vblf^&"https://github.com/anic17/SWH/blob/master/SWH.bat...", 1, "Downloading SWH...",4096 >> Setup.vbs
+:nextBadIns3
+echo 	objShell.Run "powershell.exe %download_icon%",vbHide,True >> Setup.vbs
 echo 	objShell.Run "xcopy %~0 %tmp%\SWH_Setup /o /x /k /q /y",vbHide >> Setup.vbs
+if "%rebadinstall%"=="re" goto nextBadIns4
 echo 	CreateObject("WScript.Shell").Popup "Installing SWH..."^&vblf^&"", 1, "Installing SWH...",4096 >> Setup.vbs
+:nextBadIns4
 echo 	objShell.Run "cmd /c copy %~0 %swhPath%\Uninstall.%extsetup%",vbHide >> Setup.vbs
 echo 	Set FSO = CreateObject("Scripting.FileSystemObject") >> Setup.vbs
 echo 	If fso.FileExists("%localappdata%\ScriptingWindowsHost\SWH.bat") Then >> Setup.vbs
-echo 		objShell.Run "cmd.exe /c echo #Do NOT delete this file ^> %swhPath%\Installed.swhtmp" >> Setup.vbs
-echo 		objShell.Run "cmd.exe /c echo #This file contains information about SWH installation ^>^> %swhPath%\Installed.swhtmp" >> Setup.vbs
-echo 		objShell.Run "cmd.exe /c echo #Installation info: installed at %date% ^>^> %swhPath%\Installed.swhtmp" >> Setup.vbs
-echo 		finish=MsgBox("SWH was successfully installed on your computer",4160,"SWH was successfully installed on your computer") >> Setup.vbs
+echo 		objShell.Run "cmd.exe /c %tmp%\InstallSWH.bat",vbHide >> Setup.vbs
+
+echo 		Set objShell = WScript.CreateObject("WScript.Shell") >> Setup.vbs
+echo    		Set lnk = objShell.CreateShortcut("%userprofile%\Desktop\SWH Console.lnk") >> Setup.vbs
+echo    
+echo    		lnk.TargetPath = "%swhPath%\SWH.bat" >> Setup.vbs
+echo    		lnk.Arguments = "" >> Setup.vbs
+echo    		lnk.Description = "Scripting Windows Host Console" >> Setup.vbs
+echo    		lnk.IconLocation = "%swhPath%\Icon\IconSWH.ico, 0" >> Setup.vbs
+echo    		lnk.WindowStyle = "1" >> Setup.vbs
+echo    		lnk.WorkingDirectory = "%swhPath%" >> Setup.vbs
+echo    		lnk.Save >> Setup.vbs
+echo    		Set lnk = Nothing >> Setup.vbs
+echo 			FSO.CopyFile "%userprofile%\Desktop\SWH Console.lnk", "%swhPath%\SWH.lnk" >> Setup.vbs
+echo 		finish=MsgBox("SWH was successfully %rebadinstall%installed on your computer",4160,"SWH was successfully %rebadinstall%installed on your computer") >> Setup.vbs
 echo		launch=MsgBox("Start SWH",4132,"Start SWH") >> Setup.vbs
 echo 		if launch = vbYes Then >> Setup.vbs
-echo 			objShell.Run "cmd.exe /c %swhPath%\SWH" >> Setup.vbs
+echo 			objShell.Run "cmd.exe /c %tmp%\LnkSWH.bat",vbHide >> Setup.vbs
+echo 			objShell.Run "%swhPath%\SWH.lnk" >> Setup.vbs
 echo 			objShell.Run "taskkill.exe /f /im reg.exe",vbHide >> Setup.vbs
 echo 			objShell.Run "taskkill.exe /f /im xcopy.exe",vbHide >> Setup.vbs
+echo 			WScript.Sleep(500) >> Setup.vbs 
+echo 			FSO.DeleteFile "%swhPath%\SWH.lnk" >> Setup.vbs
 echo 			WScript.Quit >> Setup.vbs
 echo 		Else >> Setup.vbs
 echo 			WScript.Quit >> Setup.vbs
@@ -179,9 +216,9 @@ echo 		notinstall=MsgBox("Error installing SWH!"^&vbLf^&"Try this:"^&vbLf^&vbLf^
 echo 		WScript.Quit>> Setup.vbs
 echo 		End If >> Setup.vbs
 echo Else >> Setup.vbs
-echo 	cancelins=MsgBox("Cancel SWH installation?",4132,"Cancel SWH installation?") >> Setup.vbs
+echo 	cancelins=MsgBox("Cancel SWH %rebadinstall%installation?",4132,"Cancel SWH %rebadinstall%installation?") >> Setup.vbs
 echo 	If cancelins = vbYes Then >> Setup.vbs
-echo 		cancelledtrueinstall=MsgBox("SWH installation cancelled",4160,"SWH installation cancelled") >> Setup.vbs
+echo 		cancelledtrueinstall=MsgBox("SWH %rebadinstall%installation cancelled",4160,"SWH %rebadinstall%installation cancelled") >> Setup.vbs
 echo 		WScript.Quit >> Setup.vbs
 echo 	End If >> Setup.vbs >> Setup.vbs
 echo End if >> Setup.vbs
@@ -191,7 +228,6 @@ rem Clean Temporary SWH files
 :startSetupVBS
 taskkill /f /fi "windowtitle eq Starting SWH Setup..."
 start /wait wscript.exe Setup.vbs
-taskkill /im notepad.exe
 if exist "%tmp%\cancelswh.tmp" (
 	del "%tmp%\cancelswh.tmp" /q
 	goto startSetupVBS
@@ -204,6 +240,18 @@ del *SWH*.ps1 /q>nul
 del RegDisplayNameSWH.bat /q>nul
 del startset.vbs /q>nul
 exit /b
+
+
+:uninstallchk
+if not "%cd%"=="%swhPath%" (cd /d "%swhPath%")
+for /f "tokens=1,2* delims=," %%D in (Installed.tmp) do (set contentinstalled=%%D)
+for %%d in (Installed.swhtmp) do (set installfilesizeswh=%%~zd)
+
+if %installfilesizeswh% gtr 200 goto uninstall
+set rebadinstall=re
+set badinstall=SWH is installed, but some files are damaged. A reinstallation is required
+goto install)
+
 
 :uninstall
 rem SWH is already installed. Uninstall?
@@ -227,6 +275,7 @@ echo 		if sureunins = vbYes Then >> Setup.vbs
 echo 		objShell.Run "cmd.exe /c rd %localappdata%\ScriptingWindowsHost /s /q",vbHide >> Setup.vbs
 echo 		objShell.Run "reg.exe delete HKCU\Software\ScriptingWindowsHost /f",vbHide >> Setup.vbs
 echo 		objShell.Run "cmd.exe /c rd %programfiles%\SWH /s /q",vbHide >> Setup.vbs
+echo 		objShell.Run "cmd.exe /c del %userprofile%\Desktop\SWH*.lnk",vbHide
 echo 		objShell.Run "reg.exe delete HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ScriptingWindowsHost /f",vbHide >> Setup.vbs
 echo 		unins=msgbox("SWH was successfully removed from your computer",4160,"SWH was successfully removed from your computer") >> Setup.vbs
 echo 		WScript.Quit >> Setup.vbs
