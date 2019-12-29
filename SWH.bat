@@ -94,8 +94,7 @@ cls
 :params_slash
 ::Parameters receptor
 if /I "%1"=="/p" (goto Params_PasswordSWH)
-if exist "%programfiles%\SWH\ApplicationData\PS.dat" (goto
-)
+::if exist "%programfiles%\SWH\ApplicationData\PS.dat" (goto)
 if /I "%1"=="/?" (goto usageParams_Slash)
 if /I "%1"=="/h" (goto usageParams_Slash)
 if /I "%1"=="/admin" (goto runSWH_Admin)
