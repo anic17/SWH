@@ -634,6 +634,7 @@ if /i %cmd%=="pkg install trex" (goto pkg_install_trex)
 if /i %cmd%=="pkg list" (goto pkglist)
 if /i %cmd%=="pkg remove calc" (goto pkgremovecalc)
 if /i %cmd%=="pkg remove trex" (goto pkgremovetrex)
+if /i %cmd%=="pkg listinstall" (goto pkg_listinstall)
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
@@ -658,12 +659,14 @@ echo.
 echo pkg install ^<package^> : Installs a package
 echo pkg remove ^<package^> : Removes a package
 echo pkg list : Lists all avaiable packages
+echo pkg listinstall : Lists all installed packages
 echo.
 echo Examples:
 echo.
 echo pkg install calc
 echo pkg remove calc
 echo pkg list
+echo pkg listinstall
 echo.
 goto swh
 
@@ -721,16 +724,14 @@ if exist "%pathswh%\T-RexGame.html" (
 echo T-Rex game package has been successfully installed on your computer.
 echo.
 goto swh
-
 :chkpkginstallcalc
 cd /d "%pathswh%"
-for %%a in (T-RexGame.html) do (set pkgtrexsize=%%~za)
+for %%A in (T-RexGame.html) do (set pkgtrexsize=%%~zA)
 if not "%pkgtrexsize%"=="121452" (goto installing_pkg_trex)
 echo T-Rex Game package is already installed on your computer
 echo.
 cd /d "%cdirectory%"
 goto swh
-
 :pkglist
 echo.
 echo Avaiable packages:
@@ -739,7 +740,6 @@ echo T-Rex game (pkg install trex)
 echo SWH Calculator (pkg install calc)
 echo.
 goto swh
-
 :pkgremovecalc
 echo.
 set /p sureremovepackcalc=Are you sure you want to remove calculator package? (y/n): 
@@ -771,10 +771,6 @@ start /wait wscript.exe "%pathswh%\Temp\Sremcalcpkg.vbs"
 echo Calculator package has been successfully removed from your computer.
 echo.
 goto swh
-
-
-
-
 :pkgremovetrex
 echo.
 set /p sureremovepacktrex=Are you sure you want to remove T-Rex Game package? (y/n): 
@@ -808,7 +804,25 @@ echo.
 goto swh
 
 
+:pkg_listinstall
+echo.
+cd /d "%pathswh%"
+if not exist SWH_Calc.exe goto next1listins_PKG
 
+for %%i in (SWH_Calc.exe) do (set calclistinspkgsize=%%~zi)
+
+set /a sizekbcalcpkg=%calclistinspkgsize%/1024
+if "%calclistinspkgsize%"=="2358" (echo SWH Calculator. Size: %sizekbcalcpkg% kB)
+
+:next1listins_PKG
+if not exist T-RexGame.html (goto swh)
+for %%I in (T-RexGame.html) do (set trexlistinspkgsize=%%~zI)
+
+set /a sizekbtrexpkg=%trexlistinspkgsize%/1024
+if "%calclistinspkgsize%"=="121452" (echo T-Rex Game. Size: %sizekbtrexpkg% kB)
+echo.
+cd /d "%cdirectory%"
+goto swh
 
 
 
@@ -1708,8 +1722,8 @@ goto swh
 if not %admin%==0 (goto correctdiskcleaner)
 echo.
 echo Please run SWH Disk Cleaner as administrator
-echo swh=msgbox("Please run SWH Disk Cleaner as administrator",4112,"Please run SWH Disk Cleaner as administrator") > %pathswh%\rundiskadmin.vbs
-start /wait wscript.exe "%pathswh%\rundiskadmin.vbs"
+echo swh=msgbox("Please run SWH Disk Cleaner as administrator",4112,"Please run SWH Disk Cleaner as administrator") > %pathswh%\Temp\RunDiskAdmin.vbs
+start /wait wscript.exe "%pathswh%\Temp\RunDiskAdmin.vbs"
 echo.
 goto swh
 
@@ -1746,7 +1760,6 @@ if not exist *.* (
 )
 copy *.* JunkTemp>nul
 for %%T in (JunkTemp) do (set sizeJunkTemp=%%~zT)
-timeout /t 1 /nobreak>nul
 :passedDownloadsTemp
 cd /d "%userprofile%\Downloads"
 if not exist *.* (
@@ -1757,7 +1770,7 @@ copy *.* JunkDownloads>nul
 for %%D in (JunkDownloads) do (set sizeJunkDownloads=%%~zD)
 timeout /t 1 /nobreak>nul
 cd /d "%pathswh%\Temp"
-copy *.* JunkSWHTemp
+copy *.* JunkSWHTemp>nul
 for %%S in (JunkSWHTemp) do (set sizeJunkSWHtemp=%%~zS)
 
 :passedDownloadsJunk
