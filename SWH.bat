@@ -2612,53 +2612,31 @@ if "%filetorename%"=="%newnamefile%" (
 )
 
 :calc
-echo.
-echo SWH calculator is based in a 32 bits system
-echo It will only be capable to make operations less than 2 147 483 648 (2,147 billion)
-echo.
-set /p whatcalc=Addition (1), subtraction (2), multiplication (3), division (4): 
-if %whatcalc%==1 (goto calcsuma)
-if %whatcalc%==2 (goto calcresta)
-if %whatcalc%==3 (goto calcmulti)
-if %whatcalc%==4 (goto calcdiv) else (goto incocalc)
+if not exist "%pathswh%\SWH_Calc.exe" (goto errorcalculator)
+cd /d "%pathswh%"
+ren "SWH_Calc.exe" "SWH_Calc.hta"
 
-:incocalc
-echo "%whatcalc%" is not an existing option.
-echo.
-goto swh
-:calcsuma
-set /p firstnumbersuma=First number: 
-set /p secondnumbersuma=Second number: 
-set /a resultsuma=%firstnumbersuma%+%secondnumbersuma%
-echo %resultsuma%
-echo.
-echo CalcAdd:%firstnumbersuma%+%secondnumbersuma%=%resultsuma% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
-goto swh
-:calcresta
-set /p firstnumberresta=First number: 
-set /p secondnumberresta=Second number: 
-set /a resultresta=%firstnumberresta%-%secondnumberresta%
-echo %resultresta%
-echo.
-echo CalcSub:%firstnumberresta%-%secondnumberresta%=%resultresta% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
-goto swh
-:calcmulti
-set /p firstnumbermulti=First number: 
-set /p secondnumbermulti=Second number: 
-set /a resultmulti=%firstnumbermulti%*%secondnumbermulti%
-echo %resultmulti%
-echo CalcMulti:%firstnumbermulti%*%secondnumbermulti%=%resultmulti% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
-echo.
-goto swh
-:calcdiv
-set /p firstnumberdivision=First number: 
-set /p secondnumberdivision=Second number: 
-set /a resultdivision=%firstnumberdivision%/%secondnumberdivision%
-echo %resultdivision%
-echo CalcDiv:%firstnumberdivision%/%secondnumberdivision%=%resultdivision% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo Set objShell = CreateObject("WScript.Shell") > "%pathswh%\Temp\SWH_Calc.vbs"
+echo objShell.Run "mshta.exe %pathswh%\SWH_Calc.hta" >> "%pathswh%\Temp\SWH_Calc.vbs"
+echo WScript.Sleep(350) >> "%pathswh%\Temp\SWH_Calc.vbs" >> "%pathswh%\Temp\SWH_Calc.vbs"
+echo objShell.Run "%pathswh%\Temp\HiddCalc.bat",vbHide>> "%pathswh%\Temp\SWH_Calc.vbs"
+
+echo @ren "SWH_Calc.hta" "SWH_Calc.exe" > %pathswh%\Temp\HiddCalc.bat
+
+
+
+
+start /wait wscript.exe "%pathswh%\Temp\SWH_Calc.vbs"
+cd /d "%cdirectory%"
 echo.
 goto swh
 
+
+:errorcalculator
+echo err=MsgBox("SWH cannot find the file %pathswh%\SWH_Calc.exe",4112,"SWH cannot find the calculator file") > %pathswh%\Temp\ErrCalc.vbs
+start /wait wscript.exe "%pathswh%\Temp\ErrCalc.vbs"
+echo.
+goto swh
 :consize
 set /p colmodesize=Columns of SWH console: 
 set /p linemodesize=Lines of SWH console: 
