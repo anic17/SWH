@@ -24,12 +24,6 @@ md "%localappdata%\ScriptingWindowsHost">nul
 cls
 md "%localappdata%\ScriptingWindowsHost\Temp"
 cls
-md "%AppData%\SWH"
-cls
-md "%AppData%\SWH\.config"
-cls
-md "%AppData%\SWH\ApplicationData"
-cls
 md "%programfiles%\SWH\.config"
 cls
 md "%programfiles%\SWH\ApplicationData"
@@ -391,6 +385,7 @@ echo msg: Makes a message box on the screen >> %pathswh%\Temp\MoreHelp
 echo networkconnections: Shows the network connections >> %pathswh%\Temp\MoreHelp
 echo networkmsg: Chats with a computer on the same network than you >> %pathswh%\Temp\MoreHelp
 echo path: Changes the actual path of SWH >> %pathswh%\Temp\MoreHelp
+echo pkg: Installs/Removes SWH packages >> %pathswh%\Temp\MoreHelp
 echo powershell: Starts Windows PowerShell in the current directory >> %pathswh%\Temp\MoreHelp
 echo project: Makes a programmation script with Scripting Windows Host (Coming soon) >> %pathswh%\Temp\MoreHelp
 echo prompt: Changes the text of the SWH command line >> %pathswh%\Temp\MoreHelp
@@ -481,6 +476,7 @@ echo networkconnections: Shows the network connections
 echo networkmsg: Chats with a computer on the same network than you
 echo news: Shows the news of SWH %ver%
 echo path: Changes the actual path of SWH
+echo pkg: Installs/Removes SWH packages
 echo powershell: Starts Windows PowerShell in the current directory
 echo project: Makes a programmation script with Scripting Windows Host (Coming soon)
 echo prompt: Changes the text of the SWH command line
@@ -632,6 +628,12 @@ if /i %cmd%=="download" (goto download_internet)
 if /i %cmd%=="editswh" (goto editswh_github)
 if /i %cmd%=="networkmsg" (goto networkmsg)
 if /i %cmd%=="checkprocess" (goto checkprocess)
+if /i %cmd%=="pkg" (goto pkg)
+if /i %cmd%=="pkg install calc" (goto pkg_install_calc)
+if /i %cmd%=="pkg install trex" (goto pkg_install_trex)
+if /i %cmd%=="pkg list" (goto pkglist)
+if /i %cmd%=="pkg remove calc" (goto pkgremovecalc)
+if /i %cmd%=="pkg remove trex" (goto pkgremovetrex)
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
@@ -641,15 +643,184 @@ set /p cmd=%cd% %commandtoexecute%
 set cmd2=%cmd%
 set cmd="%cmd2%"
 if %cmd%=="help" (goto cmdhelp) else (goto other1cmd)
-
-
 :foundedpassword_gotoswh
 if "%psd%"=="[{CLSID:8t4tvry4893tvy2nq4928trvyn14098vny84309tvny493q8tvn0943tyvnu0q943t8vn204vmy10vn05}]"
 set /p enterpassword_gotoswh=Enter SWH password please: 
 goto swh
 
-:resetstartlog
 
+
+
+:pkg
+echo.
+echo Syntax:
+echo.
+echo pkg install ^<package^> : Installs a package
+echo pkg remove ^<package^> : Removes a package
+echo pkg list : Lists all avaiable packages
+echo.
+echo Examples:
+echo.
+echo pkg install calc
+echo pkg remove calc
+echo pkg list
+echo.
+goto swh
+
+:pkg_install_calc
+echo.
+if exist "%pathswh%\SWH_Calc.exe" (goto chkpkginstallcalc)
+:installing_pkg_calc
+echo Installing calculator package...
+echo.
+echo $url = "https://raw.githubusercontent.com/anic17/SWH/data/SWH_Calc.exe" > %pathswh%\Temp\PackCalc.ps1
+echo $output = "%pathswh%\SWH_Calc.exe" >> %pathswh%\Temp\PackCalc.ps1
+echo Invoke-WebRequest -Uri $url -OutFile $output >> %pathswh%\Temp\PackCalc.ps1
+powershell.exe "%pathswh%\Temp\PackCalc.ps1"
+if exist "%pathswh%\SWH_Calc.exe" (
+	echo msgbox "Calculator package has been successfully installed on your computer",4160,"Calculator package has been successfully installed" > %pathswh%\Temp\Scalcpkg.vbs
+	start /wait wscript.exe "%pathswh%\Temp\Scalcpkg.vbs"
+) else (
+	echo msgbox "Error installing calculator package",4112,"Error installing calculator package" > %pathswh%\Temp\ErrCalcPkg.vbs
+	start /wait wscript.exe "%pathswh%\Temp\ErrCalcPkg.vbs"
+	echo.
+	goto swh
+)
+echo Calculator package has been successfully installed on your computer.
+echo.
+goto swh
+
+:chkpkginstallcalc
+cd /d "%pathswh%"
+for %%a in (SWH_Calc.exe) do (set pkgcalcsize=%%~za)
+if not "%pkgcalcsize%"=="2358" (goto installing_pkg_calc)
+echo Calculator package is already installed on your computer
+echo.
+cd /d "%cdirectory%"
+goto swh
+
+:pkg_install_trex
+::https://raw.githubusercontent.com/anic17/SWH/data/T-RexGame.html
+echo.
+echo Installing T-Rex Game package...
+echo.
+:installing_pkg_trex
+echo $url = "https://raw.githubusercontent.com/anic17/SWH/data/T-RexGame.html" > %pathswh%\Temp\PackTrex.ps1
+echo $output = "%pathswh%\T-RexGame.html" >> %pathswh%\Temp\PackTrex.ps1
+echo Invoke-WebRequest -Uri $url -OutFile $output >> %pathswh%\Temp\PackTrex.ps1
+powershell.exe %pathswh%\Temp\PackTrex.ps1
+if exist "%pathswh%\T-RexGame.html" (
+	echo msgbox "T-Rex game package has been successfully installed on your computer",4160,"T-Rex game package has been successfully installed" > %pathswh%\Temp\Strexpkg.vbs
+	start /wait wscript.exe "%pathswh%\Temp\Strexpkg.vbs"
+) else (
+	echo msgbox "Error installing T-Rex game package",4112,"Error installing T-Rex game package" > %pathswh%\Temp\ErrTrexPkg.vbs
+	start /wait wscript.exe "%pathswh%\Temp\ErrTrexPkg.vbs"
+	echo.
+	goto swh
+)
+echo T-Rex game package has been successfully installed on your computer.
+echo.
+goto swh
+
+:chkpkginstallcalc
+cd /d "%pathswh%"
+for %%a in (T-RexGame.html) do (set pkgtrexsize=%%~za)
+if not "%pkgtrexsize%"=="121452" (goto installing_pkg_trex)
+echo T-Rex Game package is already installed on your computer
+echo.
+cd /d "%cdirectory%"
+goto swh
+
+:pkglist
+echo.
+echo Avaiable packages:
+echo.
+echo T-Rex game (pkg install trex)
+echo SWH Calculator (pkg install calc)
+echo.
+goto swh
+
+:pkgremovecalc
+echo.
+set /p sureremovepackcalc=Are you sure you want to remove calculator package? (y/n): 
+if /i "%sureremovepackcalc%"=="Y" (goto removingpkgcalc) else (
+	echo.
+	goto swh
+)
+:removingpkgcalc
+if not exist "%pathswh%\SWH_Calc.exe" (
+	echo.
+	echo Cannot remove calculator package: calculator isn't installed.
+	echo.
+	goto swh
+)
+echo.
+echo Removing calculator package...
+del %pathswh%\SWH_Calc.exe /q>nul
+if exist "%pathswh%\SWH_Calc.exe" (
+	echo.
+	echo msgbox "Error removing calculator package",4112,"Error removing calculator package" > %pathswh%\Temp\ErrRemCalcPkg.vbs
+	start /wait wscript.exe "%pathswh%\Temp\ErrRemCalcPkg.vbs"
+	echo Error removing calculator package!
+	echo.
+	goto swh
+)
+echo.
+echo msgbox "Calculator package has been successfully removed from your computer",4160,"Calculator package has been successfully removed from your computer" > %pathswh%\Temp\Sremcalcpkg.vbs
+start /wait wscript.exe "%pathswh%\Temp\Sremcalcpkg.vbs"
+echo Calculator package has been successfully removed from your computer.
+echo.
+goto swh
+
+
+
+
+:pkgremovetrex
+echo.
+set /p sureremovepacktrex=Are you sure you want to remove T-Rex Game package? (y/n): 
+if /i "%sureremovepacktrex%"=="Y" (goto removingpkgtrex) else (
+	echo.
+	goto swh
+)
+:removingpkgtrex
+if not exist "%pathswh%\T-RexGame.html" (
+	echo.
+	echo Cannot remove T-Rex Game package: calculator isn't installed.
+	echo.
+	goto swh
+)
+echo.
+echo Removing T-Rex Game package...
+del %pathswh%\T-RexGame.html /q>nul
+if exist "%pathswh%\T-RexGame.html" (
+	echo.
+	echo msgbox "Error removing T-Rex Game package",4112,"Error removing T-Rex Game package" > %pathswh%\Temp\ErrRemTrexPkg.vbs
+	start /wait wscript.exe "%pathswh%\Temp\ErrRemTrexPkg.vbs"
+	echo Error removing T-Rex Game package!
+	echo.
+	goto swh
+)
+echo.
+echo msgbox "T-Rex Game package has been successfully removed from your computer",4160,"T-Rex Game package has been successfully removed from your computer" > %pathswh%\Temp\Sremtrexpkg.vbs
+start /wait wscript.exe "%pathswh%\Temp\Sremtrexpkg.vbs"
+echo T-Rex Game package has been successfully removed from your computer.
+echo.
+goto swh
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+:resetstartlog
 if %resetstartlog_%==1 (
 	if exist %pathswh%\resetstartlog.opt del %pathswh%\resetstartlog.opt /q
 	echo 0 > %pathswh%\resetstartlog.opt
@@ -2179,11 +2350,23 @@ if exist %pathswh%\T-RexGame.html (
 
 :nostartTREX
 echo T-Rex: Error: %localappdata%\ScriptingWindowsHost\T-RexGame.html not founded >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
-echo Error! File %localappdata%\ScriptingWindowsHost\T-RexGame.html not founded.
-echo SWH=MsgBox("File T-RexGame.html not founded",4112,"SWH can't found the T-rex Game file") > "%pathswh%\Temp\ErrorT-Rex.vbs"
+echo Error! File %localappdata%\ScriptingWindowsHost\T-RexGame.html not founded. To install T-Rex Game, use the following command: pkg install trex
+echo SWH=MsgBox("File %pathswh%\T-RexGame.html not founded"^&vblf^&vbLf^&"To install T-Rex Game, use the following command:"^&vbLf^&"pkg install trex",4112,"SWH can't found the T-rex Game file") > "%pathswh%\Temp\ErrorT-Rex.vbs"
 start /wait wscript.exe "%pathswh%\Temp\ErrorT-Rex.vbs"
 echo.
 goto swh
+
+:CHKchromeins
+if not exist "%programfiles(x86)%\Google\Chrome\Application\chrome.exe" (
+	echo.
+	echo Cannot play the game: This game requires Google Chrome.
+	echo.
+	goto swh
+)
+start chrome.exe "%pathswh%\T-RexGame.html"
+echo.
+goto swh
+
 
 :cancelshutdown
 echo cancelshutdown >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
@@ -2197,15 +2380,16 @@ echo.
 goto swh
 
 :cd
-set /p chdirectory=Directory to access: 
-if exist %chdirectory% (
-	cd /d %chdirectory%
+set /p cdirectory=Directory to access: 
+if exist %cdirectory% (
+	cd /d %cdirectory%
 	set cdirectory=%cd%
+	echo "cdirectory" is "%cdirectory%"
 	echo.
 	goto swh
 ) else (
+	echo Directory "%cdirectory%" not founded!
 	set cdirectory=%cd%
-	echo Directory "%chdirectory%" not founded!
 	echo cd %cdirectory% does not exist >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
 	echo.
 	goto swh
@@ -2618,25 +2802,25 @@ ren "SWH_Calc.exe" "SWH_Calc.hta"
 
 echo Set objShell = CreateObject("WScript.Shell") > "%pathswh%\Temp\SWH_Calc.vbs"
 echo objShell.Run "mshta.exe %pathswh%\SWH_Calc.hta" >> "%pathswh%\Temp\SWH_Calc.vbs"
-echo WScript.Sleep(350) >> "%pathswh%\Temp\SWH_Calc.vbs" >> "%pathswh%\Temp\SWH_Calc.vbs"
 echo objShell.Run "%pathswh%\Temp\HiddCalc.bat",vbHide>> "%pathswh%\Temp\SWH_Calc.vbs"
 
 echo @ren "SWH_Calc.hta" "SWH_Calc.exe" > %pathswh%\Temp\HiddCalc.bat
-
-
-
 
 start /wait wscript.exe "%pathswh%\Temp\SWH_Calc.vbs"
 cd /d "%cdirectory%"
 echo.
 goto swh
 
-
 :errorcalculator
-echo err=MsgBox("SWH cannot find the file %pathswh%\SWH_Calc.exe",4112,"SWH cannot find the calculator file") > %pathswh%\Temp\ErrCalc.vbs
+echo err=MsgBox("SWH cannot find the file %pathswh%\SWH_Calc.exe"^&vbLf^&vbLf^&"You can install this with the following command:"^&vbLf^&"pkg install calc",4112,"SWH cannot find the calculator file") > %pathswh%\Temp\ErrCalc.vbs
 start /wait wscript.exe "%pathswh%\Temp\ErrCalc.vbs"
 echo.
+echo SWH cannot find the file %pathswh%\SWH_Calc.exe
+echo You can install SWH_Calc.exe with the following command: pkg install calc
+echo.
 goto swh
+
+
 :consize
 set /p colmodesize=Columns of SWH console: 
 set /p linemodesize=Lines of SWH console: 
