@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SWH calculator</title>
+</head>
+	<body bgcolor= "#000000" text= "white">
+	<script type="text/javascript">
+  	 	window.resizeTo(300,310);
+	</script>
+        <div id='calc-contain'>
+ 			<font face="Consolas">
+            <font size="10">
+            <form name="calculator">
+            <input type="text" name="answer" />
+        	</font>
+            <br>
+            <br>
+            <font size="5">
+            <input type="button" value="   1   " onclick="calculator.answer.value += '1'" />
+            <input type="button" value="   2   " onclick="calculator.answer.value += '2'" />
+            <input type="button" value="   3   " onclick="calculator.answer.value += '3'" />
+            <input type="button" value="   +   " onclick="calculator.answer.value += '+'" />
+            <font size=6>
+            </br>
+            </font>
+            <input type="button" value="   4   " onclick="calculator.answer.value += '4'" />
+            <input type="button" value="   5   " onclick="calculator.answer.value += '5'" />
+            <input type="button" value="   6   " onclick="calculator.answer.value += '6'" />
+            <input type="button" value="   -   " onclick="calculator.answer.value += '-'" />
+            <font size=10>
+            </br>
+            </font>
+            <input type="button" value="   7   " onclick="calculator.answer.value += '7'" />
+            <input type="button" value="   8   " onclick="calculator.answer.value += '8'" />
+            <input type="button" value="   9   " onclick="calculator.answer.value += '9'" />
+            <input type="button" value="   *   " onclick="calculator.answer.value += '*'" />
+            <font size="6">
+            </br>
+        	</font>
+            <input type="button" value="  C   " onclick="calculator.answer.value = ''" />
+            <input type="button" value="   0   " onclick="calculator.answer.value += '0'" />
+            <input type="button" value="   =   " onclick="calculator.answer.value = eval(calculator.answer.value)" />
+            <input type="button" value="   /   " onclick="calculator.answer.value += '/'" />
+            </br>
+  
+    	  </font>
+          </form>
+          <div id="agh">
+          	 <font face="Verdana">
+            </font>
+          </div>
+        </div>
+    </body>
+</html>
