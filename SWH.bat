@@ -6,10 +6,11 @@ set execdate=%date%
 set exectime=%time%
 set execdir=%cd%
 set execname=%~nx0
+
 mode con: cols=120 lines=30
 set moreCMD=0
 set pathswh=%localappdata%\ScriptingWindowsHost
-if %os%==Windows_NT (goto startingWindowsNT)
+if "%os%"=="Windows_NT" (goto startingWindowsNT)
 
 echo Your computer don't have a NT kernel (%Windir%\System32\ntoskrnl.exe)
 echo SWH is not compatible with this version of Windows
@@ -152,6 +153,7 @@ attrib -h -s "%pathswh%\Temp\D.sys"
 for /f "tokens=1,2* delims=," %%y in (D.sys) do (set dateBlock=%%y)
 attrib +h +s "%pathswh%\Temp\D.sys"
 cls
+
 title %~dpnx0 - You are blocked from SWH! Reason: Trying to steal passwords.
 echo You are blocked from SWH! Reason: Trying to steal passwords.
 echo.
@@ -163,6 +165,7 @@ echo.
 echo So, no I will not able to start SWH?
 echo.
 echo Yes, you will be able to use SWH, but you need to wait 1 day
+
 if not "%date%"=="%dateBlock%" (goto waitedday) else (goto infiniteLoop)
 :infiniteLoop
 pause>nul
@@ -219,10 +222,10 @@ echo       Decrypt = Newstr >> Decrypt.vbs
 echo End Function >> Decrypt.vbs
 start /Wait WScript.exe "%pathswh%\Temp\Decrypt.vbs"
 
+
 cd /d "%pathswh%\Temp"
 for /f "tokens=1,2* delims=," %%F in (Decrypt.txt) do (set DecryptPSD=%%F)
 if "%password%"=="%DecryptPSD%" (goto startingswhpassword) else (goto failedpassword)>nul
-
 
 set password2="%password%"
 
@@ -236,9 +239,11 @@ del "%pathswh%\Temp\Decrypt.txt" /q>nul
 del "%pathswh%\Temp\Decrypt.vbs" /q>nul
 echo Incorrect password! Press any key to try again...
 echo [%date% %time%] Failed to access SWH. Reason: Incorrect Password: %password% >> %pathswh%\StartLog.log
+
 pause>nul
 cls
 goto putpassword
+
 :startingswhpassword
 cd /d "%programfiles%\SWH\ApplicationData"
 echo [%date% %time%] - Password=0 >> %pathswh%\StartLog.log
@@ -273,7 +278,6 @@ set colmodesize=0
 set linemodesize=0
 cd %userprofile%
 
-
 cls
 md SwhZip>nul
 cls
@@ -283,6 +287,7 @@ md SWH_64Bits>nul
 cls
 md Settings>nul
 cls
+
 title Scripting Windows Host Console
 set cdirectory=%userprofile%
 cd /d %localappdata%\ScriptingWindowsHost
@@ -290,6 +295,7 @@ if not exist SWH_History.txt (
 	echo Creating History... > SWH_History.txt
 	echo Creating History... Please wait.
 )
+
 :startswh
 rem Start SWH
 cd /d %localappdata%\ScriptingWindowsHost\Settings
@@ -398,6 +404,7 @@ echo resetstartlog: Resets the start log each time SWH starts >> %pathswh%\Temp\
 echo restartswh: Restarts SWH >> %pathswh%\Temp\MoreHelp
 echo run: Runs a program, file or Internet ressource >> %pathswh%\Temp\MoreHelp
 echo say: Says a text in SWH Console >> %pathswh%\Temp\MoreHelp
+echo scanvirus: Scans a file and looks for threats and viruses >> %pathswh%\Temp\MoreHelp
 echo search: Searchs a file or a folder >> %pathswh%\Temp\MoreHelp
 echo setpassword: Sets a password for SWH Console >> %pathswh%\Temp\MoreHelp
 echo setup: Starts SWH Setup (Install/Uninstall) >> %pathswh%\Temp\MoreHelp
@@ -489,6 +496,7 @@ echo resetstartlog: Resets the start log each time SWH starts
 echo restartswh: Restarts SWH
 echo run: Runs a program, file or Internet ressource
 echo say: Says a text in SWH Console
+echo scanvirus: Scans a file and looks for threats and viruses
 echo search: Searchs a file or a folder
 echo setpassword: Sets a password for SWH Console
 echo setup: Starts SWH Setup (Install/Uninstall)
@@ -629,12 +637,14 @@ if /i %cmd%=="editswh" (goto editswh_github)
 if /i %cmd%=="networkmsg" (goto networkmsg)
 if /i %cmd%=="checkprocess" (goto checkprocess)
 if /i %cmd%=="pkg" (goto pkg)
+if /i %cmd%=="pkg install" (goto pkg_install)
 if /i %cmd%=="pkg install calc" (goto pkg_install_calc)
 if /i %cmd%=="pkg install trex" (goto pkg_install_trex)
 if /i %cmd%=="pkg list" (goto pkglist)
 if /i %cmd%=="pkg remove calc" (goto pkgremovecalc)
 if /i %cmd%=="pkg remove trex" (goto pkgremovetrex)
 if /i %cmd%=="pkg listinstall" (goto pkg_listinstall)
+if /i %cmd%=="scanvirus" (goto scanvirus)
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
@@ -667,6 +677,18 @@ echo pkg install calc
 echo pkg remove calc
 echo pkg list
 echo pkg listinstall
+echo.
+goto swh
+
+:pkg_install
+echo.
+echo Syntax:
+echo.
+echo pkg install ^<package^>
+echo.
+echo Example:
+echo.
+echo pkg install calc
 echo.
 goto swh
 
@@ -824,6 +846,30 @@ echo.
 cd /d "%cdirectory%"
 goto swh
 
+
+
+
+
+
+:scanvirus
+echo.
+if not exist "%programfiles%\Windows Defender\MpCmdRun.exe" (goto errornowindowsdefender)
+set /p filetoscanav=File to be scanned with Windows Defender: 
+if not exist %filetoscanav% (
+	echo.
+	echo Cannot find %filetoscanav%
+	echo.
+	goto swh
+)
+echo.
+"%programfiles%\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "%filetoscanav%"
+echo.
+goto swh
+
+:errornowindowsdefender
+echo Cannot find Windows Defender Command Line Scan %programfiles%\Windows Defender\MpCmdRun.exe
+echo.
+goto swh
 
 
 
@@ -1514,14 +1560,14 @@ goto swh
 
 :read
 if %moreCMD%==1 (goto ReadMore)
-set /p read=Text to read: 
+set /p read=File to read: 
 echo.
 type %read%
 echo.
 echo.
 goto swh
 :ReadMore
-set /p readMore=Text to read: 
+set /p readMore=File to read: 
 echo.
 more %readMore%
 echo.
@@ -1873,6 +1919,7 @@ goto swh
 echo %commandtoexecute4% > %localappdata%\ScriptingWindowsHost\Settings\ConsoleText.opt
 echo.
 goto swh
+
 :nochangingcontext
 echo.
 goto swh
@@ -1932,13 +1979,12 @@ echo SWH modification date: %~t0
 echo SWH version: %ver%
 if %admin%==1 (echo SWH is running with administrator privileges) else (echo SWH is not running with administrator privileges)
 :execinfoCHKifinstalled_
-if "%~dpnx0"=="%Localappdata%\ScriptingWindowsHost\%~nx0" if exist "%Localappdata%\ScriptingWindowsHost\Installed.swhtmp" (
-	echo Using the installed version
-) else (goto execinfoCHKinstall)
+if "%~dpnx0"=="%Localappdata%\ScriptingWindowsHost\%~nx0" (echo Using the installed version) else (goto execinfoCHKinstall)
 echo.
 goto swh
+
 :execinfoCHKinstall
-if exist "%Localappdata%\ScriptingWindowsHost\%~nx0" if exist "%Localappdata%\ScriptingWindowsHost\Installed.swhtmp" (
+if exist "%Localappdata%\ScriptingWindowsHost\%~nx0" (
 	echo SWH is installed, using portable version
 	echo.
 	goto swh
@@ -2582,6 +2628,7 @@ set /p taskkillprocessf=Process to finish (IM):
 if /i "%taskkillprocessf%"=="csrss.exe" (goto accessdeniedEndTask)
 if /i "%taskkillprocessf%"=="lsass.exe" (goto accessdeniedEndTask)
 if /i "%taskkillprocessf%"=="winlogon.exe" (goto accessdeniedEndTask)
+if /i "%taskkillprocessf%"=="wininit.exe" (goto accessdeniedEndTask)
 if /i "%taskkillprocessf%"=="System" (goto accessdeniedEndTask)
 if /i "%taskkillprocessf%"=="Registry" (goto accessdeniedEndTask)
 if /i "%taskkillprocessf%"=="svchost.exe" (echo Access denied) else (taskkill /f /im %taskkillprocessf%)
@@ -2593,6 +2640,7 @@ set /p taskkillprocessnf=Process to finish (IM):
 if /i "%taskkillprocessnf%"=="csrss.exe" (goto accessdeniedEndTask)
 if /i "%taskkillprocessnf%"=="lsass.exe" (goto accessdeniedEndTask)
 if /i "%taskkillprocessnf%"=="winlogon.exe" (goto accessdeniedEndTask)
+if /i "%taskkillprocessnf%"=="wininit.exe" (goto accessdeniedEndTask)
 if /i "%taskkillprocessnf%"=="System" (goto accessdeniedEndTask)
 if /i "%taskkillprocessnf%"=="Registry" (goto accessdeniedEndTask)
 if /i "%taskkillprocessnf%"=="svchost.exe" (echo Access denied) else (taskkill /im %taskkillprocessnf%)
@@ -2621,7 +2669,7 @@ goto swh
 :rfolder
 set /p removefolder=Folder to remove: 
 set removefolderexist="%removefolder%"
-if /I not exist "%removefolder%" (
+if not exist "%removefolder%" (
 	echo "%removefolder%" does not exist. Check that you writted the correct folder name
 	echo.
 	goto swh
@@ -2796,7 +2844,7 @@ if not exist %filetorename% (
 set /p newnamefile=New name of %filetorename%: 
 if "%filetorename%"=="%newnamefile%" (
 	echo The two names are the same.
-	echo Please write a different name.
+	echo Please write different names.
 	echo.
 	echo Rename: Error: Two names are the same (%newnamefile%) >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
 	echo.
@@ -2815,7 +2863,7 @@ ren "SWH_Calc.exe" "SWH_Calc.hta"
 
 echo Set objShell = CreateObject("WScript.Shell") > "%pathswh%\Temp\SWH_Calc.vbs"
 echo objShell.Run "mshta.exe %pathswh%\SWH_Calc.hta" >> "%pathswh%\Temp\SWH_Calc.vbs"
-echo objShell.Run "%pathswh%\Temp\HiddCalc.bat",vbHide>> "%pathswh%\Temp\SWH_Calc.vbs"
+echo objShell.Run "%pathswh%\Temp\HiddCalc.bat",vbHide >> "%pathswh%\Temp\SWH_Calc.vbs"
 
 echo @ren "SWH_Calc.hta" "SWH_Calc.exe" > %pathswh%\Temp\HiddCalc.bat
 
