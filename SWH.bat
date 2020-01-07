@@ -12,12 +12,17 @@ set moreCMD=0
 set pathswh=%localappdata%\ScriptingWindowsHost
 if "%os%"=="Windows_NT" (goto startingWindowsNT)
 
-echo Your computer don't have a NT kernel (%Windir%\System32\ntoskrnl.exe)
 echo SWH is not compatible with this version of Windows
+echo.
+echo SWH is compatible with Windows Vista and next (Recomended Windows 10)
 echo Would you run SWH anyways knowing this version of Windows is not compatible? (Y/N)
 choice /c:NY /N
 if errorlevel 2 (goto startingWindowsNT)
 if errorlevel 1 (exit /B)
+if exist "%pathswh%\SWH.bat" (goto chkifinstalled) else (set installedswh=0 & goto startingWindowsNT)
+
+:chkifinstalled
+if exist "%pathswh%\Installed.swhtmp" (set installedswh=1) else (set installedswh=0)
 
 
 :startingWindowsNT
@@ -88,8 +93,7 @@ if exist "%programfiles%\SWH\ApplicationData\PS.dat" (goto swhpassword) else (
 cls
 :params_slash
 ::Parameters receptor
-if /I "%1"=="/p" (goto Params_PasswordSWH)
-::if exist "%programfiles%\SWH\ApplicationData\PS.dat" (goto)
+if exist "%programfiles%\SWH\ApplicationData\PS.dat" (call :putpassword)
 if /I "%1"=="/?" (goto usageParams_Slash)
 if /I "%1"=="/h" (goto usageParams_Slash)
 if /I "%1"=="/admin" (goto runSWH_Admin)
@@ -98,9 +102,6 @@ if /I "%1"=="/c" (goto params_Command) else (goto nonexist_PARAMSWH)
 echo.
 set cmd="%2"
 goto other1cmd
-
-:Params_PasswordSWH
-set psd=%2
 
 :usageParams_Slash
 echo.
@@ -111,7 +112,7 @@ echo "%~nx0" /?    ^| Same as /h. Shows SWH parameters help
 echo "%~nx0" /admin    ^| Runs SWH as administrator
 echo "%~nx0" /c ^<command^>    ^| Executes a SWH command
 echo "%~nx0" /h    ^| Same as /?. Shows SWH parameters help
-echo "%~nx0" /p ^<password^>   ^| If the password is existent, type the password and access SWH. (Creating)
+::echo "%~nx0" /p ^<password^>   ^| If the password is existent, type the password and access SWH. (Creating)
 echo.
 goto swh
 :runSWH_Admin
@@ -334,7 +335,7 @@ if exist IncorrectCommand.opt (
 	echo [%date% %time%] - Unexistant Setting: %pathswh%\Settings\IncorrectCommand.opt >> %pathswh%\StartLog.log
 )
 set cmd=Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}
-set ver=10.2.2
+set ver=10.4.1
 set securever=%ver%
 cls
 cd /d %cdirectory%
@@ -382,14 +383,18 @@ echo execinfo: Shows the information of the execution of SWH >> %pathswh%\Temp\M
 echo execute (or exec): Starts a file of the computer >> %pathswh%\Temp\MoreHelp
 echo faq: Shows the frequent asked questions list >> %pathswh%\Temp\MoreHelp
 echo file: Creates a file >> %pathswh%\Temp\MoreHelp
+echo filesize: Shows the size of a file >> %pathswh%\Temp\MoreHelp
 echo folder: Makes a directory >> %pathswh%\Temp\MoreHelp
+echo google: Searchs in Google >> %pathswh%\Temp\MoreHelp
 echo help: Shows this help message >> %pathswh%\Temp\MoreHelp
 echo history: Views the commands history >> %pathswh%\Temp\MoreHelp
 echo ipconfig: Shows the IP and his configuration >> %pathswh%\Temp\MoreHelp
+echo invertcolors: Inverts colors of the screen (Classic inversion) >> %pathswh%\Temp\MoreHelp
 echo more: Makes a pause in a long text every time the page ends >> %pathswh%\Temp\MoreHelp
 echo msg: Makes a message box on the screen >> %pathswh%\Temp\MoreHelp
 echo networkconnections: Shows the network connections >> %pathswh%\Temp\MoreHelp
 echo networkmsg: Chats with a computer on the same network than you >> %pathswh%\Temp\MoreHelp
+echo passwordkey: Generates a new key for the password AES encryption (Beta) >> %pathswh%\Temp\MoreHelp
 echo path: Changes the actual path of SWH >> %pathswh%\Temp\MoreHelp
 echo pkg: Installs/Removes SWH packages >> %pathswh%\Temp\MoreHelp
 echo powershell: Starts Windows PowerShell in the current directory >> %pathswh%\Temp\MoreHelp
@@ -472,16 +477,20 @@ echo execinfo: Shows the information of the execution of SWH
 echo execute (or exec): Starts a file of the computer
 echo faq: Shows the frequent asked questions list
 echo file: Creates a file
+echo filesize: Shows the size of a file
 echo firmware: Enters the computer firmware (UEFI/BIOS)
 echo folder: Makes a directory
+echo google: Searchs in Google
 echo help: Shows this help message
 echo history: Views the commands history
+echo invertcolors: Inverts colors of the screen (Classic inversion)
 echo ipconfig: Shows the IP and his configuration
 echo more: Makes a pause in a long text every time the page ends
 echo msg: Makes a message box on the screen
 echo networkconnections: Shows the network connections
 echo networkmsg: Chats with a computer on the same network than you
 echo news: Shows the news of SWH %ver%
+echo passwordkey: Generates a new key for the password AES encryption (Beta)
 echo path: Changes the actual path of SWH
 echo pkg: Installs/Removes SWH packages
 echo powershell: Starts Windows PowerShell in the current directory
@@ -631,7 +640,7 @@ if /i %cmd%=="setup" (goto startSetup)
 if /i %cmd%=="base64encode" (goto base64encode)
 if /i %cmd%=="base64decode" (goto base64decode)
 if /i %cmd%=="contact" (goto swhcontact)
-if /I %cmd%=="swhadmin" (goto swh_admin)
+if /i %cmd%=="swhadmin" (goto swh_admin)
 if /i %cmd%=="download" (goto download_internet)
 if /i %cmd%=="editswh" (goto editswh_github)
 if /i %cmd%=="networkmsg" (goto networkmsg)
@@ -645,15 +654,21 @@ if /i %cmd%=="pkg remove calc" (goto pkgremovecalc)
 if /i %cmd%=="pkg remove trex" (goto pkgremovetrex)
 if /i %cmd%=="pkg listinstall" (goto pkg_listinstall)
 if /i %cmd%=="scanvirus" (goto scanvirus)
+if /i %cmd%=="google" (goto searchgoogle)
+if /i %cmd%=="filesize" (goto filesize)
+if /i %cmd%=="invertcolors" (goto invertcolors)
+if /i %cmd%=="passwordkey" (goto passwordkey)
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
+if not exist "\" (echo. & set errordisk_=%cd% & goto errornotdisk)
 set cmd=Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}
 echo SWH:Automatic >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
 set /p cmd=%cd% %commandtoexecute%
 set cmd2=%cmd%
 set cmd="%cmd2%"
 if %cmd%=="help" (goto cmdhelp) else (goto other1cmd)
+
 :foundedpassword_gotoswh
 if "%psd%"=="[{CLSID:8t4tvry4893tvy2nq4928trvyn14098vny84309tvny493q8tvn0943tyvnu0q943t8vn204vmy10vn05}]"
 set /p enterpassword_gotoswh=Enter SWH password please: 
@@ -850,6 +865,93 @@ goto swh
 
 
 
+:searchgoogle
+echo.
+set /p searchgoogle_=Search to Google: 
+echo Set objShell = WScript.CreateObject("WScript.Shell") > "%pathswh%\Temp\SearchGoogle.vbs"
+echo Google = "%searchgoogle_%" >> "%pathswh%\Temp\SearchGoogle.vbs"
+echo objShell.Run "cmd.exe /c start www.google.com",vbHide,True >> "%pathswh%\Temp\SearchGoogle.vbs"
+echo WScript.Sleep(1150) >> "%pathswh%\Temp\SearchGoogle.vbs"
+echo objShell.SendKeys Google >> "%pathswh%\Temp\SearchGoogle.vbs"
+echo objShell.SendKeys "{ENTER}" >> "%pathswh%\Temp\SearchGoogle.vbs"
+echo WScript.Quit >> "%pathswh%\Temp\SearchGoogle.vbs"
+start /wait "WScript.exe" "%pathswh%\Temp\SearchGoogle.vbs"
+echo.
+goto swh
+
+
+:invertcolors
+echo Set objShell = WScript.CreateObject("WScript.Shell") > "%pathswh%\Temp\InvertColors.vbs"
+echo objShell.Run "cmd.exe /c start /min %systemroot%\System32\magnify.exe",vbHide >> "%pathswh%\Temp\InvertColors.vbs"
+echo WScript.Sleep(1000) >> "%pathswh%\Temp\InvertColors.vbs"
+echo wscript.echo "pressing..." >> "%pathswh%\Temp\InvertColors.vbs"
+echo objShell.SendKeys "^%%I" >> "%pathswh%\Temp\InvertColors.vbs"
+echo WScript.Quit >> "%pathswh%\Temp\InvertColors.vbs"
+start "wscript.exe" "%pathswh%\Temp\InvertColors.vbs"
+echo.
+goto swh
+
+:passwordkey
+if %admin%==0 (call :adminpermission)
+echo.
+echo IMPORTANT: If you have a password and you change the key, you will be NOT able to start SWH.
+echo.
+set /p surechangepasswordkey=Change key anyway? (y/n): 
+if /i "%surechangepasswordkey%"=="Y" goto changingpasswordkey
+
+
+:changingpasswordkey
+echo Generating new key for password...
+cd /d "%pathswh%\Temp"
+:generatepasswordkey
+set randomKey1=%random:~-1%%random:~-1%%random:~-1%%random:~-1%%random:~-1%
+set randomKey2=%random:~-1%%random:~-1%%random:~-1%%random:~-1%%random:~-1%
+set randomKey3=%random:~-1%%random:~-1%%random:~-1%%random:~-1%
+set randomKey4=%random:~-1%%random:~-1%%random:~-1%%random:~-1%
+set randomKey5=%random:~-1%%random:~-1%%random:~-1%%random:~-1%
+set randomKey6=%random:~-1%%random:~-1%%random:~-1%%random:~-1%
+
+
+set randomGen1=(%randomKey1%*%randomKey2%)/2
+set randomGen2=(%randomKey3%*%randomKey4%)/2
+set randomGen3=(%randomKey5%*%randomKey6%)/2
+
+set randomkeypassword=%randomKey1%-%randomKey2%-%randomKey3%
+echo %randomkeypassword% >> "%pathswh%\Temp\KeyPSD"
+for %%D in (KeyPSD) do (set lenghtkeypsd=%%~zD)
+if "%lenghtkeypsd%"=="19" (cd /d "%cdirectory%" & goto changedpasswordkey)
+
+:changedpasswordkey
+echo.
+del "%pathswh%\Temp\KeyPSD" /q /f
+set /p viewnewkeypassword=Do you want to view current key? (y/n): 
+if /i "%viewnewkeypassword%"=="Y" (goto credentialchangedpasswordkey)
+
+:credentialchangedpasswordkey
+echo.
+set /p userswh=Username: 
+if /i not "%userswh%"=="%username%" (
+	echo.
+	echo Incorrect user
+	echo.
+	goto swh
+)
+set /p passwordSWH=SWH Password: 
+if "%passwordSWH%"=="%DecryptPSD%" (
+	echo New password key: %randomkeypassword%
+	echo.
+	goto swh
+) else (
+	echo.
+	echo Incorrect SWH password
+	echo.
+	goto swh
+)
+
+
+
+
+
 
 :scanvirus
 echo.
@@ -866,6 +968,9 @@ echo.
 echo.
 goto swh
 
+
+
+
 :errornowindowsdefender
 echo Cannot find Windows Defender Command Line Scan %programfiles%\Windows Defender\MpCmdRun.exe
 echo.
@@ -873,7 +978,28 @@ goto swh
 
 
 
+:filesize
+echo.
+set /p filesize=File to have his size: 
+if not exist "%filesize%" (goto notexistfile_size)
+for %%a in (%filesize%) do (set sizefileB=%%~za)
+echo.
+if "%sizefileB%" geq 
+set /a sizefileKB=%sizefileB%/1024
+if %sizefileKB% leq 1 (
+	echo Size of %filesize%: %sizefileB% Bytes, less than 1 kB
+	echo.
+	goto swh
+)
+echo Size of %filesize%: %sizefileB% Bytes, %sizefileKB% kB
+echo.
+goto swh
 
+:notexistfile_size
+echo.
+echo Cannot find %filesize%
+echo.
+goto swh
 
 
 
@@ -945,7 +1071,7 @@ if /i "%opendownloaddir%"=="n" (echo. &goto swh) else (
 )
 
 :errornotdisk
-cd /d "%homedrive%"
+cd /d "%homedrive%\%homepath%"
 choice /c:rf /n /m "Error reading current drive. Retry or fail?"
 if errorlevel 2 goto failnotdisk
 if errorlevel 1 goto retrynotdisk
@@ -1074,14 +1200,19 @@ echo What's new on SWH %ver%?
 echo.
 echo Encrypted password:
 echo In previous versions, the password was visible in his password file.
-echo Now it is encrypted, making SWH access only for people that know the password
+echo Now it is encrypted, making SWH access only for people that know the password.
 echo.
 echo More functions, less size:
 echo SWH %ver% tries to be more accessible with only %sizeSWHkB% kB, and with a lot of functions.
 echo.
 echo Added parameters:
 echo Now you can run SWH with parameters like %~nx0 /admin or %~nx0 /c ^<command^>
-echo This is very useful to automatize tasks
+echo This is very useful to automatize tasks.
+echo.
+echo Encrypt/Decrypt:
+echo In previous versions, your encryption wasn't very safe if a person has your encrypted strirng and SWH.
+echo Now you will create a key for add more security at your encryption.
+echo To decrypt, you will need the key.
 echo.
 goto swh
 
@@ -1298,9 +1429,7 @@ set enterpassword2setit="%enterpassword2setit%"
 if not "%psd%"==""%enterpassword2setit%"" (goto errorremovingpsd)
 :notpasswordsettet
 set /p setpassword1=Password to set in SWH: 
-echo.
-if /i %password2qwerty%=="" (goto swh)
-echo SWH is checking if the password is sure... SWH has a database of more than 100 passwords that aren't secure.
+if /i "%setpassword1%"=="" (goto swh)
 set password2qwerty="%setpassword1%"
 if /i %password2qwerty%=="qwerty" (goto easypassword)
 if /i %password2qwerty%=="123456" (goto easypassword)
@@ -1407,6 +1536,13 @@ if /i %password2qwerty%=="321qwerty" (goto easypassword)
 if /i %password2qwerty%=="321azerty" (goto easypassword)
 if /i %password2qwerty%=="321qwertz" (goto easypassword)
 if /i %password2qwerty%=="123" (goto easypassword)
+cd /d "%pathswh%\Temp"
+echo %password2qwerty% > "%pathswh%\Temp\ckps"
+for %%P in (ckps) do (set psdlenght=%%~zP)
+::if exist "%pathswh%\Temp\ckps" del "%pathswh%\Temp\ckps" /q /f 
+set /a psdlenght_=%psdlenght%-3
+cd /d "%cdirectory%"
+if "%psdlenght_%" leq "5" (goto easypassword)
 
 
 
@@ -1414,9 +1550,6 @@ if /i %password2qwerty%=="123" (goto easypassword)
 
 
 
-echo.
-echo Sure password. SWH cannot find this password on his database.
-echo.
 set /p setpassword2=Repeat password: 
 if "%setpassword2%"=="%setpassword1%" (goto changingpassword) else (goto errorchangingpassword)
 
@@ -1435,7 +1568,7 @@ goto swh
 :changingpassword
 
 
-cd /d %pathswh%\Temp
+cd /d "%pathswh%\Temp"
 
 
 
@@ -1483,9 +1616,7 @@ echo       Decrypt = Newstr >> Encrypt.vbs
 echo End Function >> Encrypt.vbs
 if exist "%programfiles%\SWH\ApplicationData\PS.dat" (del "%programfiles%\SWH\ApplicationData\PS.dat" /q)
 start /wait WScript.exe "%pathswh%\Temp\Encrypt.vbs"
-copy "%pathswh%\Temp\PS.dat" "%programfiles%\SWH\ApplicationData\PS.dat">nul
-if exist "%pathswh%\Temp\PS.dat" (del "%pathswh%\Temp\PS.dat /q")
-
+move "%pathswh%\Temp\PS.dat" "%programfiles%\SWH\ApplicationData\PS.dat">nul
 
 
 echo.
@@ -1637,15 +1768,16 @@ echo.
 echo Note: SWH only can decrypt text encrypted by it
 echo.
 set /p texttodecrypt=Text to decrypt: 
-
-cd /d "%pathswh%"
+set /p keydecrypt=Key to decrypt your string: 
+cd /d "%pathswh%\Temp"
 echo Option Explicit > Decrypt.vbs
+echo On Error Resume Next >> Decrypt.vbs
 echo Dim temp, key, objShell, objFSO, decrypt >> Decrypt.vbs
 echo Set objShell = WScript.CreateObject("WScript.Shell") >> Decrypt.vbs
 echo temp = "%texttodecrypt%" >> Decrypt.vbs
-echo key = "huasHIYhkasdho1" >> Decrypt.vbs
+echo key = "%keydecrypt%" >> Decrypt.vbs
 echo temp = DecryptING(temp,key) >> Decrypt.vbs
-echo Set objFSO = createobject("scripting.filesystemobject")>> Decrypt.vbs 
+echo Set objFSO = createobject("scripting.filesystemobject") >> Decrypt.vbs 
 echo Set decrypt = objfso.createtextfile("decrypt.txt",true) >> Decrypt.vbs
 echo decrypt.writeline "" ^&temp >> Decrypt.vbs
 echo decrypt.close >> Decrypt.vbs
@@ -1679,8 +1811,11 @@ echo       Next >> Decrypt.vbs
 echo       Newstr=StrReverse(Newstr)>> Decrypt.vbs 
 echo       DecryptING = Newstr >> Decrypt.vbs
 echo End Function >> Decrypt.vbs
+start /wait wscript.exe "%pathswh%\Temp\Decrypt.vbs"
 echo.
-start wscript.exe "%pathswh%\Decrypt.vbs"
+echo.
+type "%pathswh%\Temp\Decrypt.txt"
+echo.
 cd /d "%cdirectory%"
 goto swh
 
@@ -1701,14 +1836,41 @@ goto swh
 
 if exist %pathswh%\Temp\encrypt.txt (del %pathswh%\Temp\encrypt.txt /q>nul)
 if exist %pathswh%\Temp\encrypt.vbs (del %pathswh%\Temp\encrypt.vbs /q>nul)
+echo.
 set /p texttoencrypt=Text to encrypt: 
+set /p keyencrypt=Key to encrypt your string (Key is needed for decryption): 
+if "%keyencrypt%"=="" (goto generateencryptkey) else (goto nextencryptkey)
+
+:generateencryptkey
+set key_del2min=%pathswh%\Key_%random:~-1%.txt
+	set randomKey_=%random:~-1%%random:~-1%%random:~-1%%random:~-1%%random:~-1%
+	set randomKey2_=%random:~-1%%random:~-1%%random:~-1%%random:~-1%%random:~-1%
+	set randomKey3_=%random:~-1%%random:~-1%%random:~-1%%random:~-1%%random:~-1%
+	set randomKey4_=%random:~-1%%random:~-1%%random:~-1%%random:~-1%%random:~-1%
+	set keyencrypt=%randomKey_%-%randomKey2_%-%randomKey3_%-%randomKey4_%
+	echo.
+	echo Random key for decryption: %keyencrypt%
+	echo.
+	echo Key has been saved as: %key_del2min%
+	echo In 2 minutes private key will be deleted
+	echo Key for decryption: > "%key_del2min%"
+	echo. >> "%key_del2min%"
+	echo %keyencrypt% >> "%key_del2min%"
+
+	echo msgbox "%key_del2min%" > "%pathswh%\Temp\DelKey.vbs"
+	echo WScript.Sleep(120000) >> "%pathswh%\Temp\DelKey.vbs"
+	echo CreateObject("WScript.Shell").Run "cmd.exe /c del %key_del2min% /q",vbHide >> "%pathswh%\Temp\DelKey.vbs"
+	start WScript.exe "%pathswh%\Temp\DelKey.vbs"
+
+:nextencryptkey
 cd /d "%pathswh%\Temp"
 
 echo Option Explicit > Encrypt.vbs
+echo On Error Resume Next >> Encrypt.vbs
 echo Dim temp, key, objShell, objFSO, crypt >> Encrypt.vbs
 echo Set objShell = WScript.CreateObject("WScript.Shell") >> Encrypt.vbs
 echo temp = "%texttoencrypt%" >> Encrypt.vbs
-echo key = "huasHIYhkasdho1" >> Encrypt.vbs
+echo key = "%keyencrypt%" >> Encrypt.vbs
 echo temp = Encrypt(temp,key) >> Encrypt.vbs
 
 echo Set objFSO = createobject("scripting.filesystemobject") >> Encrypt.vbs
@@ -1727,7 +1889,7 @@ echo  str = StrReverse(str) >> Encrypt.vbs
 echo  For x = 1 To LenStr >> Encrypt.vbs
 echo       Newstr = Newstr ^& chr(asc(Mid(str,x,1)) + Asc(Mid(key,KeyPos,1))) >> Encrypt.vbs
 echo       KeyPos = keypos+1 >> Encrypt.vbs
-echo       If KeyPos ^> lenKey Then KeyPos = 1 >> Encrypt.vbs >> Encrypt.vbs
+echo       If KeyPos ^> lenKey Then KeyPos = 1 >> Encrypt.vbs
 echo  Next >> Encrypt.vbs
 echo  encrypt = Newstr >> Encrypt.vbs
 echo End Function >> Encrypt.vbs
@@ -1748,12 +1910,16 @@ echo       Decrypt = Newstr >> Encrypt.vbs
 echo End Function >> Encrypt.vbs
 start /wait wscript.exe "%pathswh%\Temp\encrypt.vbs"
 echo.
+echo.
 type "%pathswh%\Temp\encrypt.txt"
+echo.
 echo.
 set /p encryptcopyclip=Copy encrypted text to the clipboard (y/n): 
 if /i "%encryptcopyclip%"=="y" (
-	clip < %pathswh%\Temp\encrypt.txt
+	clip < "%pathswh%\Temp\encrypt.txt"
 )
+echo.
+echo.
 cd /d "%cdirectory%"
 goto swh
 
@@ -1842,9 +2008,9 @@ echo Temp: %sizeJunkTemp% Bytes (%tempJunkKB% kB)
 echo Windows Temp: %sizeJunkWinTemp% Bytes (%wintempJunkKB% kB)
 echo SWH Temp files: %sizeJunkSWHtemp% Bytes (%swhtempJunkKB% kB)
 echo.
-del "%userprofile%\Downloads" /q>nul
-del "%SystemRoot%\Temp\JunkWinTemp" /q>nul
-del "%tmp%\JunkTemp" /q>nul
+del "%userprofile%\Downloads\JunkDownloads" /q>nul
+del "%SystemRoot%\Temp\JunkWinTemp" /q /s>nul
+del "%tmp%\JunkTemp" /q /s>nul
 set /p surecleardiskspace=Clear all this files? (%totalJunkSWH_DiskCleaner% Bytes will be cleaned, %totalJunkKB% kB) (y/n): 
 if /i "%surecleardiskspace%"=="y" (
 	echo Clearing Downloads...
@@ -2259,8 +2425,7 @@ echo Title: %titlecon% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost
 goto swh
 
 :vol
-set /p voldisk=Disk to see his volume (Type only the letter, ex C ): 
-vol %voldisk%
+vol
 echo.
 echo Volume >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
 goto swh
@@ -2443,7 +2608,6 @@ set /p cdirectory=Directory to access:
 if exist %cdirectory% (
 	cd /d %cdirectory%
 	set cdirectory=%cd%
-	echo "cdirectory" is "%cdirectory%"
 	echo.
 	goto swh
 ) else (
@@ -2817,7 +2981,7 @@ echo Developper: anic17
 echo Coded with: Batch, VBScript, PowerShell
 echo.
 echo Credits >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
-echo (c) Copyright 2019 SWH. All rights reserved
+echo (c) Copyright 2019 - 2020 SWH. All rights reserved
 pause>nul
 echo.
 goto swh
