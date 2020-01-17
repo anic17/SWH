@@ -38,8 +38,24 @@ md "%pathswh%\OldSWH"
 cls
 md "%pathswh%\SWHZip"
 cls
-md "%pathswh%\Downloads"
+md "%pathswh%\DLL"
 cls
+md "%pathswh%\pkg"
+cls
+md "%pathswh%\Icon"
+cls
+md "%pathswh%\MyProjects"
+cls
+::md "%pathswh%\Settings"
+md "%pathswh%\SWHZip"
+cls
+reg add HKEY_CURRENT_USER\Software\ScriptingWindowsHost\Settings /f>nul
+reg add HKEY_CURRENT_USER\Software\ScriptingWindowsHost /f>nul
+cls
+reg query HKEY_CURRENT_USER\Software\ScriptingWindowsHost\DisableSWH
+if errorlevel 1 (reg add HKCU\Software\ScriptingWindowsHost /v DisableSWH /t REG_DWORD /d 0 /f)
+
+
 
 if exist "%pathswh%\D.sys" (attrib +h +s "%pathswh%\D.sys")
 
@@ -48,14 +64,43 @@ if exist %pathswh%\resetstartlog.opt (
 ) else (
 	set resetstartlog_=1
 )
+cls
 
-goto regYesBlockCHK
-FOR /f "usebackq tokens=3*" %%A IN (`REG QUERY "HKCU\Software\ScriptingWindowsHost /v DisableSWH"`) DO (
-	set SWH_RegDisabled=%%A %%B
-	)
-if not %SWH_RegDisabled%==1 goto regYesBlockCHK
+FOR /F "usebackq tokens=3*" %%A IN (`REG QUERY "HKEY_CURRENT_USER\Software\ScriptingWindowsHost" /v DisableSWH`) DO (
+    set regdisableswh=%%A %%B
+)
+
+if %errorlevel%==1 (
+	echo [%date% %time%] - Cannot find HKCU\Software\ScriptingWindowsHost\DisableSWH >> %pathswh%\StartLog.log
+	title %~dpnx0 - Cannot find HKEY_CURRENT_USER\Software\ScriptingWindowsHost\DisableSWH
+	echo Error! Cannot find HKEY_CURRENT_USER\Software\ScriptingWindowsHost\DisableSWH
+	pause>nul
+	reg add HKEY_CURRENT_USER\Software\ScriptingWindowsHost /v DisableSWH /t REG_DWORD /d 0 /f
+	cls
+)
+
+
+
+if %regdisableswh%==0x0 (goto regYesBlockCHK)
+if %regdisableswh%==0x1 (goto swhdisabledreg) else (
+	echo [%date% %time%] - Invalid registry key at HKCU\Software\ScriptingWindowsHost\DisableSWH >> %pathswh%\StartLog.log
+	title %~dpnx0 - Invalid registry key at HKEY_CURRENT_USER\Software\ScriptingWindowsHost\DisableSWH
+	echo Error! Invalid registry key at HKEY_CURRENT_USER\Software\ScriptingWindowsHost\DisableSWH
+	echo Possible values are 0 or 1
+	echo.
+	echo Press any key to try again...
+	pause>nul
+	reg add HKEY_CURRENT_USER\Software\ScriptingWindowsHost /v DisableSWH /t REG_DWORD /d 0 /f
+	echo.
+	goto regYesBlockCHK
+)
+
+
+
+if not "%regdisableswh%"=="0x1" goto regYesBlockCHK
 
 :swhdisabledreg
+echo [%date% %time%] - SWH Disabled by Registry >> %pathswh%\StartLog.log
 title %~dpnx0 - SWH disabled by Registry
 cls
 echo SWH has been disabled by an administrator
@@ -65,6 +110,7 @@ pause>nul
 exit /b
 
 :regYesBlockCHK
+echo [%date% %time%] - RegistryDisabled=0 >> %pathswh%\StartLog.log
 if not exist "%homedrive%\Program Files\SWH\ApplicationData\BU.dat" (
 	echo [%date% %time%] - BlockUsers=0 >> %pathswh%\StartLog.log
 	goto checkingPassword
@@ -74,7 +120,7 @@ if not exist "%homedrive%\Program Files\SWH\ApplicationData\BU.dat" (
 echo [%date% %time%] - BlockUsers=1 >> %pathswh%\StartLog.log
 for /f "tokens=1,2* delims=," %%b in (%programfiles%\SWH\ApplicationData\BU.dat) do (set onlyusernotblock=%%b)
 cls
-if /i %username%==%onlyusernotblock% (goto checkingPassword)
+if /i "%username%"=="%onlyusernotblock%" (goto checkingPassword)
 echo.
 title %~dpnx0 - SWH blocked for this user
 echo Your SWH access was blocked because you not have the requested privileges to start it.
@@ -229,8 +275,6 @@ for /f "tokens=1,2* delims=," %%F in (Decrypt.txt) do (set DecryptPSD=%%F)
 if "%password%"=="%DecryptPSD%" (goto startingswhpassword) else (goto failedpassword)>nul
 
 set password2="%password%"
-
-
 if %password2%=="%psd%" (goto startingswhpassword) else (goto failedpassword)>nul
 
 
@@ -279,15 +323,6 @@ set colmodesize=0
 set linemodesize=0
 cd %userprofile%
 
-cls
-md SwhZip>nul
-cls
-md MyProjects>nul
-cls
-md SWH_64Bits>nul
-cls
-md Settings>nul
-cls
 
 title Scripting Windows Host Console
 set cdirectory=%userprofile%
@@ -353,8 +388,10 @@ rem Help command More
 echo. > %pathswh%\Temp\MoreHelp 
 echo Commands: >> %pathswh%\Temp\MoreHelp
 echo.>> %pathswh%\Temp\MoreHelp
-echo base64decode: Encodes a string or a file using Base64 >> %pathswh%\Temp\MoreHelp
-echo base64encode: Decodes a string or a file using Base64  >> %pathswh%\Temp\MoreHelp >> %pathswh%\Temp\MoreHelp
+echo base64decode: Encodes a string using Base64 >> %pathswh%\Temp\MoreHelp
+echo base64decodefile: Decodes a file using Base64 >> %pathswh%\Temp\MoreHelp
+echo base64encode: Decodes a string using Base64  >> %pathswh%\Temp\MoreHelp >> %pathswh%\Temp\MoreHelp
+echo base64encodefile: Encodes a file using Base64 >> %pathswh%\Temp\MoreHelp
 echo blockusers: Blocks SWH if the user is not "%username%" >> %pathswh%\Temp\MoreHelp
 echo bootmode: Starts SWH with compatibility with X: drive (No recomended for normal use) >> %pathswh%\Temp\MoreHelp
 echo bugs: Can see the bugs of SWH >> %pathswh%\Temp\MoreHelp
@@ -373,20 +410,23 @@ echo contact: Shows the contact information >> %pathswh%\Temp\MoreHelp
 echo copy: Copies files of the computer >> %pathswh%\Temp\MoreHelp
 echo credits: Shows the credits of SWH >> %pathswh%\Temp\MoreHelp
 echo date: Changes the date of the computer >> %pathswh%\Temp\MoreHelp
+echo decrypttext: Decrypts a text >> %pathswh%\Temp\MoreHelp
 echo del: Removes a file >> %pathswh%\Temp\MoreHelp
 echo dir (or directory): Shows the current directory >> %pathswh%\Temp\MoreHelp
+echo disableswh: Disables SWH for current user >> %pathswh%\Temp\MoreHelp
 echo download: Downloads an Internet file, website, photo or video. >> %pathswh%\Temp\MoreHelp
 echo editswh: Edits source code of SWH in GitHub. To make changes, developper will check it >> %pathswh%\Temp\MoreHelp
-echo encrypttext: Encrypts a text >> %pathswh%\Temp\MoreHelp
-echo endtask: Finish an active process >> %pathswh%\Temp\MoreHelp
-echo execinfo: Shows the information of the execution of SWH >> %pathswh%\Temp\MoreHelp
-echo execute (or exec): Starts a file of the computer >> %pathswh%\Temp\MoreHelp
-echo faq: Shows the frequent asked questions list >> %pathswh%\Temp\MoreHelp
-echo file: Creates a file >> %pathswh%\Temp\MoreHelp
-echo filesize: Shows the size of a file >> %pathswh%\Temp\MoreHelp
-echo folder: Makes a directory >> %pathswh%\Temp\MoreHelp
-echo google: Searchs in Google >> %pathswh%\Temp\MoreHelp
-echo help: Shows this help message >> %pathswh%\Temp\MoreHelp
+echo email: Sends a mail message >> "%pathswh%\Temp\MoreHelp"
+echo encrypttext: Encrypts a text >> "%pathswh%\Temp\MoreHelp"
+echo endtask: Finish an active process >> "%pathswh%\Temp\MoreHelp"
+echo execinfo: Shows the information of the execution of SWH >> "%pathswh%\Temp\MoreHelp"
+echo execute (or exec): Starts a file of the computer >> "%pathswh%\Temp\MoreHelp"
+echo faq: Shows the frequent asked questions list >> "%pathswh%\Temp\MoreHelp"
+echo file: Creates a file >> "%pathswh%\Temp\MoreHelp"
+echo filesize: Shows the size of a file >> "%pathswh%\Temp\MoreHelp"
+echo folder: Makes a directory >> "%pathswh%\Temp\MoreHelp"
+echo google: Searchs in Google >> "%pathswh%\Temp\MoreHelp"
+echo help: Shows this help message >> "%pathswh%\Temp\MoreHelp"
 echo history: Views the commands history >> %pathswh%\Temp\MoreHelp
 echo ipconfig: Shows the IP and his configuration >> %pathswh%\Temp\MoreHelp
 echo invertcolors: Inverts colors of the screen (Classic inversion) >> %pathswh%\Temp\MoreHelp
@@ -407,7 +447,9 @@ echo rename: Renames a file or a folder >> %pathswh%\Temp\MoreHelp
 echo resetsettings: Resets the actual settings >> %pathswh%\Temp\MoreHelp
 echo resetstartlog: Resets the start log each time SWH starts >> %pathswh%\Temp\MoreHelp
 echo restartswh: Restarts SWH >> %pathswh%\Temp\MoreHelp
+echo reversetext: Reverses a text >> %pathswh%\Temp\MoreHelp
 echo run: Runs a program, file or Internet ressource >> %pathswh%\Temp\MoreHelp
+echo runasadmin: Starts a program as administrator >> %pathswh%\Temp\MoreHelp
 echo say: Says a text in SWH Console >> %pathswh%\Temp\MoreHelp
 echo scanvirus: Scans a file and looks for threats and viruses >> %pathswh%\Temp\MoreHelp
 echo search: Searchs a file or a folder >> %pathswh%\Temp\MoreHelp
@@ -447,8 +489,10 @@ echo help >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.
 rem Help command
 echo Commands:
 echo.
-echo base64decode: Encodes a string or a file using Base64
-echo base64encode: Decodes a string or a file using Base64
+echo base64decode: Encodes a string using Base64
+echo base64decodefile: Decodes a file using Base64
+echo base64encode: Decodes a string using Base64
+echo base64encodefile: Encodes a file using Base64
 echo blockusers: Blocks SWH if the user is not "%username%"
 echo bootmode: Starts SWH with compatibility with X: drive (No recomended for normal use)
 echo bugs: Can see the bugs of SWH
@@ -467,10 +511,13 @@ echo contact: Shows the contact information
 echo copy: Copies files of the computer
 echo credits: Shows the credits of SWH
 echo date: Changes the date of the computer
+echo decrypttext: Decrypts a text
 echo del: Removes a file
 echo dir (or directory): Shows the current directory
+echo disableswh: Disables SWH for current user
 echo download: Downloads an Internet file, website, photo or video
 echo editswh: Edits source code of SWH in GitHub. To make changes, developper will check it
+echo email: Sends a mail message
 echo encrypttext: Encrypts a text
 echo endtask: Finish an active process
 echo execinfo: Shows the information of the execution of SWH
@@ -503,7 +550,9 @@ echo rename: Renames a file or a folder
 echo resetsettings: Resets the actual settings
 echo resetstartlog: Resets the start log each time SWH starts
 echo restartswh: Restarts SWH
+echo reversetext: Reverses a text
 echo run: Runs a program, file or Internet ressource
+echo runasadmin: Starts a program as administrator
 echo say: Says a text in SWH Console
 echo scanvirus: Scans a file and looks for threats and viruses
 echo search: Searchs a file or a folder
@@ -565,10 +614,10 @@ if /i %cmd%=="endtask" (goto taskkill)
 if /i %cmd%=="tasklist" (goto tasklist)
 if /i %cmd%=="taskmgr" (goto taskmgr)
 if /i %cmd%=="removefolder" (goto rfolder)
-if /i %cmd%=="exit" (cd\&echo.&echo Exiting SWH...&cd /d "%cdirectory%"&exit /b)
+if /i %cmd%=="exit" (echo.&echo Exiting SWH...&exit /b)
 if /i %cmd%=="copy" (goto copyfiles)
 if /i %cmd%=="cmd" (goto cmdscreen)
-if /i %cmd%=="swh" (goto startswh)
+if /i %cmd%=="swh" (%0)
 if /i %cmd%=="msg" (goto msgbox)
 if /i %cmd%=="date" (goto chdate)
 if /i %cmd%=="time" (goto chtime)
@@ -590,7 +639,7 @@ if /i %cmd%=="networkconnections" (goto networkconnections)
 if /i %cmd%=="prompt" (goto consoleinput)
 if /i %cmd%=="t-rex" (goto trexgame)
 if /i %cmd%=="search" (goto searchfiles)
-if /i %cmd%=="powershell" (goto PowerShell)
+if /i %cmd%=="powershell" (goto :PowerShell)
 if /i %cmd%=="url" (goto url)
 if /i %cmd%=="systemconfig" (goto bootconfig)
 if /i %cmd%=="variable" (goto variable)
@@ -658,12 +707,19 @@ if /i %cmd%=="google" (goto searchgoogle)
 if /i %cmd%=="filesize" (goto filesize)
 if /i %cmd%=="invertcolors" (goto invertcolors)
 if /i %cmd%=="passwordkey" (goto passwordkey)
+if /i %cmd%=="disableswh" (goto disableswh)
+if /i %cmd%=="reversetext" (goto reversetext)
+if /i %cmd%=="runasadmin" (goto runasadmin)
+if /i %cmd%=="if!" (goto if_condition)
+if /i %cmd%=="base64encodefile" (goto base64encodefile)
+if /i %cmd%=="base64decodefile" (goto base64decodefile)
+if /i %cmd%=="email" (goto email)
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
 if not exist "\" (echo. & set errordisk_=%cd% & goto errornotdisk)
 set cmd=Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}
-echo SWH:Automatic >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo SWH:Automatic >> "%pathswh%\SWH_History.txt"
 set /p cmd=%cd% %commandtoexecute%
 set cmd2=%cmd%
 set cmd="%cmd2%"
@@ -674,6 +730,50 @@ if "%psd%"=="[{CLSID:8t4tvry4893tvy2nq4928trvyn14098vny84309tvny493q8tvn0943tyvn
 set /p enterpassword_gotoswh=Enter SWH password please: 
 goto swh
 
+:runasadmin
+echo.
+if %admin%==1 (
+	echo SWH is running as administrator; you don't need to use this command
+	echo.
+	goto swh
+)
+echo Executable files are: .COM, .EXE, .BAT, .CMD
+echo.
+set /p runasadminprog=Executable to run as administrator: 
+if not exist "%runasadminprog%" (
+	echo.
+	echo Cannot find %runasadminprog%
+	echo.
+	goto swh
+)
+echo.
+echo CreateObject("Shell.Application").ShellExecute "%runasadminprog%",,,"RunAS",1 > "%pathswh%\Temp\RunAs.vbs"
+start /wait WScript.exe "%pathswh%\Temp\RunAs.vbs"
+goto swh
+
+
+
+:disableswh
+if %admin%==0 goto adminpermission
+echo.
+set /p suredisableswh_reg=Are you sure you want to disable SWH? (y/n): 
+if /i "%suredisableswh_reg%"=="y" (
+	reg add HKCU\Software\ScriptingWindowsHost /v DisableSWH /t REG_DWORD /d 1 /f>nul
+	echo.
+	echo SWH has been blocked. Please run the following command to unblock SWH:
+	echo.
+	echo CMD.exe /k REG ADD HKCU\Software\ScriptingWindowsHost /v DisableSWH /t REG_DWORD /d 0 /f
+	echo.
+	echo When you press a key, you will not be able to start SWH
+	pause>nul
+	echo.
+	echo Exiting SWH... Reason: SWH blocked
+	echo.
+	exit /B
+) else (
+	echo.
+	goto swh
+)
 
 
 
@@ -709,15 +809,15 @@ goto swh
 
 :pkg_install_calc
 echo.
-if exist "%pathswh%\SWH_Calc.exe" (goto chkpkginstallcalc)
+if exist "%pathswh%\pkg\SWH_Calc.exe" (goto chkpkginstallcalc)
 :installing_pkg_calc
 echo Installing calculator package...
 echo.
 echo $url = "https://raw.githubusercontent.com/anic17/SWH/data/SWH_Calc.exe" > %pathswh%\Temp\PackCalc.ps1
-echo $output = "%pathswh%\SWH_Calc.exe" >> %pathswh%\Temp\PackCalc.ps1
+echo $output = "%pathswh%\pkg\SWH_Calc.exe" >> %pathswh%\Temp\PackCalc.ps1
 echo Invoke-WebRequest -Uri $url -OutFile $output >> %pathswh%\Temp\PackCalc.ps1
 powershell.exe "%pathswh%\Temp\PackCalc.ps1"
-if exist "%pathswh%\SWH_Calc.exe" (
+if exist "%pathswh%\pkg\SWH_Calc.exe" (
 	echo msgbox "Calculator package has been successfully installed on your computer",4160,"Calculator package has been successfully installed" > %pathswh%\Temp\Scalcpkg.vbs
 	start /wait wscript.exe "%pathswh%\Temp\Scalcpkg.vbs"
 ) else (
@@ -731,7 +831,7 @@ echo.
 goto swh
 
 :chkpkginstallcalc
-cd /d "%pathswh%"
+cd /d "%pathswh%\pkg"
 for %%a in (SWH_Calc.exe) do (set pkgcalcsize=%%~za)
 if not "%pkgcalcsize%"=="2358" (goto installing_pkg_calc)
 echo Calculator package is already installed on your computer
@@ -746,10 +846,10 @@ echo Installing T-Rex Game package...
 echo.
 :installing_pkg_trex
 echo $url = "https://raw.githubusercontent.com/anic17/SWH/data/T-RexGame.html" > %pathswh%\Temp\PackTrex.ps1
-echo $output = "%pathswh%\T-RexGame.html" >> %pathswh%\Temp\PackTrex.ps1
+echo $output = "%pathswh%\pkg\T-RexGame.html" >> %pathswh%\Temp\PackTrex.ps1
 echo Invoke-WebRequest -Uri $url -OutFile $output >> %pathswh%\Temp\PackTrex.ps1
 powershell.exe %pathswh%\Temp\PackTrex.ps1
-if exist "%pathswh%\T-RexGame.html" (
+if exist "%pathswh%\pkg\T-RexGame.html" (
 	echo msgbox "T-Rex game package has been successfully installed on your computer",4160,"T-Rex game package has been successfully installed" > %pathswh%\Temp\Strexpkg.vbs
 	start /wait wscript.exe "%pathswh%\Temp\Strexpkg.vbs"
 ) else (
@@ -762,7 +862,7 @@ echo T-Rex game package has been successfully installed on your computer.
 echo.
 goto swh
 :chkpkginstallcalc
-cd /d "%pathswh%"
+cd /d "%pathswh%\pkg"
 for %%A in (T-RexGame.html) do (set pkgtrexsize=%%~zA)
 if not "%pkgtrexsize%"=="121452" (goto installing_pkg_trex)
 echo T-Rex Game package is already installed on your computer
@@ -785,7 +885,7 @@ if /i "%sureremovepackcalc%"=="Y" (goto removingpkgcalc) else (
 	goto swh
 )
 :removingpkgcalc
-if not exist "%pathswh%\SWH_Calc.exe" (
+if not exist "%pathswh%\pkg\SWH_Calc.exe" (
 	echo.
 	echo Cannot remove calculator package: calculator isn't installed.
 	echo.
@@ -794,7 +894,7 @@ if not exist "%pathswh%\SWH_Calc.exe" (
 echo.
 echo Removing calculator package...
 del %pathswh%\SWH_Calc.exe /q>nul
-if exist "%pathswh%\SWH_Calc.exe" (
+if exist "%pathswh%\pkg\SWH_Calc.exe" (
 	echo.
 	echo msgbox "Error removing calculator package",4112,"Error removing calculator package" > %pathswh%\Temp\ErrRemCalcPkg.vbs
 	start /wait wscript.exe "%pathswh%\Temp\ErrRemCalcPkg.vbs"
@@ -816,7 +916,7 @@ if /i "%sureremovepacktrex%"=="Y" (goto removingpkgtrex) else (
 	goto swh
 )
 :removingpkgtrex
-if not exist "%pathswh%\T-RexGame.html" (
+if not exist "%pathswh%\pkg\T-RexGame.html" (
 	echo.
 	echo Cannot remove T-Rex Game package: calculator isn't installed.
 	echo.
@@ -825,7 +925,7 @@ if not exist "%pathswh%\T-RexGame.html" (
 echo.
 echo Removing T-Rex Game package...
 del %pathswh%\T-RexGame.html /q>nul
-if exist "%pathswh%\T-RexGame.html" (
+if exist "%pathswh%\pkg\T-RexGame.html" (
 	echo.
 	echo msgbox "Error removing T-Rex Game package",4112,"Error removing T-Rex Game package" > %pathswh%\Temp\ErrRemTrexPkg.vbs
 	start /wait wscript.exe "%pathswh%\Temp\ErrRemTrexPkg.vbs"
@@ -843,7 +943,7 @@ goto swh
 
 :pkg_listinstall
 echo.
-cd /d "%pathswh%"
+cd /d "%pathswh\pkg%"
 if not exist SWH_Calc.exe goto next1listins_PKG
 
 for %%i in (SWH_Calc.exe) do (set calclistinspkgsize=%%~zi)
@@ -860,6 +960,211 @@ if "%calclistinspkgsize%"=="121452" (echo T-Rex Game. Size: %sizekbtrexpkg% kB)
 echo.
 cd /d "%cdirectory%"
 goto swh
+
+:base64encodefile
+echo.
+set /p base64encodefile=File to encode into Base64: 
+
+
+
+echo ' https://stackoverflow.com/questions/496751/base64-encode-string-in-vbscript > "%pathswh%\Temp\base64_encodefile.vbs"
+echo ' code using encoding abilities of MSXml2.DOMDocument object and saves >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo ' the resulting data to encoded.txt file >> "%pathswh%\Temp\base64_encodefile.vbs"
+
+echo Option Explicit >> "%pathswh%\Temp\base64_encodefile.vbs"
+
+echo Const fsDoOverwrite     = true  ' Overwrite file with base64 code >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Const fsAsASCII         = false ' Create base64 code file as ASCII file >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Const adTypeBinary      = 1     ' Binary file is encoded >> "%pathswh%\Temp\base64_encodefile.vbs"
+
+echo ' Variables for writing base64 code to file >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Dim objFSO >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Dim objFileOut >> "%pathswh%\Temp\base64_encodefile.vbs"
+
+echo ' Variables for encoding >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Dim objXML >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Dim objDocElem >> "%pathswh%\Temp\base64_encodefile.vbs"
+
+echo ' Variable for reading binary picture >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Dim objStream >> "%pathswh%\Temp\base64_encodefile.vbs"
+
+echo ' Open data stream from picture >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Set objStream = CreateObject("ADODB.Stream") >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo objStream.Type = adTypeBinary >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo objStream.Open() >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo objStream.LoadFromFile("%base64encodefile%") >> "%pathswh%\Temp\base64_encodefile.vbs"
+
+echo ' Create XML Document object and root node >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo ' that will contain the data >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Set objXML = CreateObject("MSXml2.DOMDocument") >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Set objDocElem = objXML.createElement("Base64Data") >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo objDocElem.dataType = "bin.base64" >> "%pathswh%\Temp\base64_encodefile.vbs"
+
+echo ' Set binary value >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo objDocElem.nodeTypedValue = objStream.Read() >> "%pathswh%\Temp\base64_encodefile.vbs"
+
+echo ' Open data stream to base64 code file >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Set objFSO = CreateObject("Scripting.FileSystemObject") >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Set objFileOut = objFSO.CreateTextFile("%base64encodefile%.base64", fsDoOverwrite, fsAsASCII) >> "%pathswh%\Temp\base64_encodefile.vbs"
+
+echo ' Get base64 value and write to file >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo objFileOut.Write objDocElem.text >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo objFileOut.Close() >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo ' Clean all >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Set objFSO = Nothing >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Set objFileOut = Nothing >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Set objXML = Nothing >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Set objDocElem = Nothing >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Set objStream = Nothing >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo.
+start /wait WScript.exe "%pathswh%\Temp\base64_encodefile.vbs"
+echo File has been saved with the name of %base64encodefile%.base64
+echo.
+goto swh
+
+
+:base64decodefile
+echo.
+set /p base64decodefile=File to decode into Base64: 
+
+echo ' This script reads base64 encoded picture from file named encoded.txt, > "%pathswh%\Temp\base64_decodefile.vbs"
+echo ' converts it in to back to binary reprisentation using encoding abilities >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo ' of MSXml2.DOMDocument object and saves data to SuperPicture.jpg file >> "%pathswh%\Temp\base64_decodefile.vbs"
+
+echo Option Explicit >> "%pathswh%\Temp\base64_decodefile.vbs"
+
+echo Const foForReading          = 1 ' Open base 64 code file for reading >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Const foAsASCII             = 0 ' Open base 64 code file as ASCII file >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Const adSaveCreateOverWrite = 2 ' Mode for ADODB.Stream >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Const adTypeBinary          = 1 ' Binary file is encoded >> "%pathswh%\Temp\base64_decodefile.vbs"
+
+echo ' Variables for reading base64 code from file >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Dim objFSO >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Dim objFileIn >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Dim objStreamIn >> "%pathswh%\Temp\base64_decodefile.vbs"
+
+echo ' Variables for decoding >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Dim objXML >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Dim objDocElem >> "%pathswh%\Temp\base64_decodefile.vbs"
+
+echo ' Variable for write binary picture >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Dim objStream >> "%pathswh%\Temp\base64_decodefile.vbs"
+
+echo ' Open data stream from base64 code filr >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Set objFSO = CreateObject("Scripting.FileSystemObject") >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Set objFileIn   = objFSO.GetFile("%base64decodefile%") >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Set objStreamIn = objFileIn.OpenAsTextStream(foForReading, foAsASCII) >> "%pathswh%\Temp\base64_decodefile.vbs"
+
+echo ' Create XML Document object and root node >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo ' that will contain the data >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Set objXML = CreateObject("MSXml2.DOMDocument") >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Set objDocElem = objXML.createElement("Base64Data") >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo objDocElem.DataType = "bin.base64" >> "%pathswh%\Temp\base64_decodefile.vbs"
+
+echo ' Set text value >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo objDocElem.text = objStreamIn.ReadAll() >> "%pathswh%\Temp\base64_decodefile.vbs"
+
+echo ' Open data stream to picture file >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Set objStream = CreateObject("ADODB.Stream") >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo objStream.Type = adTypeBinary >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo objStream.Open() >> "%pathswh%\Temp\base64_decodefile.vbs"
+
+echo ' Get binary value and write to file >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo objStream.Write objDocElem.NodeTypedValue >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo objStream.SaveToFile "%base64decodefile%.decoded", adSaveCreateOverWrite >> "%pathswh%\Temp\base64_decodefile.vbs"
+
+echo ' Clean all >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Set objFSO = Nothing >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Set objFileIn = Nothing >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Set objStreamIn = Nothing >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Set objXML = Nothing >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Set objDocElem = Nothing >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo Set objStream = Nothing >> "%pathswh%\Temp\base64_decodefile.vbs"
+echo.
+start /wait WScript.exe "%pathswh%\Temp\base64_decodefile.vbs"
+echo File has been saved with the name of %base64encodefile%.decoded
+echo.
+goto swh
+
+:email
+echo.
+set /p frommail=From: 
+set /p tomail=To: 
+set /p subjectmail=Subject: 
+set /p bodymail=Body: 
+
+
+echo $MyEmail = "%frommail%" > "%pathswh%\Temp\E-Mail.ps1"
+echo $SMTP = "smtp.gmail.com" >> "%pathswh%\Temp\E-Mail.ps1"
+echo $To = "%tomail%" >> "%pathswh%\Temp\E-Mail.ps1"
+echo $Subject = "%subjectmail%" >> "%pathswh%\Temp\E-Mail.ps1"
+echo $Body = "%bodymail%" >> "%pathswh%\Temp\E-Mail.ps1"
+echo $Creds = (Get-Credential -Credential "$MyEmail") >> "%pathswh%\Temp\E-Mail.ps1"
+
+echo Start-Sleep 2 >> "%pathswh%\Temp\E-Mail.ps1"
+
+echo Send-MailMessage -To $to -From $MyEmail -Subject $Subject -Body $Body -SmtpServer $SMTP -Credential $Creds -UseSsl -Port 587 -DeliveryNotificationOption never >> "%pathswh%\Temp\E-Mail.ps1"
+
+echo ^<#  >> "%pathswh%\Temp\E-Mail.ps1"
+echo $PSEmailServer variable can be used to pre-configure the >> "%pathswh%\Temp\E-Mail.ps1"
+echo SMTP server in your Powershell Profile. Then you don't need >> "%pathswh%\Temp\E-Mail.ps1"
+echo to specify -smtpserver paramter. Send-MailMessage will use the >> "%pathswh%\Temp\E-Mail.ps1"
+echo SMTP sever address assigned to $PSEmailServer >> "%pathswh%\Temp\E-Mail.ps1"
+echo Delivery Notification Options: >> "%pathswh%\Temp\E-Mail.ps1"
+echo -- None: No notification.         >> "%pathswh%\Temp\E-Mail.ps1"
+echo -- OnSuccess: Notify if the delivery is successful.       >> "%pathswh%\Temp\E-Mail.ps1"
+echo -- OnFailure: Notify if the delivery is unsuccessful.  >> "%pathswh%\Temp\E-Mail.ps1"    
+echo -- Delay: Notify if the delivery is delayed.        >> "%pathswh%\Temp\E-Mail.ps1"
+echo -- Never: Never notify. >> "%pathswh%\Temp\E-Mail.ps1"
+echo #^> >> "%pathswh%\Temp\E-Mail.ps1"
+powershell.exe "%pathswh%\Temp\E-Mail.ps1"
+echo Mail sent
+echo.
+goto swh
+
+
+
+
+:reversetext
+echo.
+set /p str_reverse=String to reverse: 
+
+echo On Error Resume Next > "%pathswh%\Temp\ReverseStr.vbs"
+echo Set objFSO = CreateObject("Scripting.FileSystemObject") >> "%pathswh%\Temp\ReverseStr.vbs"
+echo Set reversetext = objFSO.createtextfile("%pathswh%\Temp\ReverseStr.txt") >> "%pathswh%\Temp\ReverseStr.vbs"
+echo SWH_StrRev = StrReverse("%str_reverse%") >> "%pathswh%\Temp\ReverseStr.vbs"
+echo reversetext.writeline SWH_StrRev >> "%pathswh%\Temp\ReverseStr.vbs"
+echo reversetext.close >> "%pathswh%\Temp\ReverseStr.vbs"
+echo WScript.Quit() >> "%pathswh%\Temp\ReverseStr.vbs"
+start /wait wscript.exe "%pathswh%\Temp\ReverseStr.vbs"
+echo.
+more "%pathswh%\Temp\ReverseStr.txt"
+echo.
+goto swh
+
+
+:if_condition
+echo.
+
+echo.
+echo If syntax:
+echo.
+echo If
+echo var_1
+echo =
+echo var_2
+echo command 
+echo.
+set /p ifsyntax1=First variable?: 
+%variablename%
+set /p ifsyntax1=First variable?: 
+set /p ifsyntax1=First variable?: 
+set /p ifsyntax1=First variable?: 
+set /p ifsyntax1=First variable?: 
+set /p ifsyntax1=First variable?: 
+
+
+
 
 
 
@@ -964,8 +1269,13 @@ if not exist %filetoscanav% (
 	goto swh
 )
 echo.
-"%programfiles%\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "%filetoscanav%"
+echo %filetoscanav% > %pathswh%\Temp\ScanVirus.txt
+cd /d "%pathswh%\Temp"
+for /f "tokens=1,2* delims=," %%V in (ScanVirus.txt) do (set pathscanvirus=%%~V)
+
+"%programfiles%\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -File "%pathscanvirus%"
 echo.
+cd /d "%cdirectory%"
 goto swh
 
 
@@ -1366,7 +1676,7 @@ echo.
 goto swh
 
 :incommand
-echo Incorrect command: %cmd% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo Incorrect command: %cmd% >> "%pathswh%\SWH_History.txt"
 echo %incotext%
 echo.
 goto swh
@@ -1853,15 +2163,13 @@ set key_del2min=%pathswh%\Key_%random:~-1%.txt
 	echo.
 	echo Key has been saved as: %key_del2min%
 	echo In 2 minutes private key will be deleted
-	echo Key for decryption: > "%key_del2min%"
-	echo. >> "%key_del2min%"
-	echo %keyencrypt% >> "%key_del2min%"
+	echo Key for decryption:> "%key_del2min%"
+	echo.>> "%key_del2min%"
+	echo %keyencrypt%>> "%key_del2min%"
 
-	echo msgbox "%key_del2min%" > "%pathswh%\Temp\DelKey.vbs"
-	echo WScript.Sleep(120000) >> "%pathswh%\Temp\DelKey.vbs"
+	echo WScript.Sleep(120000) > "%pathswh%\Temp\DelKey.vbs"
 	echo CreateObject("WScript.Shell").Run "cmd.exe /c del %key_del2min% /q",vbHide >> "%pathswh%\Temp\DelKey.vbs"
 	start WScript.exe "%pathswh%\Temp\DelKey.vbs"
-
 :nextencryptkey
 cd /d "%pathswh%\Temp"
 
@@ -1920,6 +2228,8 @@ if /i "%encryptcopyclip%"=="y" (
 )
 echo.
 echo.
+set texttoencrypt=
+set keyencrypt=
 cd /d "%cdirectory%"
 goto swh
 
@@ -2314,6 +2624,17 @@ goto swh
 
 ::
 :ftc12
+if not exist "%pathswh%\DLL\vbsedit32.dll" (
+	echo.
+	echo Error: Cannot find "%pathswh%\DLL\vbsedit32.dll"
+	echo.
+	echo SWHZip will now use command-line version
+	echo.
+	set /p ftc=File to compress: 
+)
+
+
+
 echo Set toolkit = CreateObject("VbsEdit.Toolkit") > %pathswh%\Temp\SelectFileSWHZip.vbs
 echo files=toolkit.OpenFileDialog("%userprofile%\Desktop","",False,"Open a file to be compressed with SWHZip") >> %pathswh%\Temp\SelectFileSWHZip.vbs
 echo If UBound(files)^>=0 Then >> %pathswh%\Temp\SelectFileSWHZip.vbs
@@ -2330,7 +2651,6 @@ echo End If >> %pathswh%\Temp\SelectFileSWHZip.vbs
 start /wait WScript.exe "%pathswh%\Temp\SelectFileSWHZip.vbs"
 cd /d "%pathswh%\Temp"
 for /f "tokens=1,2* delims=," %%a in (SelectFileSWHZip.txt) do (set ftc=%%a)
-::
 set ext=swhzip
 goto cmprssing
 
@@ -2344,6 +2664,13 @@ rem if /i "%surecmpr%"=="N" (goto cancelcmprs) else (goto impocmprs)
 
 :cmprssing
 echo.
+if "%ftc%"=="" (
+	echo.
+	echo You must specify a file to compress
+	echo.
+	cd /d "%cdirectory%"
+	goto swh
+)
 echo Compressing... Please wait
 
 
@@ -2421,13 +2748,13 @@ goto swh
 set /p titlecon=Title of SWH Console: 
 title %titlecon%
 echo.
-echo Title: %titlecon% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo Title: %titlecon% >> "%pathswh%\SWH_History.txt"
 goto swh
 
 :vol
 vol
 echo.
-echo Volume >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo Volume >> "%pathswh%\SWH_History.txt"
 goto swh
 
 :variable
@@ -2435,11 +2762,14 @@ echo.
 echo Note: changing SWH variables can do SWH that doesn't work correctly.
 echo See "swhvariables" for info of the variables that you mustn't change
 echo.
+set /a varcount=%varcount%+1
 set /p variablename=Variable name: 
 set /p variabletext=Variable text: 
-set %variablename%=%variabletext%
 echo.
-echo Variable: variablename:%variablename%; variabletext:%variabletext% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo Variable saved as "%variablename%_%varcount%"
+set %variablename%_%varcount%=%variabletext%
+echo.
+echo Variable: variablename:%variablename%; variabletext:%variabletext% >> "%pathswh%\SWH_History.txt"
 goto swh
 
 :swhvariables
@@ -2453,24 +2783,21 @@ echo commandtoexecute: It is the %commandtoexecute% text. It can be changed by "
 echo localappdata: Changing LocalAppData will make many errors of the correct working of SWH
 echo ver: Ver is the variable that shows the SWH Version. Changing will not show the actual version.
 echo.
-echo SwhVariables >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo SwhVariables >> "%pathswh%\SWH_History.txt"
 goto swh
 
 :bugs
-echo Bugs >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo Bugs >> "%pathswh%\SWH_History.txt"
 echo Fixed bugs:
 echo 0xe0000001: If you write "not swh" it closes automatically
 echo 0xe0000002: If you write ">", "<", "&" or "|" it closes automatically
-echo 0xe0000003: The text decryptor is bugged (Now)
 echo.
 goto swh
 
 :bootconfig
-cd /d %SystemRoot%\System32
-start msconfig.exe
-cd /d %cdirectory%
+start %SystemRoot%\System32\msconfig.exe
 echo.
-echo SystemConfig: %SystemRoot%\System32\msconfig.exe >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo SystemConfig: %SystemRoot%\System32\msconfig.exe >> "%pathswh%\SWH_History.txt"
 goto swh
 
 
@@ -2562,9 +2889,9 @@ echo.
 goto swh
 
 :trexgame
-if exist %pathswh%\T-RexGame.html (
+if exist %pathswh%\pkg\T-RexGame.html (
 	goto CHKchromeins
-	start %pathswh%\T-RexGame.html
+	start %pathswh%\pkg\T-RexGame.html
 	echo.
 	echo T-RexGame.html: played >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
 	goto swh
@@ -2573,9 +2900,9 @@ if exist %pathswh%\T-RexGame.html (
 )
 
 :nostartTREX
-echo T-Rex: Error: %localappdata%\ScriptingWindowsHost\T-RexGame.html not founded >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
-echo Error! File %localappdata%\ScriptingWindowsHost\T-RexGame.html not founded. To install T-Rex Game, use the following command: pkg install trex
-echo SWH=MsgBox("File %pathswh%\T-RexGame.html not founded"^&vblf^&vbLf^&"To install T-Rex Game, use the following command:"^&vbLf^&"pkg install trex",4112,"SWH can't found the T-rex Game file") > "%pathswh%\Temp\ErrorT-Rex.vbs"
+echo T-Rex: Error: %pathswh%\pkg\T-RexGame.html not founded >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo Error! File %pathswh%\pkg\T-RexGame.html not founded. To install T-Rex Game, use the following command: pkg install trex
+echo SWH=MsgBox("File %pathswh%\pkg\T-RexGame.html not founded"^&vblf^&vbLf^&"To install T-Rex Game, use the following command:"^&vbLf^&"pkg install trex",4112,"SWH can't found the T-rex Game file") > "%pathswh%\Temp\ErrorT-Rex.vbs"
 start /wait wscript.exe "%pathswh%\Temp\ErrorT-Rex.vbs"
 echo.
 goto swh
@@ -2587,7 +2914,7 @@ if not exist "%programfiles(x86)%\Google\Chrome\Application\chrome.exe" (
 	echo.
 	goto swh
 )
-start chrome.exe "%pathswh%\T-RexGame.html"
+start chrome.exe "%pathswh%\pkg\T-RexGame.html"
 echo.
 goto swh
 
@@ -2863,7 +3190,7 @@ echo Copy: %copyfiles1% -- %copyfiles2% >> C:\Users\%username%\AppData\Local\Scr
 goto swh
 
 :msgbox
-cd /d %localappdata%\ScriptingWindowsHost
+cd /d "%pathswh%\Temp"
 set /p whatmsg=Message: With any symbol (1), with a red cross (2), with a question mark (3), with a danger symbol (4) or with an information symbol (5): 
 if "%whatmsg%"=="1" (goto msg1)
 if "%whatmsg%"=="2" (goto msg2)
@@ -3021,23 +3348,23 @@ if "%filetorename%"=="%newnamefile%" (
 )
 
 :calc
-if not exist "%pathswh%\SWH_Calc.exe" (goto errorcalculator)
-cd /d "%pathswh%"
+if not exist "%pathswh%\pkg\SWH_Calc.exe" (goto errorcalculator)
+cd /d "%pathswh%\pkg"
 ren "SWH_Calc.exe" "SWH_Calc.hta"
 
-echo Set objShell = CreateObject("WScript.Shell") > "%pathswh%\Temp\SWH_Calc.vbs"
-echo objShell.Run "mshta.exe %pathswh%\SWH_Calc.hta" >> "%pathswh%\Temp\SWH_Calc.vbs"
-echo objShell.Run "%pathswh%\Temp\HiddCalc.bat",vbHide >> "%pathswh%\Temp\SWH_Calc.vbs"
 
-echo @ren "SWH_Calc.hta" "SWH_Calc.exe" > %pathswh%\Temp\HiddCalc.bat
+start mshta.exe %pathswh%\pkg\SWH_Calc.hta
 
-start /wait wscript.exe "%pathswh%\Temp\SWH_Calc.vbs"
+timeout /t 1 /nobreak>nul
+ren "SWH_Calc.hta" "SWH_Calc.exe"
+
+
 cd /d "%cdirectory%"
 echo.
 goto swh
 
 :errorcalculator
-echo err=MsgBox("SWH cannot find the file %pathswh%\SWH_Calc.exe"^&vbLf^&vbLf^&"You can install this with the following command:"^&vbLf^&"pkg install calc",4112,"SWH cannot find the calculator file") > %pathswh%\Temp\ErrCalc.vbs
+echo err=MsgBox("SWH cannot find the file %pathswh%\pkg\SWH_Calc.exe"^&vbLf^&vbLf^&"You can install this with the following command:"^&vbLf^&"pkg install calc",4112,"SWH cannot find the calculator file") > %pathswh%\Temp\ErrCalc.vbs
 start /wait wscript.exe "%pathswh%\Temp\ErrCalc.vbs"
 echo.
 echo SWH cannot find the file %pathswh%\SWH_Calc.exe
