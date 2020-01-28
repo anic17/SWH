@@ -146,7 +146,7 @@ if /I "%1"=="/?" (goto usageParams_Slash)
 if /I "%1"=="/h" (goto usageParams_Slash)
 if /I "%1"=="/admin" (goto runSWH_Admin)
 if /I "%1"=="/execdir" (goto execdir_ChangeCD)
-if /I "%1"=="/c" (goto params_Command) else (set nonexistparams=1 & goto startingswhpassword)
+if /I "%1"=="/c" (set next_exit=1 & goto params_Command) else (set nonexistparams=1 & goto startingswhpassword)
 :params_command
 echo.
 set cmd="%2"
@@ -162,9 +162,17 @@ echo "%~nx0" /admin                     ^| Runs SWH as administrator
 echo "%~nx0" /c ^<command^>               ^| Executes a SWH command
 echo "%~nx0" /h                         ^| Same as /?. Shows SWH parameters help
 echo "%~nx0" /execdir ^<directory^>       ^| Starts SWH in a specified directory
+echo.
+echo Examples:
+echo.
+echo "%~nx0" /execdir %systemdrive%\               ^| This command will run SWH in default directory %systemdrive%\
+echo "%~nx0" /c powershell              ^| This command will open Windows PowerShell
 ::echo "%~nx0" /p ^<password^>   ^| If the password is existent, type the password and access SWH. (Creating)
 echo.
 exit /B
+
+
+
 :runSWH_Admin
 echo Set WshShell = WScript.CreateObject("WScript.Shell") > %pathswh%\Temp\AdminSWH.vbs
 echo If WScript.Arguments.Length = 0 Then >> %pathswh%\Temp\AdminSWH.vbs
@@ -178,7 +186,7 @@ echo objShell.Run "cmd.exe /c %pathswh%\SWH.bat" >> %pathswh%\Temp\AdminSWH.vbs
 echo.
 start wscript.exe "%pathswh%\Temp\AdminSWH.vbs"
 echo.
-exit
+exit /B
 :nonexist_PARAMSWH
 echo Error! Type "%~nx0" /? to get help about how to start SWH with parameters
 echo.
@@ -294,9 +302,7 @@ cls
 goto putpassword
 
 :execdir_ChangeCD
-
 set cdirectory=%2
-
 set execdir_cd=1
 goto next_CD_execdir
 
@@ -633,7 +639,7 @@ if /i %cmd%=="endtask" (goto taskkill)
 if /i %cmd%=="tasklist" (goto tasklist)
 if /i %cmd%=="taskmgr" (goto taskmgr)
 if /i %cmd%=="removefolder" (goto rfolder)
-if /i %cmd%=="exit" (echo.&echo Exiting SWH...&exit /b)
+if /i %cmd%=="exit" (echo.&echo Exiting SWH...& title %windir%\System32\cmd.exe & exit /b)
 if /i %cmd%=="copy" (goto copyfiles)
 if /i %cmd%=="cmd" (goto cmdscreen)
 if /i %cmd%=="swh" (goto startswh)
@@ -739,6 +745,7 @@ if /i %cmd%=="encryptfile" (goto encryptfile)
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
+if %next_exit%==1 (set next_exit=0 & exit /B)
 if not exist "\" (echo. & set errordisk_=%cd% & goto errornotdisk)
 set cmd=Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}
 echo SWH:Automatic >> "%pathswh%\SWH_History.txt"
