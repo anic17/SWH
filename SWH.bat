@@ -49,6 +49,8 @@ cls
 ::md "%pathswh%\Settings"
 md "%pathswh%\SWHZip"
 cls
+set execdir_cd=0
+goto regYesBlockCHK
 reg add HKEY_CURRENT_USER\Software\ScriptingWindowsHost\Settings /f>nul
 reg add HKEY_CURRENT_USER\Software\ScriptingWindowsHost /f>nul
 cls
@@ -132,18 +134,19 @@ exit /b
 :checkingPassword
 if exist "%programfiles%\SWH\ApplicationData\PS.dat" (goto swhpassword) else (
 	set psd=[{CLSID:8t4tvry4893tvy2nq4928trvyn14098vny84309tvny493q8tvn0943tyvnu0q943t8vn204vmy10vn05}]
-	goto startingswhpassword
+	goto params_slash
 )
 
 :swhpassword
 cls
 :params_slash
 ::Parameters receptor
-if exist "%programfiles%\SWH\ApplicationData\PS.dat" (call :putpassword)
+::if exist "%programfiles%\SWH\ApplicationData\PS.dat" (call :putpassword)
 if /I "%1"=="/?" (goto usageParams_Slash)
 if /I "%1"=="/h" (goto usageParams_Slash)
 if /I "%1"=="/admin" (goto runSWH_Admin)
-if /I "%1"=="/c" (goto params_Command) else (goto nonexist_PARAMSWH)
+if /I "%1"=="/execdir" (goto execdir_ChangeCD)
+if /I "%1"=="/c" (goto params_Command) else (set nonexistparams=1 & goto startingswhpassword)
 :params_command
 echo.
 set cmd="%2"
@@ -154,13 +157,14 @@ echo.
 ::Parameters help
 echo Usage:
 echo.
-echo "%~nx0" /?    ^| Same as /h. Shows SWH parameters help
-echo "%~nx0" /admin    ^| Runs SWH as administrator
-echo "%~nx0" /c ^<command^>    ^| Executes a SWH command
-echo "%~nx0" /h    ^| Same as /?. Shows SWH parameters help
+echo "%~nx0" /?                         ^| Same as /h. Shows SWH parameters help
+echo "%~nx0" /admin                     ^| Runs SWH as administrator
+echo "%~nx0" /c ^<command^>               ^| Executes a SWH command
+echo "%~nx0" /h                         ^| Same as /?. Shows SWH parameters help
+echo "%~nx0" /execdir ^<directory^>       ^| Starts SWH in a specified directory
 ::echo "%~nx0" /p ^<password^>   ^| If the password is existent, type the password and access SWH. (Creating)
 echo.
-goto swh
+exit /B
 :runSWH_Admin
 echo Set WshShell = WScript.CreateObject("WScript.Shell") > %pathswh%\Temp\AdminSWH.vbs
 echo If WScript.Arguments.Length = 0 Then >> %pathswh%\Temp\AdminSWH.vbs
@@ -289,25 +293,42 @@ pause>nul
 cls
 goto putpassword
 
+:execdir_ChangeCD
+
+set cdirectory=%2
+
+set execdir_cd=1
+goto next_CD_execdir
+
 :startingswhpassword
+
 cd /d "%programfiles%\SWH\ApplicationData"
 echo [%date% %time%] - Password=0 >> %pathswh%\StartLog.log
 for /f "tokens=1,2* delims=," %%p in (PS.dat) do (set psd=%%p)
 rem Help more
 rem Directory %localappdata%\ScriptingWindowsHost
-cd /d %pathswh%
+cd /d "%pathswh%"
 
+set cdirectory=%userprofile%
+set executiondir_established=%userprofile%
 
-copy %0 %pathswh%\SWH.bat>nul
-set /a sizeSWHkB=%~z0/1024
 set firstDirCD_=%cd%
+:next_CD_execdir
+if %execdir_cd%==1 (
+	set cdirectory=%2
+	set executiondir_established=%2
+	cd /d %2
+)
+::echo %cdirectory%
+
 set syspathvar=0
-set cdirectory=%cd%
 mode cols=120 lines=30
-echo SWH_TestFileAdmin > %WinDir%\SWH_TestFileAdmin.tmp
-if exist %Windir%\SWH_TestFileAdmin.tmp (
+copy %0 "%pathswh%\SWH.bat">nul
+set /a sizeSWHkB=%~z0/1024
+echo SWH_TestFileAdmin > "%WinDir%\SWH_TestFileAdmin.tmp"
+if exist "%Windir%\SWH_TestFileAdmin.tmp" (
 	set admin=1
-	del %windir%\SWH_TestFileAdmin.tmp /q
+	del "%windir%\SWH_TestFileAdmin.tmp" /q
 ) else (set admin=0)
 set commandtoexecute=SWH: 
 cls
@@ -321,12 +342,9 @@ set userblock=0
 set sizeverify=0
 set colmodesize=0
 set linemodesize=0
-cd %userprofile%
-
 
 title Scripting Windows Host Console
-set cdirectory=%userprofile%
-cd /d %localappdata%\ScriptingWindowsHost
+cd /d "%localappdata%\ScriptingWindowsHost"
 if not exist SWH_History.txt (
 	echo Creating History... > SWH_History.txt
 	echo Creating History... Please wait.
@@ -334,7 +352,7 @@ if not exist SWH_History.txt (
 
 :startswh
 rem Start SWH
-cd /d %localappdata%\ScriptingWindowsHost\Settings
+cd /d "%pathswh%\Settings"
 mode con: cols=120 lines=30
 if exist Size.opt (
 	for /f "tokens=1,2* delims=," %%s in (Size.opt) do (mode con: %%s)
@@ -373,8 +391,7 @@ set cmd=Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}
 set ver=10.4.1
 set securever=%ver%
 cls
-cd /d %cdirectory%
-if not "%1"=="" (goto params_slash)
+if not "%executiondir_established%"=="%userprofile%" (cd /d "%2") else (cd /d "%cdirectory%")
 echo [%date% %time%] - SWH: Running SWH on user %username% in directory %~dp0 >> %pathswh%\StartLog.log
 echo Welcome to the Scripting Windows Host Console. %xdiskcomp%
 echo.
@@ -410,6 +427,7 @@ echo contact: Shows the contact information >> %pathswh%\Temp\MoreHelp
 echo copy: Copies files of the computer >> %pathswh%\Temp\MoreHelp
 echo credits: Shows the credits of SWH >> %pathswh%\Temp\MoreHelp
 echo date: Changes the date of the computer >> %pathswh%\Temp\MoreHelp
+echo decompressfile: Decompresses a file compressed with SWHZip >> "%pathswh%\Temp\MoreHelp"
 echo decrypttext: Decrypts a text >> %pathswh%\Temp\MoreHelp
 echo del: Removes a file >> %pathswh%\Temp\MoreHelp
 echo dir (or directory): Shows the current directory >> %pathswh%\Temp\MoreHelp
@@ -511,6 +529,7 @@ echo contact: Shows the contact information
 echo copy: Copies files of the computer
 echo credits: Shows the credits of SWH
 echo date: Changes the date of the computer
+echo decompressfile: Decompresses a file compressed with SWHZip
 echo decrypttext: Decrypts a text
 echo del: Removes a file
 echo dir (or directory): Shows the current directory
@@ -617,7 +636,7 @@ if /i %cmd%=="removefolder" (goto rfolder)
 if /i %cmd%=="exit" (echo.&echo Exiting SWH...&exit /b)
 if /i %cmd%=="copy" (goto copyfiles)
 if /i %cmd%=="cmd" (goto cmdscreen)
-if /i %cmd%=="swh" (%0)
+if /i %cmd%=="swh" (goto startswh)
 if /i %cmd%=="msg" (goto msgbox)
 if /i %cmd%=="date" (goto chdate)
 if /i %cmd%=="time" (goto chtime)
@@ -714,6 +733,9 @@ if /i %cmd%=="if!" (goto if_condition)
 if /i %cmd%=="base64encodefile" (goto base64encodefile)
 if /i %cmd%=="base64decodefile" (goto base64decodefile)
 if /i %cmd%=="email" (goto email)
+if /i %cmd%=="decompressfile" (goto decompressfile)
+if /i %cmd%=="compressfile" (goto compressfile)
+if /i %cmd%=="encryptfile" (goto encryptfile)
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
@@ -740,12 +762,18 @@ if %admin%==1 (
 echo Executable files are: .COM, .EXE, .BAT, .CMD
 echo.
 set /p runasadminprog=Executable to run as administrator: 
-if not exist "%runasadminprog%" (
-	echo.
-	echo Cannot find %runasadminprog%
-	echo.
-	goto swh
-)
+if exist "%runasadminprog%" (set runasadminprog=%runasadminprog% & goto exist_runasadmin)
+if exist "%WINDIR%\%runasadminprog%" (set runasadminprog=%WinDir%\%runasadminprog% & goto exist_runasadmin)
+if exist "%userprofile%\%runasadminprog%" (set runasadminprog=%userprofile%\%runasadminprog% & goto exist_runasadmin)
+if exist "%WINDIR%\System32\%runasadminprog%" (set runasadminprog=%WinDir%\System32\%runasadminprog% & goto exist_runasadmin)
+if exist "%WinDir%\SysWOW64\%runasadminprog%" (set runasadminprog=%WinDir%\SysWOW64\%runasadminprog% & goto exist_runasadmin)
+if exist "%runasadminprog%" (set runasadminprog=%WinDir%\System32\%runasadminprog% & goto exist_runasadmin)
+echo.
+echo Cannot find %runasadminprog%
+echo.
+goto swh
+
+:exist_runasadmin
 echo.
 echo CreateObject("Shell.Application").ShellExecute "%runasadminprog%",,,"RunAS",1 > "%pathswh%\Temp\RunAs.vbs"
 start /wait WScript.exe "%pathswh%\Temp\RunAs.vbs"
@@ -893,7 +921,7 @@ if not exist "%pathswh%\pkg\SWH_Calc.exe" (
 )
 echo.
 echo Removing calculator package...
-del %pathswh%\SWH_Calc.exe /q>nul
+del "%pathswh%\pkg\SWH_Calc.exe" /q>nul
 if exist "%pathswh%\pkg\SWH_Calc.exe" (
 	echo.
 	echo msgbox "Error removing calculator package",4112,"Error removing calculator package" > %pathswh%\Temp\ErrRemCalcPkg.vbs
@@ -1153,16 +1181,20 @@ echo If
 echo var_1
 echo =
 echo var_2
-echo command 
+echo command
 echo.
-set /p ifsyntax1=First variable?: 
-%variablename%
-set /p ifsyntax1=First variable?: 
-set /p ifsyntax1=First variable?: 
-set /p ifsyntax1=First variable?: 
-set /p ifsyntax1=First variable?: 
-set /p ifsyntax1=First variable?: 
+set /p ifsyntax_var1=First variable?: 
+set /p ifsyntax_var2=Second variable?: 
+set /p ifsyntax_command=Command?: 
 
+if %ifsyntax_var1%==%ifsyntax_var2% (
+	set cmd="%ifsyntax_command%"
+	echo True
+) else (
+	echo False
+)
+echo.
+goto other1cmd
 
 
 
@@ -1291,6 +1323,18 @@ goto swh
 :filesize
 echo.
 set /p filesize=File to have his size: 
+
+
+Dim fso:Set fso = WScript.CreateObject("Scripting.FileSystemObject")
+Dim oFile:Set oFile = fso.GetFile("%filesize%")
+Wscript.Echo oFile.Name ^& " : " ^& round(oFile.Size/1024/1024,2)
+
+
+
+
+
+
+
 if not exist "%filesize%" (goto notexistfile_size)
 for %%a in (%filesize%) do (set sizefileB=%%~za)
 echo.
@@ -1355,7 +1399,7 @@ echo Download will be saved in: %pathswh%\Downloads
 set /p downloadinternet=URL: 
 set /p namesavedownloadinternet=Name to save your downloaded file (A file name cannot contain these characters: ^> ^< ^| : "" / * \ ?): 
 echo $url = "%downloadinternet%" > %download_ps1%
-echo $output = "%localappdata%\ScriptingWindowsHost\Downloads\%namesavedownloadinternet%" >> %download_ps1%
+echo $output = "%pathswh%\Downloads\%namesavedownloadinternet%" >> %download_ps1%
 echo $start_time = Get-Date >> %download_ps1%
 echo Invoke-WebRequest -Uri $url -OutFile $output >> %download_ps1%
 PowerShell.exe "%download_ps1%"
@@ -1524,6 +1568,9 @@ echo In previous versions, your encryption wasn't very safe if a person has your
 echo Now you will create a key for add more security at your encryption.
 echo To decrypt, you will need the key.
 echo.
+echo File Encryption/Decryption
+echo Now you can safely encrypt your personal files to make it innaccessible for other users, but accessible for you
+echo.
 goto swh
 
 
@@ -1587,14 +1634,10 @@ echo.
 echo Starting Scripting Windows Host Setup...
 cd /d "%pathswh%\Temp"
 echo $Url = "https://raw.githubusercontent.com/anic17/SWH/master/SWH_Setup.bat" > DownloadSWH_Setup.ps1
-echo $output = "SWH_Setup.bat" >> DownloadSWH_Setup.ps1
-echo $start_time = Get-Date >> DownloadSWH_Setup.ps1
+echo $output = "%pathswh%\Temp\SWH_Setup.bat" >> DownloadSWH_Setup.ps1
 echo Invoke-WebRequest -Uri $url -OutFile $output >> DownloadSWH_Setup.ps1
-start /min PowerShell.exe "%pathswh%\Temp\DownloadSWH_Setup.ps1"
-echo Set WshShell = CreateObject("WScript.Shell") > SWH_SetupHidder.vbs
-echo WshShell.Run "cmd.exe /C SWH_Setup.bat",vbHide >> SWH_SetupHidder.vbs
-timeout /t 4 /nobreak>nul
-start WScript.exe "SWH_SetupHidder.vbs"
+PowerShell.exe "%pathswh%\Temp\DownloadSWH_Setup.ps1"
+start cmd.exe /c "%pathswh%\Temp\SWH_Setup.bat"
 cd /d "%cdirectory%"
 echo.
 goto swh
@@ -2392,7 +2435,7 @@ echo.
 goto swh
 
 :changingconsoletext
-echo %commandtoexecute4% > %localappdata%\ScriptingWindowsHost\Settings\ConsoleText.opt
+echo %commandtoexecute4% > "%pathswh%\ScriptingWindowsHost\Settings\ConsoleText.opt"
 echo.
 goto swh
 
@@ -2455,12 +2498,12 @@ echo SWH modification date: %~t0
 echo SWH version: %ver%
 if %admin%==1 (echo SWH is running with administrator privileges) else (echo SWH is not running with administrator privileges)
 :execinfoCHKifinstalled_
-if "%~dpnx0"=="%Localappdata%\ScriptingWindowsHost\%~nx0" (echo Using the installed version) else (goto execinfoCHKinstall)
+if "%~dpnx0"=="%pathswh%\%~nx0" (echo Using the installed version) else (goto execinfoCHKinstall)
 echo.
 goto swh
 
 :execinfoCHKinstall
-if exist "%Localappdata%\ScriptingWindowsHost\%~nx0" (
+if exist "%pathswh%\%~nx0" (
 	echo SWH is installed, using portable version
 	echo.
 	goto swh
@@ -2603,64 +2646,23 @@ title Scripting Windows Host File Compressor
 echo Welcome to the Scripting Windows Host file compressor.
 :startcompress123
 set direc=%cd%
-::Starts old code of SWHZip
-set direcTest="%direc%"
-if %direcTest%=="{CLSID-SWH-SWHZIP12456vW7vrCt67Bt78R7vyu7vcr5659ov93590fcb598-5tc54t3c3d3h6s5yf-x35yv45yc335y}" (goto specifyDIRSWHZIP)
-if exist %direc% (
-	cd /d %direc%
-	goto ftc12
-) else (
-	echo.
-	echo "%direc%" directory is not existent. Please check "%direc%" is the correct name.
-	echo.
-	goto swh
-)
-:specifyDIRSWHZIP
-echo.
-echo Please specify a directory
-echo.
-goto swh
-::Ends old code of SWHZip
 
-::
-:ftc12
-if not exist "%pathswh%\DLL\vbsedit32.dll" (
-	echo.
-	echo Error: Cannot find "%pathswh%\DLL\vbsedit32.dll"
-	echo.
-	echo SWHZip will now use command-line version
-	echo.
-	set /p ftc=File to compress: 
-)
+echo Set wShell=CreateObject("WScript.Shell") > "%pathswh%\Temp\SelectFileSWHZip.vbs"
+echo Set oExec=wShell.Exec("mshta.exe ""about:<title>Select file</title><input type=file id=FILE><script>FILE.click();new ActiveXObject('Scripting.FileSystemObject').GetStandardStream(1).WriteLine(FILE.value);close();resizeTo(0,0);</script>""") >> "%pathswh%\Temp\SelectFileSWHZip.vbs"
+echo sFileSelected = oExec.StdOut.ReadLine >> "%pathswh%\Temp\SelectFileSWHZip.vbs"
 
 
+echo Set objFSO= createObject("Scripting.FileSystemObject") >> "%pathswh%\Temp\SelectFileSWHZip.vbs"
+echo Set swhzipselect = objfso.createtextfile("%pathswh%\Temp\SelectFileSWHZip.txt",true) >> "%pathswh%\Temp\SelectFileSWHZip.vbs"
+echo swhzipselect.writeline sFileSelected >> "%pathswh%\Temp\SelectFileSWHZip.vbs"
+echo swhzipselect.close >> "%pathswh%\Temp\SelectFileSWHZip.vbs"
 
-echo Set toolkit = CreateObject("VbsEdit.Toolkit") > %pathswh%\Temp\SelectFileSWHZip.vbs
-echo files=toolkit.OpenFileDialog("%userprofile%\Desktop","",False,"Open a file to be compressed with SWHZip") >> %pathswh%\Temp\SelectFileSWHZip.vbs
-echo If UBound(files)^>=0 Then >> %pathswh%\Temp\SelectFileSWHZip.vbs
-
-echo Set objFSO= createObject("Scripting.FileSystemObject") >> %pathswh%\Temp\SelectFileSWHZip.vbs
-echo Set swhzipselect = objfso.createtextfile("%pathswh%\Temp\SelectFileSWHZip.txt",true) >> %pathswh%\Temp\SelectFileSWHZip.vbs
-echo swhzipselect.writeline files(0) >> %pathswh%\Temp\SelectFileSWHZip.vbs
-echo swhzipselect.close >> %pathswh%\Temp\SelectFileSWHZip.vbs
-
-echo Else >> %pathswh%\Temp\SelectFileSWHZip.vbs
-echo   Wscript.Quit >> %pathswh%\Temp\SelectFileSWHZip.vbs
-echo End If >> %pathswh%\Temp\SelectFileSWHZip.vbs
 
 start /wait WScript.exe "%pathswh%\Temp\SelectFileSWHZip.vbs"
 cd /d "%pathswh%\Temp"
 for /f "tokens=1,2* delims=," %%a in (SelectFileSWHZip.txt) do (set ftc=%%a)
 set ext=swhzip
 goto cmprssing
-
-::More old code
-rem :surecompressing14
-rem echo.
-rem set /p surecmpr=Are you sure that you would to compress %ftc% to the name of %ftc%.swhzip? (y/n): 
-rem if /i "%surecmpr%"=="y" (goto cmprssing)
-rem if /i "%surecmpr%"=="N" (goto cancelcmprs) else (goto impocmprs)
-::Ends more old code
 
 :cmprssing
 echo.
@@ -2673,20 +2675,13 @@ if "%ftc%"=="" (
 )
 echo Compressing... Please wait
 
-
 @md "%pathswh%\SWHZip\%ftc%"
 
 
 powershell -Command Compress-Archive %ftc% %ftc%.zip>nul
 
-ren %ftc%.zip %ftc%.%ext%
+ren %ftc%.zip %ftc%.swhzip
 
-
-
-echo ren %ftc%.* %ftc%.zip >> DecompressorSWH%ran%.cmd
-echo powershell -Command Expand-Archive %ftc%.zip>> DecompressorSWH%ran%.cmd
-echo del DecompressorSWH%ran%.cmd /q >> DecompressorSWH%ran%.cmd
-echo exit /B >> DecompressorSWH%ran%.cmd
 
 copy "%ftc%" "%localappdata%\ScriptingWindowsHost\SwhZip\%ftc%">nul
 echo %ftc% is compressed to the name %ftc%.%ext%
@@ -2713,6 +2708,63 @@ echo Press any key to exit SWHZip...
 pause>nul
 title Scripting Windows Host Console
 goto swh
+
+
+:compressfile
+echo.
+echo Please use SWHZip to compress files
+echo.
+goto swh
+
+
+:decompressfile
+echo.
+
+echo Add-Type -AssemblyName System.Windows.Forms > "%pathswh%\Temp\SelectFileDecompress.ps1"
+echo $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{ >> "%pathswh%\Temp\SelectFileDecompress.ps1"
+echo     InitialDirectory = [Environment]::GetFolderPath('Desktop') >> "%pathswh%\Temp\SelectFileDecompress.ps1"
+echo     Filter = 'SWHZip files (*.swhzip)^| *.swhzip' >> "%pathswh%\Temp\SelectFileDecompress.ps1"
+echo } >> "%pathswh%\Temp\SelectFileDecompress.ps1"
+echo $null = $FileBrowser.ShowDialog() >> "%pathswh%\Temp\SelectFileDecompress.ps1"
+echo echo $FileBrowser.ShowDialog ^> "%pathswh%\Temp\SelectFileDecompress.txt" >> "%pathswh%\Temp\SelectFileDecompress.ps1"
+
+
+if not exist "%pathswh%\Temp\SelectFileDecompress.txt" (
+	echo.
+	echo Unknown error
+	echo.
+	goto swh
+)
+cd /d "%pathswh%\Temp"
+for /f "tokens=1,2* delims=," %%D in (SelectFileDecompress.txt) do (set decompressfilecontent=%%D)
+cd /d "%cdirectory%"
+if "%decompressfilecontent%"=="" (echo. & goto swh)
+
+
+if not exist %decompressfilecontent% (
+	echo "%decompressfilecontent%" does not exist!
+	echo.
+	goto swh
+)
+ren %decompressfilecontent% %decompressfilecontent%.zip
+powershell -c Expand-Archive %decompressfilecontent%.zip %decompressfilecontent%>nul
+echo.
+goto swh
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
