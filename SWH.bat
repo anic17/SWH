@@ -742,10 +742,11 @@ if /i %cmd%=="email" (goto email)
 if /i %cmd%=="decompressfile" (goto decompressfile)
 if /i %cmd%=="compressfile" (goto compressfile)
 if /i %cmd%=="encryptfile" (goto encryptfile)
+if /i %cmd%=="alias" (goto alias)
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
-if %next_exit%==1 (set next_exit=0 & exit /B)
+if "%next_exit%"=="1" (set next_exit=0 & exit /B)
 if not exist "\" (echo. & set errordisk_=%cd% & goto errornotdisk)
 set cmd=Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}
 echo SWH:Automatic >> "%pathswh%\SWH_History.txt"
@@ -772,6 +773,8 @@ set /p runasadminprog=Executable to run as administrator:
 if exist "%runasadminprog%" (set runasadminprog=%runasadminprog% & goto exist_runasadmin)
 if exist "%WINDIR%\%runasadminprog%" (set runasadminprog=%WinDir%\%runasadminprog% & goto exist_runasadmin)
 if exist "%userprofile%\%runasadminprog%" (set runasadminprog=%userprofile%\%runasadminprog% & goto exist_runasadmin)
+if exist "%WINDIR%\System32\WindowsPowerShell\v1.0\%runasadminprog%" (set runasadminprog=%WINDIR%\System32\WindowsPowerShell\v1.0\%runasadminprog% & goto exist_runasadmin)
+if exist "%WINDIR%\SysWOW64\WindowsPowerShell\v1.0\%runasadminprog%" (set runasadminprog=%WINDIR%\SysWOW64\WindowsPowerShell\v1.0\%runasadminprog% & goto exist_runasadmin)
 if exist "%WINDIR%\System32\%runasadminprog%" (set runasadminprog=%WinDir%\System32\%runasadminprog% & goto exist_runasadmin)
 if exist "%WinDir%\SysWOW64\%runasadminprog%" (set runasadminprog=%WinDir%\SysWOW64\%runasadminprog% & goto exist_runasadmin)
 if exist "%runasadminprog%" (set runasadminprog=%WinDir%\System32\%runasadminprog% & goto exist_runasadmin)
@@ -1120,6 +1123,27 @@ start /wait WScript.exe "%pathswh%\Temp\base64_decodefile.vbs"
 echo File has been saved with the name of %base64encodefile%.decoded
 echo.
 goto swh
+
+:alias
+echo.
+echo Aliases:
+echo.
+echo Original command ^| Alias
+echo.
+echo calc             ^| calculator
+echo cd ^>^> \          ^| cd\
+echo cd ^>^> :          ^| cd..
+echo cls              ^| clear
+echo dir              ^| ls ^& directory
+echo ver              ^| version
+echo.
+goto swh
+
+
+
+
+
+
 
 :email
 echo.
