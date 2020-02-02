@@ -495,15 +495,16 @@ echo systeminfo: Shows the system information >> %pathswh%\Temp\MoreHelp
 echo tasklist: Shows active processes >> %pathswh%\Temp\MoreHelp
 echo taskmgr: Opens Task Manager >> %pathswh%\Temp\MoreHelp
 echo t-rex: Starts T-Rex game >> %pathswh%\Temp\MoreHelp
-echo updateswh: Shows SWH Updates >> %pathswh%\Temp\MoreHelp
-echo userinfo: Shows the information of a user >> %pathswh%\Temp\MoreHelp
-echo version (or ver): Shows the version of SWH >> %pathswh%\Temp\MoreHelp
-echo viewstartlog: Shows the start SWH log file >> %pathswh%\Temp\MoreHelp
+echo updateswh: Shows SWH Updates >>" %pathswh%\Temp\MoreHelp"
+echo userinfo: Shows the information of a user >> "%pathswh%\Temp\MoreHelp"
+echo version (or ver): Shows the version of SWH >>" %pathswh%\Temp\MoreHelp"
+echo viewstartlog: Shows the start SWH log file >> "%pathswh%\Temp\MoreHelp"
 echo voice: Makes a voice >> %pathswh%\Temp\MoreHelp
-echo widedir: Shows the current directory in wide mode. >> %pathswh%\Temp\MoreHelp
-echo winver: Shows the Windows Version >> %pathswh%\Temp\MoreHelp
-echo. >> %pathswh%\Temp\MoreHelp
-echo Press any key to continue... >> %pathswh%\Temp\MoreHelp
+echo website: Opens Scripting Windows Host Internet website >> "%pathswh%\Temp\MoreHelp"
+echo widedir: Shows the current directory in wide mode. >> "%pathswh%\Temp\MoreHelp"
+echo winver: Shows the Windows Version >> "%pathswh%\Temp\MoreHelp"
+echo. >> "%pathswh%\Temp\MoreHelp"
+echo Press any key to continue... >> "%pathswh%\Temp\MoreHelp"
 
 if %moreCMD%==1 (goto moreHelp) else (goto normalHelp)
 :morehelp
@@ -605,6 +606,7 @@ echo userinfo: Shows the information of a user
 echo version (or ver): Shows the version of SWH
 echo viewstartlog: Shows the start SWH log file
 echo voice: Makes a voice
+echo website: Opens Scripting Windows Host Internet website
 echo widedir: Shows the current directory in wide mode.
 echo winver: Shows the Windows Version
 echo.
@@ -751,6 +753,7 @@ if /i %cmd%=="compressfile" (goto compressfile)
 if /i %cmd%=="encryptfile" (goto encryptfile)
 if /i %cmd%=="alias" (goto alias)
 if /i %cmd%=="ls" (goto dir)
+if /i %cmd%=="website" (start https://anic17.github.io/SWHConsole & echo. & goto swh)
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
