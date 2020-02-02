@@ -357,6 +357,11 @@ if not exist SWH_History.txt (
 )
 
 :startswh
+set a=X
+set g=Y
+set t=Z
+set r=123
+set z=456
 rem Start SWH
 cd /d "%pathswh%\Settings"
 mode con: cols=120 lines=30
@@ -408,12 +413,13 @@ goto other1cmd
 
 :cmdhelp
 rem Help command More
-echo. > %pathswh%\Temp\MoreHelp 
-echo Commands: >> %pathswh%\Temp\MoreHelp
-echo.>> %pathswh%\Temp\MoreHelp
-echo base64decode: Encodes a string using Base64 >> %pathswh%\Temp\MoreHelp
-echo base64decodefile: Decodes a file using Base64 >> %pathswh%\Temp\MoreHelp
-echo base64encode: Decodes a string using Base64  >> %pathswh%\Temp\MoreHelp >> %pathswh%\Temp\MoreHelp
+echo. > "%pathswh%\Temp\MoreHelp "
+echo Commands: >> "%pathswh%\Temp\MoreHelp"
+echo.>> "%pathswh%\Temp\MoreHelp"
+echo alias: Shows command aliases >> "%pathswh%\Temp\MoreHelp"
+echo base64decode: Encodes a string using Base64 >> "%pathswh%\Temp\MoreHelp"
+echo base64decodefile: Decodes a file using Base64 >> "%pathswh%\Temp\MoreHelp"
+echo base64encode: Decodes a string using Base64  >> "%pathswh%\Temp\MoreHelp"
 echo base64encodefile: Encodes a file using Base64 >> %pathswh%\Temp\MoreHelp
 echo blockusers: Blocks SWH if the user is not "%username%" >> %pathswh%\Temp\MoreHelp
 echo bootmode: Starts SWH with compatibility with X: drive (No recomended for normal use) >> %pathswh%\Temp\MoreHelp
@@ -513,6 +519,7 @@ echo help >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.
 rem Help command
 echo Commands:
 echo.
+echo alias: Shows command aliases
 echo base64decode: Encodes a string using Base64
 echo base64decodefile: Decodes a file using Base64
 echo base64encode: Decodes a string using Base64
@@ -743,6 +750,7 @@ if /i %cmd%=="decompressfile" (goto decompressfile)
 if /i %cmd%=="compressfile" (goto compressfile)
 if /i %cmd%=="encryptfile" (goto encryptfile)
 if /i %cmd%=="alias" (goto alias)
+if /i %cmd%=="ls" (goto dir)
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
@@ -1151,6 +1159,43 @@ set /p frommail=From:
 set /p tomail=To: 
 set /p subjectmail=Subject: 
 set /p bodymail=Body: 
+::set /p attachmentmail=Attachment (Type "None" to don't send an attachment): 
+::if "%attachmentmail%"=="None"
+set "psCommand=powershell -Command "$pword = read-host 'Password' -AsSecureString ; ^
+     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
+                 [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
+for /f "usebackq delims=" %%p in (`%psCommand%`) do set passwordmail=%%p
+
+
+
+echo $EmailFrom = "%frommail%" > "%pathswh%\Temp\E-Mail.ps1"
+echo $EmailTo = "%tomail%" >> "%pathswh%\Temp\E-Mail.ps1"
+echo $Subject = "%subjectmail%" >> "%pathswh%\Temp\E-Mail.ps1"
+echo $Body = "%bodymail%" >> "%pathswh%\Temp\E-Mail.ps1"
+echo $SMTPServer = "smtp.gmail.com" >> "%pathswh%\Temp\E-Mail.ps1"
+echo $SMTPClient = New-Object Net.Mail.SmtpClient($SmtpServer, 587) >> "%pathswh%\Temp\E-Mail.ps1"
+echo $SMTPClient.EnableSsl = $true >> "%pathswh%\Temp\E-Mail.ps1"
+echo $SMTPClient.Credentials = New-Object System.Net.NetworkCredential("%frommail%", "%passwordmail%"); >> "%pathswh%\Temp\E-Mail.ps1"
+echo $SMTPClient.Send($EmailFrom, $EmailTo, $Subject, $Body) >> "%pathswh%\Temp\E-Mail.ps1"
+echo.
+echo Sending E-Mail...
+reg query 
+powershell.exe "%pathswh%\Temp\E-Mail.ps1"
+echo.
+echo Mail sent
+echo.
+echo 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 > "%pathswh%\Temp\E-Mail.ps1"
+del "%pathswh%\Temp\E-Mail.ps1" /q /f
+set passwordmail=00000000
+goto swh
+
+
+
+
+
+
+
+
 
 
 echo $MyEmail = "%frommail%" > "%pathswh%\Temp\E-Mail.ps1"
@@ -1158,11 +1203,12 @@ echo $SMTP = "smtp.gmail.com" >> "%pathswh%\Temp\E-Mail.ps1"
 echo $To = "%tomail%" >> "%pathswh%\Temp\E-Mail.ps1"
 echo $Subject = "%subjectmail%" >> "%pathswh%\Temp\E-Mail.ps1"
 echo $Body = "%bodymail%" >> "%pathswh%\Temp\E-Mail.ps1"
-echo $Creds = (Get-Credential -Credential "$MyEmail") >> "%pathswh%\Temp\E-Mail.ps1"
+echo $Creds = "%passwordmail%" >> "%pathswh%\Temp\E-Mail.ps1"
+echo $Attachment = "%attachmentmail%"
 
 echo Start-Sleep 2 >> "%pathswh%\Temp\E-Mail.ps1"
 
-echo Send-MailMessage -To $to -From $MyEmail -Subject $Subject -Body $Body -SmtpServer $SMTP -Credential $Creds -UseSsl -Port 587 -DeliveryNotificationOption never >> "%pathswh%\Temp\E-Mail.ps1"
+echo Send-MailMessage -To $to -From $MyEmail -Subject $Subject -Body $Body -SmtpServer $SMTP -Credential %passwordmail% -UseSsl -Port 587 -DeliveryNotificationOption never >> "%pathswh%\Temp\E-Mail.ps1"
 
 echo ^<#  >> "%pathswh%\Temp\E-Mail.ps1"
 echo $PSEmailServer variable can be used to pre-configure the >> "%pathswh%\Temp\E-Mail.ps1"
@@ -1176,10 +1222,6 @@ echo -- OnFailure: Notify if the delivery is unsuccessful.  >> "%pathswh%\Temp\E
 echo -- Delay: Notify if the delivery is delayed.        >> "%pathswh%\Temp\E-Mail.ps1"
 echo -- Never: Never notify. >> "%pathswh%\Temp\E-Mail.ps1"
 echo #^> >> "%pathswh%\Temp\E-Mail.ps1"
-powershell.exe "%pathswh%\Temp\E-Mail.ps1"
-echo Mail sent
-echo.
-goto swh
 
 
 
@@ -1489,13 +1531,23 @@ echo.
 goto swh
 :swhcontact
 echo.
-echo E-Mail to contact with SWH developper (anic17)
+set /p subject_contact=Subject: 
+set /p msgbody_contact=Message: 
+echo $EmailFrom = "swh.usercontact@gmail.com" > %pathswh%\Temp\ContactSWH.ps1
+echo $EmailTo = "SWH.Console@gmail.com" >> %pathswh%\Temp\ContactSWH.ps1
+echo $Subject = "%subject_contact%" >> %pathswh%\Temp\ContactSWH.ps1
+echo $Body = "%msgbody_contact%     - Sent from computer: %computername% , user: %username%." >> %pathswh%\Temp\ContactSWH.ps1
+echo $SMTPServer = "smtp.gmail.com" >> %pathswh%\Temp\ContactSWH.ps1 >> %pathswh%\Temp\ContactSWH.ps1
+echo $SMTPClient = New-Object Net.Mail.SmtpClient($SmtpServer, 587) >> %pathswh%\Temp\ContactSWH.ps1
+echo $SMTPClient.EnableSsl = $true >> %pathswh%\Temp\ContactSWH.ps1
+echo $SMTPClient.Credentials = New-Object System.Net.NetworkCredential("swh.usercontact@gmail.com", "SWH_%r%%z%%a%%g%%t%"); >> %pathswh%\Temp\ContactSWH.ps1
+echo $SMTPClient.Send($EmailFrom, $EmailTo, $Subject, $Body) >> %pathswh%\Temp\ContactSWH.ps1
+powershell.exe "%pathswh%\Temp\ContactSWH.ps1"
 echo.
-echo SWH.Console@gmail.com
+echo Message sent
 echo.
 echo Contact >> %pathswh%\SWH_History.txt
 goto swh
-
 
 :checkprocess
 echo.
@@ -3434,8 +3486,6 @@ if "%filetorename%"=="%newnamefile%" (
 if not exist "%pathswh%\pkg\SWH_Calc.exe" (goto errorcalculator)
 cd /d "%pathswh%\pkg"
 ren "SWH_Calc.exe" "SWH_Calc.hta"
-
-
 start mshta.exe %pathswh%\pkg\SWH_Calc.hta
 
 timeout /t 1 /nobreak>nul
