@@ -22,13 +22,13 @@ To view command list, type "help". If you cannot view all commands, type first "
 To update, type "updateswh"
 
 You can also use parameters to run in console, ex:
-
+[code]
 	- "SWH.bat" /c updateswh
 	- "SWH.bat" /admin
 	- "SWH.bat" /?
 	- "SWH.bat" /h"
 
-
+[/code]
 :D
 
 SWH Team (anic17)
