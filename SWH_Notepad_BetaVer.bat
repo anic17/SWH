@@ -60,7 +60,7 @@ echo.
 if %y%==0 if %x% leq 5 (
 	set x=
 	set y=
-	batbox /c 0xfo /d "  Save as...  "
+	batbox /c 0xf0 /d "  Save as...  "
 	echo.
 	batbox /c 0x70 /d "  Save        "
 	echo.
@@ -89,7 +89,7 @@ echo.
 set write=[{CRLF-SWH_NOTEPAD_id:31634mn34h8rfy789208735fh}-ENTER]
 set /a written=%written%+1
 set /a about_restoreclick=%written%+3
-batbox /c 0xf0 /d "> "
+batbox /c 0xf0 /d ""
 set /p "write= "
 if "%write%"=="{MENU}" (goto menuson)
 if "%write%"=="[{CRLF-SWH_NOTEPAD_id:31634mn34h8rfy789208735fh}-ENTER]" (echo.>> %pathswh%\Notepad\NoteFile%noteact%.tmp & goto write)
@@ -115,35 +115,37 @@ batbox /g 0 1 /c 0x70 /d "Save as..."
 echo.
 batbox /g 0 2 /c 0x70 /d "Save      "
 echo.
-batbox /g 0 3 /c 0x70 /d "Quit      "
+batbox /g 0 3 /c 0x70 /d "Open      "
+echo.
+batbox /g 0 4 /c 0x70 /d "Quit      "
 
 call :coords
 echo createObject("WScript.Shell").SendKeys "%~dp0" > "%pathswh%\Temp\NotepadPath.vbs"
 if %y%==1 if %x% geq 1 if %x% leq 12 (
 	:saveas
-	batbox /g 0 2
-	echo.
-	batbox /g 0 1 /c 0x70 /d ""
+	batbox /g 0 2 /c 0xf0 /d "             "
+	batbox /g 0 3 /c 0xf0 /d "             "
+	batbox /g 0 1 /c 0x70 /d "Save as: "
+	batbox /g 0 4 /c 0x70 /d "             "
 	start WScript.exe "%pathswh%\Temp\NotepadPath.vbs"
-
-	set /p saveas=Save as: 
-	copy "%pathswh%\Notepad\NoteFile%noteact%.tmp" "%saveas%">nul
-	echo Saved
+	set /p saveas=
+	copy "%pathswh%\Notepad\NoteFile%noteact%.tmp" %saveas%	
+	if exist "%saveas%" (echo Saved) else (echo Error while saving)
 )
-if %y%==2 if %x% geq 1 if %x% leq 12 if "%saved%"=="0" (goto saveas) else (set saved=1 & copy "%localappdata%\ScriptingWindowsHost\Notepad\NoteFile%noteact%.tmp" "%saveas%">nul)
+if %y%==2 if %x% geq 1 if %x% leq 12 if "%saved%"=="0" (goto saveas) else (set saved=1 & copy "%localappdata%\ScriptingWindowsHost\Notepad\NoteFile%noteact%.tmp" "%saveas%">nul & batbox /g 0 1 /d "         " & batbox /g 0 2 /d "         " & batbox /g 0 3 /d "         ")
 if %y%==3 if %x% geq 1 if %x% leq 12 (exit /B)
 echo.
 goto write
 
 :clickmenu_about
-batbox /g 20 1 /c 0x70 /d " About  "
+batbox /g 20 1 /c 0x70 /d "About SWH Notepad"
 call :coords
-if %x% geq 20 if %x% leq 28 if %y%==1 (
+if %x% geq 20 if %x% leq 40 if %y%==1 (
 	echo msgbox "Scripting Windows Host Notepad - Version 2.1"^&vbLf^&vbLf^&"By anic17"^&vbLf^&"GitHub: http://github.com/anic17/SWH",4160,"About Scripting Windows Host Notepad" > "%pathswh%\Temp\AboutNotepad.vbs"
 	start /wait WScript.exe "%pathswh%\Temp\AboutNotepad.vbs"
 	del "%pathswh%\Temp\AboutNotepad.vbs" /q
 )
-batbox /g 20 1 /c 0xf0 /d "             "
+batbox /g 20 1 /c 0xf0 /d "                   "
 batbox /g 0 %about_restoreclick% /d ""
 goto write
 
