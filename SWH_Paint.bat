@@ -61,32 +61,29 @@ del "%tmp%\t.dat"
 
 batbox /g 0 0 /c 0x07 /d "Starting Scripting Windows Host Paint..."
 echo.
-batbox /g 100 11 /c 0x07 /d "κκκκκκκκκκκκκκκκκκ"
-batbox /g 100 12 /c 0x07 /d "κκ Shadow color κκ"
-batbox /g 100 13 /c 0x07 /d "κκκκκκκκκκκκκκκκκκ"
+batbox /g 100 11 /c 0x07 /d "ΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺ"
+batbox /g 100 12 /c 0x07 /d "ΓͺΓͺ Shadow color ΓͺΓͺ"
+batbox /g 100 13 /c 0x07 /d "ΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺ"
 
 
-batbox /g 100 18 /c 0x07 /d "κκκκκκκκκκκ"
-batbox /g 100 19 /c 0x07 /d "κκ Color κκ"
-batbox /g 100 20 /c 0x07 /d "κκκκκκκκκκκ"
-batbox /g 100 14 /c 0x01 /d "κκ" & ::Blue
-batbox /g 102 14 /c 0x02 /d "κκ" & ::Green
-batbox /g 104 14 /c 0x03 /d "κκ"
-batbox /g 106 14 /c 0x04 /d "κκ"
-batbox /g 108 14 /c 0x05 /d "κκ"
-batbox /g 110 14 /c 0x06 /d "κκ"
-batbox /g 100 15 /c 0x07 /d "κκ"
-batbox /g 102 15 /c 0x08 /d "κκ"
-batbox /g 104 15 /c 0x09 /d "κκ"
-batbox /g 106 15 /c 0x0a /d "κκ"
-batbox /g 108 15 /c 0x0b /d "κκ"
-batbox /g 110 15 /c 0x0c /d "κκ"
-batbox /g 100 16 /c 0x0d /d "κκ"
-batbox /g 102 16 /c 0x0e /d "κκ"
-batbox /g 104 16 /c 0x0f /d "κκ"
-
-
-
+batbox /g 100 18 /c 0x07 /d "ΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺ"
+batbox /g 100 19 /c 0x07 /d "ΓͺΓͺ Color ΓͺΓͺ"
+batbox /g 100 20 /c 0x07 /d "ΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺ"
+batbox /g 100 14 /c 0x01 /d "ΓͺΓͺ" & ::Blue
+batbox /g 102 14 /c 0x02 /d "ΓͺΓͺ" & ::Green
+batbox /g 104 14 /c 0x03 /d "ΓͺΓͺ"
+batbox /g 106 14 /c 0x04 /d "ΓͺΓͺ"
+batbox /g 108 14 /c 0x05 /d "ΓͺΓͺ"
+batbox /g 110 14 /c 0x06 /d "ΓͺΓͺ"
+batbox /g 100 15 /c 0x07 /d "ΓͺΓͺ"
+batbox /g 102 15 /c 0x08 /d "ΓͺΓͺ"
+batbox /g 104 15 /c 0x09 /d "ΓͺΓͺ"
+batbox /g 106 15 /c 0x0a /d "ΓͺΓͺ"
+batbox /g 108 15 /c 0x0b /d "ΓͺΓͺ"
+batbox /g 110 15 /c 0x0c /d "ΓͺΓͺ"
+batbox /g 100 16 /c 0x0d /d "ΓͺΓͺ"
+batbox /g 102 16 /c 0x0e /d "ΓͺΓͺ"
+batbox /g 104 16 /c 0x0f /d "ΓͺΓͺ"
 
 
 
@@ -99,24 +96,27 @@ batbox /g 104 16 /c 0x0f /d "κκ"
 
 
 
-batbox /g 100 18 /c 0x07 /d "κκκκκκκκκκκ"
-batbox /g 100 19 /c 0x07 /d "κκ Color κκ"
-batbox /g 100 20 /c 0x07 /d "κκκκκκκκκκκ"
-batbox /g 100 21 /c 0x01 /d "κκ" & ::Blue
-batbox /g 102 21 /c 0x02 /d "κκ" & ::Green
-batbox /g 104 21 /c 0x03 /d "κκ"
-batbox /g 106 21 /c 0x04 /d "κκ"
-batbox /g 108 21 /c 0x05 /d "κκ"
-batbox /g 110 21 /c 0x06 /d "κκ"
-batbox /g 100 22 /c 0x07 /d "κκ"
-batbox /g 102 22 /c 0x08 /d "κκ"
-batbox /g 104 22 /c 0x09 /d "κκ"
-batbox /g 106 22 /c 0x0a /d "κκ"
-batbox /g 108 22 /c 0x0b /d "κκ"
-batbox /g 110 22 /c 0x0c /d "κκ"
-batbox /g 100 23 /c 0x0d /d "κκ"
-batbox /g 102 23 /c 0x0e /d "κκ"
-batbox /g 104 23 /c 0x0f /d "κκ"
+
+
+
+batbox /g 100 18 /c 0x07 /d "ΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺ"
+batbox /g 100 19 /c 0x07 /d "ΓͺΓͺ Color ΓͺΓͺ"
+batbox /g 100 20 /c 0x07 /d "ΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺ"
+batbox /g 100 21 /c 0x01 /d "ΓͺΓͺ" & ::Blue
+batbox /g 102 21 /c 0x02 /d "ΓͺΓͺ" & ::Green
+batbox /g 104 21 /c 0x03 /d "ΓͺΓͺ"
+batbox /g 106 21 /c 0x04 /d "ΓͺΓͺ"
+batbox /g 108 21 /c 0x05 /d "ΓͺΓͺ"
+batbox /g 110 21 /c 0x06 /d "ΓͺΓͺ"
+batbox /g 100 22 /c 0x07 /d "ΓͺΓͺ"
+batbox /g 102 22 /c 0x08 /d "ΓͺΓͺ"
+batbox /g 104 22 /c 0x09 /d "ΓͺΓͺ"
+batbox /g 106 22 /c 0x0a /d "ΓͺΓͺ"
+batbox /g 108 22 /c 0x0b /d "ΓͺΓͺ"
+batbox /g 110 22 /c 0x0c /d "ΓͺΓͺ"
+batbox /g 100 23 /c 0x0d /d "ΓͺΓͺ"
+batbox /g 102 23 /c 0x0e /d "ΓͺΓͺ"
+batbox /g 104 23 /c 0x0f /d "ΓͺΓͺ"
 batbox /g 100 25 /c 0x07 /d "Erase"
 batbox /g 100 26 /c 0x07 /d "Size of rubber:"
 
@@ -125,9 +125,9 @@ batbox /g 100 28 /c 0x07 /d "3x3 %selectedrubber3x3%"
 batbox /g 100 29 /c 0x07 /d "5x5 %selectedrubber5x5%"
 
 
-batbox /g 100 31 /c 0x07 /d "κκκκκκκκκκκκκκκκ"
-batbox /g 100 32 /c 0x07 /d "κκ Geometrics κκ"
-batbox /g 100 33 /c 0x07 /d "κκκκκκκκκκκκκκκκ"
+batbox /g 100 31 /c 0x07 /d "ΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺ"
+batbox /g 100 32 /c 0x07 /d "ΓͺΓͺ Geometrics ΓͺΓͺ"
+batbox /g 100 33 /c 0x07 /d "ΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺΓͺ"
 batbox /g 100 34 /c 0x07 /d "Square"
 
 batbox /g 0 0 /c 0x07 /d "                                         "
@@ -135,7 +135,7 @@ batbox /g 0 34 /c 0x70 /d "Open file"
 
 :paint
 batbox /g 100 25 /c 0x07 /d "Erase"
-batbox /g 100 0 /c 0x07 /d "Current color: " & batbox /g 115 0 /c 0x0%colordraw% /d "κκ"
+batbox /g 100 0 /c 0x07 /d "Current color: " & batbox /g 115 0 /c 0x0%colordraw% /d "ΓͺΓͺ"
 call :coords
 if %x% geq 100 if %x% leq 101 if %y%==21 set colordraw=1 & goto paint
 if %x% geq 102 if %x% leq 103 if %y%==21 set colordraw=2 & goto paint
@@ -182,8 +182,8 @@ if %x% geq 100 if %x% leq 107 if %y%==34 goto make_square & goto paint
 if %x% geq 0 if %x% leq 9 if %y%==34 goto Menu_Open 
 
 
-batbox /g %x% %y% /c 0x0%colordraw% /d "κ"
-echo /g %x% %y% /c 0x0%colordraw% /d "κ" >> %pathswh%\Paint\Draw1.swhdrw
+batbox /g %x% %y% /c 0x0%colordraw% /d "Γͺ"
+echo /g %x% %y% /c 0x0%colordraw% /d "Γͺ" >> %pathswh%\Paint\Draw1.swhdrw
 
 rem :NotErase
 
@@ -198,7 +198,7 @@ goto paint
 batbox /g 26 0 /c 0x70 /d "Click the rectangle start point"
 
 call :coords
-batbox /g %x% %y% /c 0x%colordraw%0 /d "κ"
+batbox /g %x% %y% /c 0x%colordraw%0 /d "Γͺ"
 
 set squarestart_x=%x%
 set squarestart_y=%y%
@@ -209,7 +209,7 @@ batbox /g 26 0 /c 0x70 /d "Click the rectangle end point"
 batbox /g 55 0 /c 0x07 /d "  "
 
 call :coords
-batbox /g %x% %y% /c 0x%colordraw%0 /d "κ"
+batbox /g %x% %y% /c 0x%colordraw%0 /d "Γͺ"
 
 
 set squareend_x=%x%
