@@ -38,8 +38,6 @@ md "%pathswh%\OldSWH"
 cls
 md "%pathswh%\SWHZip"
 cls
-md "%pathswh%\DLL"
-cls
 md "%pathswh%\pkg"
 cls
 md "%pathswh%\Icon"
@@ -302,7 +300,7 @@ cls
 goto putpassword
 
 :execdir_ChangeCD
-set cdirectory=%2
+set cdirectory="%~2"
 set execdir_cd=1
 goto next_CD_execdir
 
@@ -321,9 +319,9 @@ set executiondir_established=%userprofile%
 set firstDirCD_=%cd%
 :next_CD_execdir
 if %execdir_cd%==1 (
-	set cdirectory=%2
-	set executiondir_established=%2
-	cd /d %2
+	set cdirectory="%~2"
+	set executiondir_established="%~2"
+	cd /d "%~2"
 )
 ::echo %cdirectory%
 
@@ -382,7 +380,7 @@ if exist DefaultTitle.opt (
 	echo [%date% %time%] - Loaded Setting: %pathswh%\Settings\DefaultTitle.opt >> %pathswh%\StartLog.log
 ) else (
 	echo [%date% %time%] - Unexistant Setting: %pathswh%\Settings\DefaultTitle.opt >> %pathswh%\StartLog.log
-	set title=%title%
+	if "%username%"=="SYSTEM" (set title= %title% - Running as NT AUTHORITY\SYSTEM) else (set title=%title%)
 )
 if exist DefaultDirectory.opt (
 	for /f "tokens=1,2* delims=," %%d in (DefaultDirectory.opt) do (cd /d %%d &set cdirectory=%%d)
@@ -399,10 +397,10 @@ if exist IncorrectCommand.opt (
 	echo [%date% %time%] - Unexistant Setting: %pathswh%\Settings\IncorrectCommand.opt >> %pathswh%\StartLog.log
 )
 set cmd=Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}
-set ver=10.4.1
+set ver=10.5
 set securever=%ver%
 cls
-if not "%executiondir_established%"=="%userprofile%" (cd /d "%2") else (cd /d "%cdirectory%")
+if not "%executiondir_established%"=="%userprofile%" (cd /d "%~2") else (cd /d "%cdirectory%")
 echo [%date% %time%] - SWH: Running SWH on user %username% in directory %~dp0 >> %pathswh%\StartLog.log
 echo Welcome to the Scripting Windows Host Console. %xdiskcomp%
 echo.
@@ -413,39 +411,40 @@ goto other1cmd
 
 :cmdhelp
 rem Help command More
-echo. > "%pathswh%\Temp\MoreHelp "
+echo. > "%pathswh%\Temp\MoreHelp"
 echo Commands: >> "%pathswh%\Temp\MoreHelp"
 echo.>> "%pathswh%\Temp\MoreHelp"
 echo alias: Shows command aliases >> "%pathswh%\Temp\MoreHelp"
+echo audiovolume: Sets the Windows audio volume >> "%pathswh%\Temp\MoreHelp"
 echo base64decode: Encodes a string using Base64 >> "%pathswh%\Temp\MoreHelp"
 echo base64decodefile: Decodes a file using Base64 >> "%pathswh%\Temp\MoreHelp"
 echo base64encode: Decodes a string using Base64  >> "%pathswh%\Temp\MoreHelp"
-echo base64encodefile: Encodes a file using Base64 >> %pathswh%\Temp\MoreHelp
-echo blockusers: Blocks SWH if the user is not "%username%" >> %pathswh%\Temp\MoreHelp
-echo bootmode: Starts SWH with compatibility with X: drive (No recomended for normal use) >> %pathswh%\Temp\MoreHelp
-echo bugs: Can see the bugs of SWH >> %pathswh%\Temp\MoreHelp
-echo calc (or calculator): Starts SWH calculator >> %pathswh%\Temp\MoreHelp
-echo cancelshutdown: Cancels the programmed shutdown >> %pathswh%\Temp\MoreHelp
-echo cd: Go to a specific directory >> %pathswh%\Temp\MoreHelp
-echo checkprocess: Checks if a specified process is running on system >> %pathswh%\Temp\MoreHelp
-echo clear: Clears the screen of SWH >> %pathswh%\Temp\MoreHelp
-echo clearhistory: Clears the SWH command history >> %pathswh%\Temp\MoreHelp
-echo cleartemp: Clears the temporary files of your computer in %tmp% >> %pathswh%\Temp\MoreHelp
-echo clearwintemp: Clears the Windows temporary files in %Systemroot%\Temp >> %pathswh%\Temp\MoreHelp
-echo clipboard: Copies a text in the clipboard >> %pathswh%\Temp\MoreHelp
-echo cmd: Starts Command Prompt in the current directory >> %pathswh%\Temp\MoreHelp
-echo command: Starts MS-DOS command prompt (command.com) >> %pathswh%\Temp\MoreHelp
-echo contact: Shows the contact information >> %pathswh%\Temp\MoreHelp
-echo copy: Copies files of the computer >> %pathswh%\Temp\MoreHelp
-echo credits: Shows the credits of SWH >> %pathswh%\Temp\MoreHelp
-echo date: Changes the date of the computer >> %pathswh%\Temp\MoreHelp
+echo base64encodefile: Encodes a file using Base64 >> "%pathswh%\Temp\MoreHelp"
+echo blockusers: Blocks SWH if the user is not "%username%" ">> %pathswh%\Temp\MoreHelp"
+echo bootmode: Starts SWH with compatibility with X: drive (Not recomended for normal use) >> "%pathswh%\Temp\MoreHelp"
+echo bugs: Can see the bugs of SWH >> "%pathswh%\Temp\MoreHelp"
+echo calc (or calculator): Starts SWH calculator >> "%pathswh%\Temp\MoreHelp"
+echo cancelshutdown: Cancels the programmed shutdown >> "%pathswh%\Temp\MoreHelp"
+echo cd: Go to a specific directory >> "%pathswh%\Temp\MoreHelp"
+echo checkprocess: Checks if a specified process is running on system >> "%pathswh%\Temp\MoreHelp"
+echo clear: Clears the screen of SWH >> "%pathswh%\Temp\MoreHelp"
+echo clearhistory: Clears the SWH command history >> "%pathswh%\Temp\MoreHelp"
+echo cleartemp: Clears the temporary files of your computer in %tmp% >> "%pathswh%\Temp\MoreHelp"
+echo clearwintemp: Clears the Windows temporary files in %Systemroot%\Temp >> "%pathswh%\Temp\MoreHelp"
+echo clipboard: Copies a text in the clipboard >> "%pathswh%\Temp\MoreHelp"
+echo cmd: Starts Command Prompt in the current directory >> "%pathswh%\Temp\MoreHelp"
+echo command: Starts MS-DOS command prompt (command.com) >> "%pathswh%\Temp\MoreHelp"
+echo contact: Shows the contact information >> "%pathswh%\Temp\MoreHelp"
+echo copy: Copies files of the computer >> "%pathswh%\Temp\MoreHelp"
+echo credits: Shows the credits of SWH >> "%pathswh%\Temp\MoreHelp"
+echo date: Changes the date of the computer >> "%pathswh%\Temp\MoreHelp"
 echo decompressfile: Decompresses a file compressed with SWHZip >> "%pathswh%\Temp\MoreHelp"
-echo decrypttext: Decrypts a text >> %pathswh%\Temp\MoreHelp
-echo del: Removes a file >> %pathswh%\Temp\MoreHelp
-echo dir (or directory): Shows the current directory >> %pathswh%\Temp\MoreHelp
-echo disableswh: Disables SWH for current user >> %pathswh%\Temp\MoreHelp
-echo download: Downloads an Internet file, website, photo or video. >> %pathswh%\Temp\MoreHelp
-echo editswh: Edits source code of SWH in GitHub. To make changes, developper will check it >> %pathswh%\Temp\MoreHelp
+echo decrypttext: Decrypts a text >> "%pathswh%\Temp\MoreHelp"
+echo del: Removes a file >> "%pathswh%\Temp\MoreHelp"
+echo dir (or directory): Shows the current directory >> "%pathswh%\Temp\MoreHelp"
+echo disableswh: Disables SWH for current user >> "%pathswh%\Temp\MoreHelp"
+echo download: Downloads an Internet file, website, photo or video. >> "%pathswh%\Temp\MoreHelp"
+echo editswh: Edits source code of SWH in GitHub. To make changes, developper will check it >> "%pathswh%\Temp\MoreHelp"
 echo email: Sends a mail message >> "%pathswh%\Temp\MoreHelp"
 echo encrypttext: Encrypts a text >> "%pathswh%\Temp\MoreHelp"
 echo endtask: Finish an active process >> "%pathswh%\Temp\MoreHelp"
@@ -457,49 +456,50 @@ echo filesize: Shows the size of a file >> "%pathswh%\Temp\MoreHelp"
 echo folder: Makes a directory >> "%pathswh%\Temp\MoreHelp"
 echo google: Searchs in Google >> "%pathswh%\Temp\MoreHelp"
 echo help: Shows this help message >> "%pathswh%\Temp\MoreHelp"
-echo history: Views the commands history >> %pathswh%\Temp\MoreHelp
-echo ipconfig: Shows the IP and his configuration >> %pathswh%\Temp\MoreHelp
-echo invertcolors: Inverts colors of the screen (Classic inversion) >> %pathswh%\Temp\MoreHelp
-echo more: Makes a pause in a long text every time the page ends >> %pathswh%\Temp\MoreHelp
-echo msg: Makes a message box on the screen >> %pathswh%\Temp\MoreHelp
-echo networkconnections: Shows the network connections >> %pathswh%\Temp\MoreHelp
-echo networkmsg: Chats with a computer on the same network than you >> %pathswh%\Temp\MoreHelp
-echo passwordkey: Generates a new key for the password AES encryption (Beta) >> %pathswh%\Temp\MoreHelp
-echo path: Changes the actual path of SWH >> %pathswh%\Temp\MoreHelp
-echo pkg: Installs/Removes SWH packages >> %pathswh%\Temp\MoreHelp
-echo powershell: Starts Windows PowerShell in the current directory >> %pathswh%\Temp\MoreHelp
-echo project: Makes a programmation script with Scripting Windows Host (Coming soon) >> %pathswh%\Temp\MoreHelp
-echo prompt: Changes the text of the SWH command line >> %pathswh%\Temp\MoreHelp
-echo read: Shows the text of a file >> %pathswh%\Temp\MoreHelp
-echo removefolder: Removes an existing folder (empty) >> %pathswh%\Temp\MoreHelp
-echo removepassword: Removes the actual password >> %pathswh%\Temp\MoreHelp
-echo rename: Renames a file or a folder >> %pathswh%\Temp\MoreHelp
-echo resetsettings: Resets the actual settings >> %pathswh%\Temp\MoreHelp
-echo resetstartlog: Resets the start log each time SWH starts >> %pathswh%\Temp\MoreHelp
-echo restartswh: Restarts SWH >> %pathswh%\Temp\MoreHelp
-echo reversetext: Reverses a text >> %pathswh%\Temp\MoreHelp
-echo run: Runs a program, file or Internet ressource >> %pathswh%\Temp\MoreHelp
-echo runasadmin: Starts a program as administrator >> %pathswh%\Temp\MoreHelp
-echo say: Says a text in SWH Console >> %pathswh%\Temp\MoreHelp
-echo scanvirus: Scans a file and looks for threats and viruses >> %pathswh%\Temp\MoreHelp
-echo search: Searchs a file or a folder >> %pathswh%\Temp\MoreHelp
-echo setpassword: Sets a password for SWH Console >> %pathswh%\Temp\MoreHelp
-echo setup: Starts SWH Setup (Install/Uninstall) >> %pathswh%\Temp\MoreHelp
-echo size: Changes the size of SWH Console >> %pathswh%\Temp\MoreHelp
-echo shutdown: Shuts down the computer >> %pathswh%\Temp\MoreHelp
-echo swh: Starts a new session of Scripting Windows Host Console >> %pathswh%\Temp\MoreHelp
-echo swhadmin: Runs SWH as administrator >> %pathswh%\Temp\MoreHelp
-echo swhdiskcleaner: Starts SWH Disk Cleaner >> %pathswh%\Temp\MoreHelp
-echo swhzip: Starts SWHZip (SWH File compressor) >> %pathswh%\Temp\MoreHelp
-echo systeminfo: Shows the system information >> %pathswh%\Temp\MoreHelp
-echo tasklist: Shows active processes >> %pathswh%\Temp\MoreHelp
-echo taskmgr: Opens Task Manager >> %pathswh%\Temp\MoreHelp
-echo t-rex: Starts T-Rex game >> %pathswh%\Temp\MoreHelp
+echo history: Views the commands history >> "%pathswh%\Temp\MoreHelp"
+echo ipconfig: Shows the IP and his configuration >> "%pathswh%\Temp\MoreHelp"
+echo invertcolors: Inverts colors of the screen (Classic inversion) >> "%pathswh%\Temp\MoreHelp"
+echo more: Makes a pause in a long text every time the page ends >> "%pathswh%\Temp\MoreHelp"
+echo msg: Makes a message box on the screen >> "%pathswh%\Temp\MoreHelp"
+echo networkconnections: Shows the network connections >> "%pathswh%\Temp\MoreHelp"
+echo networkmsg: Chats with a computer on the same network than you >> "%pathswh%\Temp\MoreHelp"
+echo passwordkey: Generates a new key for the password AES encryption (Beta) >> "%pathswh%\Temp\MoreHelp"
+echo path: Changes the actual path of SWH >> "%pathswh%\Temp\MoreHelp"
+echo pkg: Installs/Removes SWH packages >> "%pathswh%\Temp\MoreHelp"
+echo powershell: Starts Windows PowerShell in the current directory >> "%pathswh%\Temp\MoreHelp"
+echo preventprocess: Prevents and stops a process to don't let start it >> "%pathswh%\Temp\MoreHelp"
+echo project: Makes a programmation script with Scripting Windows Host (Coming soon) >> "%pathswh%\Temp\MoreHelp"
+echo prompt: Changes the text of the SWH command line >> "%pathswh%\Temp\MoreHelp"
+echo read: Shows the text of a file >> "%pathswh%\Temp\MoreHelp"
+echo removefolder: Removes an existing folder (empty) >> "%pathswh%\Temp\MoreHelp"
+echo removepassword: Removes the actual password >> "%pathswh%\Temp\MoreHelp"
+echo rename: Renames a file or a folder >> "%pathswh%\Temp\MoreHelp"
+echo resetsettings: Resets the actual settings >> "%pathswh%\Temp\MoreHelp"
+echo resetstartlog: Resets the start log each time SWH starts >> "%pathswh%\Temp\MoreHelp"
+echo restartswh: Restarts SWH >> "%pathswh%\Temp\MoreHelp"
+echo reversetext: Reverses a text >> "%pathswh%\Temp\MoreHelp"
+echo run: Runs a program, file or Internet ressource >> "%pathswh%\Temp\MoreHelp"
+echo runasadmin: Starts a program as administrator >> "%pathswh%\Temp\MoreHelp"
+echo say: Says a text in SWH Console >> "%pathswh%\Temp\MoreHelp"
+echo scanvirus: Scans a file and looks for threats and viruses >> "%pathswh%\Temp\MoreHelp"
+echo search: Searchs a file or a folder >> "%pathswh%\Temp\MoreHelp"
+echo setpassword: Sets a password for SWH Console >> "%pathswh%\Temp\MoreHelp"
+echo setup: Starts SWH Setup (Install/Uninstall) >> "%pathswh%\Temp\MoreHelp"
+echo size: Changes the size of SWH Console >> "%pathswh%\Temp\MoreHelp"
+echo shutdown: Shuts down the computer >> "%pathswh%\Temp\MoreHelp"
+echo swh: Starts a new session of Scripting Windows Host Console >> "%pathswh%\Temp\MoreHelp"
+echo swhadmin: Runs SWH as administrator >> "%pathswh%\Temp\MoreHelp"
+echo swhdiskcleaner: Starts SWH Disk Cleaner >> "%pathswh%\Temp\MoreHelp"
+echo swhzip: Starts SWHZip (SWH File compressor) >> "%pathswh%\Temp\MoreHelp"
+echo systeminfo: Shows the system information >> "%pathswh%\Temp\MoreHelp"
+echo tasklist: Shows active processes >> "%pathswh%\Temp\MoreHelp"
+echo taskmgr: Opens Task Manager >> "%pathswh%\Temp\MoreHelp"
+echo t-rex: Starts T-Rex game >> "%pathswh%\Temp\MoreHelp"
 echo updateswh: Shows SWH Updates >>" %pathswh%\Temp\MoreHelp"
 echo userinfo: Shows the information of a user >> "%pathswh%\Temp\MoreHelp"
 echo version (or ver): Shows the version of SWH >>" %pathswh%\Temp\MoreHelp"
 echo viewstartlog: Shows the start SWH log file >> "%pathswh%\Temp\MoreHelp"
-echo voice: Makes a voice >> %pathswh%\Temp\MoreHelp
+echo voice: Makes a voice >> "%pathswh%\Temp\MoreHelp"
 echo website: Opens Scripting Windows Host Internet website >> "%pathswh%\Temp\MoreHelp"
 echo widedir: Shows the current directory in wide mode. >> "%pathswh%\Temp\MoreHelp"
 echo winver: Shows the Windows Version >> "%pathswh%\Temp\MoreHelp"
@@ -521,6 +521,7 @@ rem Help command
 echo Commands:
 echo.
 echo alias: Shows command aliases
+echo audiovolume: Sets the Windows audio volume
 echo base64decode: Encodes a string using Base64
 echo base64decodefile: Decodes a file using Base64
 echo base64encode: Decodes a string using Base64
@@ -630,7 +631,7 @@ goto swh
 rem "" antibug
 if /i %cmd%=="help" (goto cmdhelp)
 if /i %cmd%=="Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}" (
-	echo Enter >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+	echo Enter >> "%pathswh%\SWH_History.txt"
 	goto swh
 )
 if /i %cmd%=="execute" (goto start)
@@ -754,6 +755,18 @@ if /i %cmd%=="encryptfile" (goto encryptfile)
 if /i %cmd%=="alias" (goto alias)
 if /i %cmd%=="ls" (goto dir)
 if /i %cmd%=="website" (start https://anic17.github.io/SWHConsole & echo. & goto swh)
+if /i %cmd%=="man" (goto cmdhelp)
+if /i %cmd%=="quit" (echo.&echo Exiting SWH...& title %windir%\System32\cmd.exe & exit /b)
+if /i %cmd%=="mail" (goto email)
+if /i %cmd%=="audiovol" (goto audiovol)
+if /i %cmd%=="audiovolume" (goto audiovol)
+if /i %cmd%=="preventprocess" (goto preventprocess)
+
+if /i %cmd%=="pkg install notepad" (goto pkg_install_notepad)
+if /i %cmd%=="pkg install paint" (goto pkg_install_paint)
+
+
+
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
@@ -879,6 +892,7 @@ echo Calculator package has been successfully installed on your computer.
 echo.
 goto swh
 
+
 :chkpkginstallcalc
 cd /d "%pathswh%\pkg"
 for %%a in (SWH_Calc.exe) do (set pkgcalcsize=%%~za)
@@ -924,6 +938,8 @@ echo Avaiable packages:
 echo.
 echo T-Rex game (pkg install trex)
 echo SWH Calculator (pkg install calc)
+echo SWH Paint (pkg install paint)
+echo SWH Notepad (pkg install notepad)
 echo.
 goto swh
 :pkgremovecalc
@@ -1009,6 +1025,84 @@ if "%calclistinspkgsize%"=="121452" (echo T-Rex Game. Size: %sizekbtrexpkg% kB)
 echo.
 cd /d "%cdirectory%"
 goto swh
+
+
+:pkg_install_paint
+if exist "%pathswh%\pkg\SWH_Paint.bat" (
+	echo.
+	echo Paint package is already installed on your computer
+	echo.
+	goto swh
+)
+echo.
+echo Downloading Paint package...
+echo.
+
+powershell.exe -Command Invoke-WebRequest -Uri "https://raw.githubusercontent.com/anic17/SWH/data/Paint.bat" -OutFile "%pathswh%\pkg\SWH_Paint.bat"
+if not exist "%pathswh%\pkg\SWH_Paint.bat" (
+	echo Error while installing Paint package
+	echo msgbox "Error installing Paint package",4112,"Error installing Paint package" > %pathswh%\Temp\ErrSWH_drwPkg.vbs
+	start /wait WScript.exe "%pathswh%\Temp\ErrSWH_drwPkg.vbs"
+) else (
+	echo Paint package has been successfully installed on your computer
+	echo msgbox "Paint package has been successfully installed on your computer",4160,"Paint package has been successfully installed on your computer" > %pathswh%\Temp\SdrwPkg.vbs
+	start /wait WScript.exe "%pathswh%\Temp\SdrwPkg.vbs"
+)
+echo.
+goto swh
+
+
+
+
+
+
+
+:preventprocess
+echo.
+echo Note: Preventing a system process to start may cause damage to your system
+echo.
+set /p sureprev_ss=Are you sure you want to prevent processes to start? (y/n): 
+if /i not "%sureprev_ss%"=="Y" (echo. & goto swh)
+echo.
+set /p ss_prevstart=Process to prevent to start: 
+start cmd.exe /c "%pathswh%\SWH.bat"
+mode 15,1
+
+
+:prevssrun
+taskkill /f /im %ss_prevstart%
+goto prevssrun
+if /i "%ss_prevstart%"=="csrss.exe" (goto accessdeniedprev_ss)
+if /i "%ss_prevstart%"=="System" (goto accessdeniedprev_ss)
+if /i "%ss_prevstart%"=="Registry" (goto accessdeniedprev_ss)
+if /i "%ss_prevstart%"=="wininit.exe" (goto accessdeniedprev_ss)
+if /i "%ss_prevstart%"=="MsMpEng.exe" (goto accessdeniedprev_ss)
+
+if /i "%ss_prevstart%"=="winlogon.exe" (goto accessdeniedprev_ss)
+
+if /i "%ss_prevstart%"=="taskmgr.exe" (echo. & echo Cannot prevent to start TaskMgr.exe & echo. & echo This action has been blocked to evit possible malware & echo. & goto swh)
+
+if /i "%ss_prevstart%"=="svchost.exe" (goto accessdeniedprev_ss)
+
+if /i "%ss_prevstart%"=="winlogon.exe" (goto accessdeniedprev_ss)
+
+
+
+
+
+
+
+
+
+:accessdeniedprev_ss
+echo.
+echo Access denied on %ss_prevstart%
+echo Reason: This is a system critical process. Cannot prevent to start it
+echo.
+goto swh
+
+
+
 
 :base64encodefile
 echo.
@@ -1146,6 +1240,10 @@ echo cd ^>^> \          ^| cd\
 echo cd ^>^> :          ^| cd..
 echo cls              ^| clear
 echo dir              ^| ls ^& directory
+echo email            ^| mail
+echo exec             ^| execute
+echo exit             ^| quit
+echo help             ^| man
 echo ver              ^| version
 echo.
 goto swh
@@ -1181,51 +1279,15 @@ echo $SMTPClient.EnableSsl = $true >> "%pathswh%\Temp\E-Mail.ps1"
 echo $SMTPClient.Credentials = New-Object System.Net.NetworkCredential("%frommail%", "%passwordmail%"); >> "%pathswh%\Temp\E-Mail.ps1"
 echo $SMTPClient.Send($EmailFrom, $EmailTo, $Subject, $Body) >> "%pathswh%\Temp\E-Mail.ps1"
 echo.
-echo Sending E-Mail...
-reg query 
+echo Sending E-Mail... 
 powershell.exe "%pathswh%\Temp\E-Mail.ps1"
 echo.
 echo Mail sent
 echo.
-echo 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 > "%pathswh%\Temp\E-Mail.ps1"
+echo 01010100011010000110100101110011001000000110011001101001011011000110010100100000011010000110000101110011001000000110001001100101011001010110111000100000011011110111011001100101011100100111011101110010011010010111010001110100011001010110111000100000011001100110111101110010001000000111000001100001011100110111001101110111011011110111001001100100001000000111000001110010011011110111010001100101011000110111010001101001011011110110111000101110 > "%pathswh%\Temp\E-Mail.ps1"
 del "%pathswh%\Temp\E-Mail.ps1" /q /f
 set passwordmail=00000000
 goto swh
-
-
-
-
-
-
-
-
-
-
-echo $MyEmail = "%frommail%" > "%pathswh%\Temp\E-Mail.ps1"
-echo $SMTP = "smtp.gmail.com" >> "%pathswh%\Temp\E-Mail.ps1"
-echo $To = "%tomail%" >> "%pathswh%\Temp\E-Mail.ps1"
-echo $Subject = "%subjectmail%" >> "%pathswh%\Temp\E-Mail.ps1"
-echo $Body = "%bodymail%" >> "%pathswh%\Temp\E-Mail.ps1"
-echo $Creds = "%passwordmail%" >> "%pathswh%\Temp\E-Mail.ps1"
-echo $Attachment = "%attachmentmail%"
-
-echo Start-Sleep 2 >> "%pathswh%\Temp\E-Mail.ps1"
-
-echo Send-MailMessage -To $to -From $MyEmail -Subject $Subject -Body $Body -SmtpServer $SMTP -Credential %passwordmail% -UseSsl -Port 587 -DeliveryNotificationOption never >> "%pathswh%\Temp\E-Mail.ps1"
-
-echo ^<#  >> "%pathswh%\Temp\E-Mail.ps1"
-echo $PSEmailServer variable can be used to pre-configure the >> "%pathswh%\Temp\E-Mail.ps1"
-echo SMTP server in your Powershell Profile. Then you don't need >> "%pathswh%\Temp\E-Mail.ps1"
-echo to specify -smtpserver paramter. Send-MailMessage will use the >> "%pathswh%\Temp\E-Mail.ps1"
-echo SMTP sever address assigned to $PSEmailServer >> "%pathswh%\Temp\E-Mail.ps1"
-echo Delivery Notification Options: >> "%pathswh%\Temp\E-Mail.ps1"
-echo -- None: No notification.         >> "%pathswh%\Temp\E-Mail.ps1"
-echo -- OnSuccess: Notify if the delivery is successful.       >> "%pathswh%\Temp\E-Mail.ps1"
-echo -- OnFailure: Notify if the delivery is unsuccessful.  >> "%pathswh%\Temp\E-Mail.ps1"    
-echo -- Delay: Notify if the delivery is delayed.        >> "%pathswh%\Temp\E-Mail.ps1"
-echo -- Never: Never notify. >> "%pathswh%\Temp\E-Mail.ps1"
-echo #^> >> "%pathswh%\Temp\E-Mail.ps1"
-
 
 
 
@@ -1273,9 +1335,27 @@ echo.
 goto other1cmd
 
 
+:audiovol
+set /p volumeaudio=Volume to put audio sound: 
+echo Function Set-Speaker($Volume){$wshShell = new-object -com wscript.shell;1..50 ^| %% {$wshShell.SendKeys([char]174)};1..$Volume ^| %% {$wshShell.SendKeys([char]175)}} > "%pathswh%\Temp\AudioVol.ps1"
+if "%volumeaudio%"=="0" (
+	echo Set-Speaker -Volume 0 >> "%pathswh%\Temp\AudioVol.ps1"
+	powershell.exe "%pathswh%\Temp\AudioVol.ps1"
+	echo.
+	goto swh
+)
+set /a volumeaudio=%volumeaudio%/2
+if "%volumeaudio%" gtr "50" (
+	echo Set-Speaker -Volume 50 >> "%pathswh%\Temp\AudioVol.ps1"
+	powershell.exe "%pathswh%\Temp\AudioVol.ps1"
+	echo.
+	goto swh
+)
 
-
-
+echo Set-Speaker -Volume %volumeaudio% >> "%pathswh%\Temp\AudioVol.ps1"
+powershell.exe "%pathswh%\Temp\AudioVol.ps1"
+echo.
+goto swh
 
 
 :searchgoogle
@@ -1636,26 +1716,42 @@ goto swh
 
 :newsSWH
 echo.
-echo What's new on SWH %ver%?
+echo What's new on Scripting Windows Host Console %ver%?
 echo.
 echo Encrypted password:
 echo In previous versions, the password was visible in his password file.
-echo Now it is encrypted, making SWH access only for people that know the password.
+echo Now it is encrypted, making Scripting Windows Host Console access only for people that know the password.
 echo.
 echo More functions, less size:
-echo SWH %ver% tries to be more accessible with only %sizeSWHkB% kB, and with a lot of functions.
+echo Scripting Windows Host Console Version %ver% tries to be more accessible with only %sizeSWHkB% kB, and with a lot of functions.
 echo.
 echo Added parameters:
-echo Now you can run SWH with parameters like %~nx0 /admin or %~nx0 /c ^<command^>
+echo Now you can run Scripting Windows Host Console with parameters like %~nx0 /admin or %~nx0 /c ^<command^>
 echo This is very useful to automatize tasks.
 echo.
 echo Encrypt/Decrypt:
-echo In previous versions, your encryption wasn't very safe if a person has your encrypted strirng and SWH.
+echo In previous versions, your encryption wasn't very safe if a person has your encrypted string and Scripting Windows Host Console.
 echo Now you will create a key for add more security at your encryption.
 echo To decrypt, you will need the key.
 echo.
-echo File Encryption/Decryption
+echo File Encryption/Decryption:
 echo Now you can safely encrypt your personal files to make it innaccessible for other users, but accessible for you
+echo.
+echo More commands, more graphical:
+echo Now Scripting Windows Host Console has 2 more packages:
+echo     - Notepad (pkg install notepad)
+echo     - Paint (pkg install paint)
+echo Notepad has been created with intentions of replacing the command "file", because it will have more 
+echo functions and it will be more graphical (Menus, mouse clicking...)
+echo.
+echo Fastest than never:
+echo Scripting Windows Host Console start time has been reduced. In version 9 it takes 0,19 seconds to load
+echo With the newest modifications, it takes only 0,08 seconds
+echo.
+echo Messaging and E-Mails
+echo We have a command to send E-Mails without opening your E-mail program. And to receive E-Mails, to!
+
+
 echo.
 goto swh
 
@@ -2775,7 +2871,7 @@ echo.
 echo Press any key to exit SWHZip...
 pause>nul
 echo.
-title Scripting Windows Host Console
+if "%username%"=="SYSTEM" (title Scripting Windows Host Console - Running as NT AUTHORITY\SYSTEM) else (title Scripting Windows Host Console)
 goto swh
 
 :impocmprs
@@ -2784,7 +2880,7 @@ echo "%surecmpr%" is not a valid option.
 echo.
 echo Press any key to exit SWHZip...
 pause>nul
-title Scripting Windows Host Console
+if "%username%"=="SYSTEM" (title Scripting Windows Host Console - Running as NT AUTHORITY\SYSTEM) else (title Scripting Windows Host Console)
 goto swh
 :cancelcmprs
 echo.
@@ -2792,7 +2888,7 @@ echo "%ftc%" compression canceled.
 echo.
 echo Press any key to exit SWHZip...
 pause>nul
-title Scripting Windows Host Console
+if "%username%"=="SYSTEM" (title Scripting Windows Host Console - Running as NT AUTHORITY\SYSTEM) else (title Scripting Windows Host Console)
 goto swh
 
 
@@ -2884,7 +2980,7 @@ goto swh
 
 :title
 set /p titlecon=Title of SWH Console: 
-title %titlecon%
+if "%username%"=="SYSTEM" (title %titlecon% - Running as NT AUTHORITY\SYSTEM) else (title %titlecon%)
 echo.
 echo Title: %titlecon% >> "%pathswh%\SWH_History.txt"
 goto swh
@@ -3253,7 +3349,7 @@ if "%taskkillIMFnoF%"=="2" (goto tskillnfIM) else (
 	goto swh
 )
 :tskillyfIM
-set /p taskkillprocessf=Process to finish (IM): 
+set /p taskkillprocessf=Process to finish (IM):
 if /i "%taskkillprocessf%"=="csrss.exe" (goto accessdeniedEndTask)
 if /i "%taskkillprocessf%"=="lsass.exe" (goto accessdeniedEndTask)
 if /i "%taskkillprocessf%"=="winlogon.exe" (goto accessdeniedEndTask)
