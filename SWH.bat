@@ -7,7 +7,7 @@ set exectime=%time%
 set execdir=%cd%
 set execname=%~nx0
 
-mode con: cols=120 lines=30
+mode con: cols=70 lines=18
 set moreCMD=0
 set pathswh=%localappdata%\ScriptingWindowsHost
 if "%os%"=="Windows_NT" (goto startingWindowsNT)
@@ -57,7 +57,7 @@ if errorlevel 1 (reg add HKCU\Software\ScriptingWindowsHost /v DisableSWH /t REG
 
 
 
-if exist "%pathswh%\D.sys" (attrib +h +s "%pathswh%\D.sys")
+if exist "%pathswh%\Temp\D.sys" (attrib +h +s "%pathswh%\Temp\D.sys")
 
 if exist %pathswh%\resetstartlog.opt (
 	for /f "tokens=1,2* delims=," %%L in (%pathswh%\resetstartlog.opt) do (set resetstartlog_=%%L)
@@ -130,13 +130,14 @@ echo.
 pause>nul
 exit /b
 :checkingPassword
-if exist "%programfiles%\SWH\ApplicationData\PS.dat" (goto swhpassword) else (
+icacls "%programfiles%\SWH\ApplicationData" /grant Everyone:(F,MA)>nul
+if exist "%programfiles%\SWH\ApplicationData\PS.dat" (goto putpassword) else (
 	set psd=[{CLSID:8t4tvry4893tvy2nq4928trvyn14098vny84309tvny493q8tvn0943tyvnu0q943t8vn204vmy10vn05}]
+	icacls "%programfiles%\SWH\ApplicationData" /deny Everyone:(F,MA)
 	goto params_slash
 )
 
-:swhpassword
-cls
+
 :params_slash
 ::Parameters receptor
 ::if exist "%programfiles%\SWH\ApplicationData\PS.dat" (call :putpassword)
@@ -192,48 +193,33 @@ goto swh
 
 :putpassword
 echo [%date% %time%] - Password=1 >> %pathswh%\StartLog.log
+
+
 title %~dpnx0 - Enter the password to start SWH
 set password=[{CLSID:5378cv5t593vyn539n58tv2598ty5btvy3y9vn53439t57y483wv95ntvy54tn9v5y4vtn58tvu8}]
-set /p password=Password to start SWH: 
+
+set "psCommand=powershell -Command "$pword = read-host 'Password to start SWH' -AsSecureString ; ^
+     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
+                 [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
+for /f "usebackq delims=" %%P in (`%psCommand%`) do set password=%%P
+
+
+
+
 
 ::Read encrypted password
+
+
 cd /d "%programfiles%\SWH\ApplicationData"
-if not exist "%pathswh%\Temp\PS.dat" (goto TryingRemovePSD)
-for /f "tokens=1,2* delims=," %%P in (PS.dat) do (set cryptpassword=%%P) 
-cd /d "%pathswh%\Temp"
-goto firstPSDchk
+if not exist "PS.dat" (goto TryingRemovePSD)
 
-:TryingRemovePSD
-cd /d "%pathswh%\Temp"
-echo %date%> "%pathswh%\Temp\D.sys"
-attrib -h -s "%pathswh%\Temp\D.sys"
-for /f "tokens=1,2* delims=," %%y in (D.sys) do (set dateBlock=%%y)
-attrib +h +s "%pathswh%\Temp\D.sys"
-cls
+for /f "delims=" %%P in (PS.dat) do (set cryptpassword=%%P) 
+icacls "%programfiles%\SWH\ApplicationData" /deny Everyone:(F,MA)>nul
 
-title %~dpnx0 - You are blocked from SWH! Reason: Trying to steal passwords.
-echo You are blocked from SWH! Reason: Trying to steal passwords.
-echo.
-echo Why my SWH access is blocked?
-echo.
-echo 1) You tried to remove SWH password
-echo 2) You tried to change it
-echo.
-echo So, no I will not able to start SWH?
-echo.
-echo Yes, you will be able to use SWH, but you need to wait 1 day
 
-if not "%date%"=="%dateBlock%" (goto waitedday) else (goto infiniteLoop)
-:infiniteLoop
-pause>nul
-goto infiniteLoop
-
-:waitedday
-attrib -h -s "%pathswh%\Temp\D.sys"
-del "%pathswh%\Temp\D.sys" /q
-goto SWH_InitFirst
 
 :firstPSDchk
+cd /d "%PATHSWH%\Temp"
 ::Decrypt Password
 if exist Decrypt.txt del Decrypt.txt /q
 if exist Decrypt.vbs del Decrypt.vbs /q
@@ -281,7 +267,7 @@ start /Wait WScript.exe "%pathswh%\Temp\Decrypt.vbs"
 
 
 cd /d "%pathswh%\Temp"
-for /f "tokens=1,2* delims=," %%F in (Decrypt.txt) do (set DecryptPSD=%%F)
+for /f "delims=" %%F in (Decrypt.txt) do (set DecryptPSD=%%F)
 if "%password%"=="%DecryptPSD%" (goto startingswhpassword) else (goto failedpassword)>nul
 
 set password2="%password%"
@@ -327,7 +313,6 @@ if %execdir_cd%==1 (
 
 set syspathvar=0
 mode cols=120 lines=30
-copy %0 "%pathswh%\SWH.bat">nul
 set /a sizeSWHkB=%~z0/1024
 echo SWH_TestFileAdmin > "%WinDir%\SWH_TestFileAdmin.tmp"
 if exist "%Windir%\SWH_TestFileAdmin.tmp" (
@@ -348,7 +333,7 @@ set colmodesize=0
 set linemodesize=0
 
 title Scripting Windows Host Console
-cd /d "%localappdata%\ScriptingWindowsHost"
+cd /d "%PATHSWH%"
 if not exist SWH_History.txt (
 	echo Creating History... > SWH_History.txt
 	echo Creating History... Please wait.
@@ -397,16 +382,17 @@ if exist IncorrectCommand.opt (
 	echo [%date% %time%] - Unexistant Setting: %pathswh%\Settings\IncorrectCommand.opt >> %pathswh%\StartLog.log
 )
 set cmd=Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}
-set ver=10.5
+set ver=10.6
+set prever=[Pre-release %VER%]
 set securever=%ver%
-cls
+set secureprever=%PREVER%
 if not "%executiondir_established%"=="%userprofile%" (cd /d "%~2") else (cd /d "%cdirectory%")
 echo [%date% %time%] - SWH: Running SWH on user %username% in directory %~dp0 >> %pathswh%\StartLog.log
-echo Welcome to the Scripting Windows Host Console. %xdiskcomp%
+cls
+echo Welcome to the Scripting Windows Host Console. %PREVER%  %xdiskcomp%
 echo.
 set /p cmd=%cd% %commandtoexecute%
-set cmd2=%cmd%
-set cmd="%cmd2%"
+set cmd="%cmd%"
 goto other1cmd
 
 :cmdhelp
@@ -420,7 +406,7 @@ echo base64decode: Encodes a string using Base64 >> "%pathswh%\Temp\MoreHelp"
 echo base64decodefile: Decodes a file using Base64 >> "%pathswh%\Temp\MoreHelp"
 echo base64encode: Decodes a string using Base64  >> "%pathswh%\Temp\MoreHelp"
 echo base64encodefile: Encodes a file using Base64 >> "%pathswh%\Temp\MoreHelp"
-echo blockusers: Blocks SWH if the user is not "%username%" ">> %pathswh%\Temp\MoreHelp"
+echo blockusers: Blocks SWH if the user is not "%username%" >> "%pathswh%\Temp\MoreHelp"
 echo bootmode: Starts SWH with compatibility with X: drive (Not recomended for normal use) >> "%pathswh%\Temp\MoreHelp"
 echo bugs: Can see the bugs of SWH >> "%pathswh%\Temp\MoreHelp"
 echo calc (or calculator): Starts SWH calculator >> "%pathswh%\Temp\MoreHelp"
@@ -463,31 +449,33 @@ echo more: Makes a pause in a long text every time the page ends >> "%pathswh%\T
 echo msg: Makes a message box on the screen >> "%pathswh%\Temp\MoreHelp"
 echo networkconnections: Shows the network connections >> "%pathswh%\Temp\MoreHelp"
 echo networkmsg: Chats with a computer on the same network than you >> "%pathswh%\Temp\MoreHelp"
+echo newswh: Starts a new instance of Scripting Windows Host Console >> "%pathswh%\Temp\MoreHelp"
 echo passwordkey: Generates a new key for the password AES encryption (Beta) >> "%pathswh%\Temp\MoreHelp"
-echo path: Changes the actual path of SWH >> "%pathswh%\Temp\MoreHelp"
-echo pkg: Installs/Removes SWH packages >> "%pathswh%\Temp\MoreHelp"
+echo path: Changes the actual path of Scripting Windows Host >> "%pathswh%\Temp\MoreHelp"
+echo pkg: Installs/Removes Scripting Windows Host packages >> "%pathswh%\Temp\MoreHelp"
 echo powershell: Starts Windows PowerShell in the current directory >> "%pathswh%\Temp\MoreHelp"
 echo preventprocess: Prevents and stops a process to don't let start it >> "%pathswh%\Temp\MoreHelp"
 echo project: Makes a programmation script with Scripting Windows Host (Coming soon) >> "%pathswh%\Temp\MoreHelp"
-echo prompt: Changes the text of the SWH command line >> "%pathswh%\Temp\MoreHelp"
+echo prompt: Changes the text of the Scripting Windows Host command line >> "%pathswh%\Temp\MoreHelp"
+echo qr: Shows Scripting Windows Host QR Code >> "%pathswh%\Temp\MoreHelp"
 echo read: Shows the text of a file >> "%pathswh%\Temp\MoreHelp"
 echo removefolder: Removes an existing folder (empty) >> "%pathswh%\Temp\MoreHelp"
 echo removepassword: Removes the actual password >> "%pathswh%\Temp\MoreHelp"
 echo rename: Renames a file or a folder >> "%pathswh%\Temp\MoreHelp"
 echo resetsettings: Resets the actual settings >> "%pathswh%\Temp\MoreHelp"
-echo resetstartlog: Resets the start log each time SWH starts >> "%pathswh%\Temp\MoreHelp"
-echo restartswh: Restarts SWH >> "%pathswh%\Temp\MoreHelp"
+echo resetstartlog: Resets the start log each time Scripting Windows Host starts >> "%pathswh%\Temp\MoreHelp"
+echo restartswh: Restarts Scripting Windows Host Console without saving variables created by user >> "%pathswh%\Temp\MoreHelp"
 echo reversetext: Reverses a text >> "%pathswh%\Temp\MoreHelp"
 echo run: Runs a program, file or Internet ressource >> "%pathswh%\Temp\MoreHelp"
 echo runasadmin: Starts a program as administrator >> "%pathswh%\Temp\MoreHelp"
-echo say: Says a text in SWH Console >> "%pathswh%\Temp\MoreHelp"
+echo say: Says a text in Scripting Windows Host Console >> "%pathswh%\Temp\MoreHelp"
 echo scanvirus: Scans a file and looks for threats and viruses >> "%pathswh%\Temp\MoreHelp"
 echo search: Searchs a file or a folder >> "%pathswh%\Temp\MoreHelp"
 echo setpassword: Sets a password for SWH Console >> "%pathswh%\Temp\MoreHelp"
 echo setup: Starts SWH Setup (Install/Uninstall) >> "%pathswh%\Temp\MoreHelp"
 echo size: Changes the size of SWH Console >> "%pathswh%\Temp\MoreHelp"
 echo shutdown: Shuts down the computer >> "%pathswh%\Temp\MoreHelp"
-echo swh: Starts a new session of Scripting Windows Host Console >> "%pathswh%\Temp\MoreHelp"
+echo swh: Restarts Scripting Windows Host Console but saving variables created by the user >> "%pathswh%\Temp\MoreHelp"
 echo swhadmin: Runs SWH as administrator >> "%pathswh%\Temp\MoreHelp"
 echo swhdiskcleaner: Starts SWH Disk Cleaner >> "%pathswh%\Temp\MoreHelp"
 echo swhzip: Starts SWHZip (SWH File compressor) >> "%pathswh%\Temp\MoreHelp"
@@ -529,7 +517,7 @@ echo base64encodefile: Encodes a file using Base64
 echo blockusers: Blocks SWH if the user is not "%username%"
 echo bootmode: Starts SWH with compatibility with X: drive (No recomended for normal use)
 echo bugs: Can see the bugs of SWH
-echo calc (or calculator): Starts SWH calculator
+echo calc: Starts SWH calculator
 echo cancelshutdown: Cancels the scheduled shutdown
 echo cd: Go to a specific directory
 echo checkprocess: Checks if a specified process is running on system
@@ -547,7 +535,7 @@ echo date: Changes the date of the computer
 echo decompressfile: Decompresses a file compressed with SWHZip
 echo decrypttext: Decrypts a text
 echo del: Removes a file
-echo dir (or directory): Shows the current directory
+echo dir: Shows the current directory
 echo disableswh: Disables SWH for current user
 echo download: Downloads an Internet file, website, photo or video
 echo editswh: Edits source code of SWH in GitHub. To make changes, developper will check it
@@ -555,7 +543,7 @@ echo email: Sends a mail message
 echo encrypttext: Encrypts a text
 echo endtask: Finish an active process
 echo execinfo: Shows the information of the execution of SWH
-echo execute (or exec): Starts a file of the computer
+echo exec: Starts a file of the computer
 echo faq: Shows the frequent asked questions list
 echo file: Creates a file
 echo filesize: Shows the size of a file
@@ -573,17 +561,18 @@ echo networkmsg: Chats with a computer on the same network than you
 echo news: Shows the news of SWH %ver%
 echo passwordkey: Generates a new key for the password AES encryption (Beta)
 echo path: Changes the actual path of SWH
-echo pkg: Installs/Removes SWH packages
+echo pkg: Installs/Removes Scripting Windows Host packages
 echo powershell: Starts Windows PowerShell in the current directory
 echo project: Makes a programmation script with Scripting Windows Host (Coming soon)
 echo prompt: Changes the text of the SWH command line
+echo qr: Shows Scripting Windows Host QR Code 
 echo read: Shows the text of a file
 echo removefolder: Removes an existing folder (empty)
 echo removepassword: Removes the actual password
 echo rename: Renames a file or a folder
 echo resetsettings: Resets the actual settings
 echo resetstartlog: Resets the start log each time SWH starts
-echo restartswh: Restarts SWH
+echo restartswh: Restarts Scripting Windows Host Console without saving variables created by user
 echo reversetext: Reverses a text
 echo run: Runs a program, file or Internet ressource
 echo runasadmin: Starts a program as administrator
@@ -594,7 +583,7 @@ echo setpassword: Sets a password for SWH Console
 echo setup: Starts SWH Setup (Install/Uninstall)
 echo size: Changes the size of SWH Console
 echo shutdown: Shuts down the computer
-echo swh: Starts a new session of Scripting Windows Host Console
+echo swh: Restarts Scripting Windows Host Console but saving variables created by the user
 echo swhadmin: Runs SWH as administrator
 echo swhdiskcleaner: Starts SWH Disk Cleaner
 echo swhzip: Starts SWHZip (SWH File compressor)
@@ -761,9 +750,24 @@ if /i %cmd%=="mail" (goto email)
 if /i %cmd%=="audiovol" (goto audiovol)
 if /i %cmd%=="audiovolume" (goto audiovol)
 if /i %cmd%=="preventprocess" (goto preventprocess)
-
 if /i %cmd%=="pkg install notepad" (goto pkg_install_notepad)
 if /i %cmd%=="pkg install paint" (goto pkg_install_paint)
+if /i %cmd%=="filehash" (goto filehash)
+if /i %cmd%=="qr" (goto qr)
+
+if /i %cmd%=="wget" (goto download_internet)
+if /i %cmd%=="kill" (goto taskkill)
+if /i %cmd%=="cat" (goto read)
+if /i %cmd%=="type" (goto read)
+
+
+if /i %cmd%=="rel" (goto release)
+if /i %cmd%=="release" (goto release)
+if /i %cmd%=="start" (goto start)
+
+if /i %cmd%=="md" (goto mkdir)
+if /i %cmd%=="mkdir" (goto mkdir)
+if /i %cmd%=="networkshell!" (goto networkshell)
 
 
 
@@ -1052,6 +1056,248 @@ echo.
 goto swh
 
 
+:networkshell
+echo.
+echo Starting Scripting Windows Host Network Shell...
+echo.
+:swhnetsh
+set netsh={ENTER:mk98phn9aX7jh1z5IquF}
+set /p "netsh=SWH Network Shell> "
+
+if /i "%netsh%"=="{ENTER:mk98phn9aX7jh1z5IquF}" (goto swhnetsh)
+if /i "%netsh%"=="wifi" (echo. & echo WiFi module is now selected & echo. & goto swhnetshwifi)
+if /i "%netsh%"=="exit" (echo. & echo Exiting Scripting Windows Host Network Shell... & echo. & goto swh)
+if /i "%netsh%"=="firewall" (goto netsh_firewalladmin)
+if /i "%netsh%"=="help" (goto swhnetshhelp) 
+echo.
+echo Incorrect command. Type "help" to view command list
+echo.
+goto swhnetsh
+
+::Help
+:swhnetshhelp
+echo.
+echo exit: Returns back to Scripting Windows Host Console
+echo firewall: Shows and edits firewall state
+echo help: Shows this message
+echo wifi: Starts SWH Network Shell WiFi module
+echo.
+goto swhnetshwifi
+
+
+
+
+
+
+
+
+:swhnetshwifi
+set "netshwifi={ENTER:mk98phn9aX7jh1z5IquF}"
+
+set /p "netshwifi=SWH Network Shell - WiFi> "
+if "%netshwifi%"=="{ENTER:mk98phn9aX7jh1z5IquF}" (goto swhnetshwifi)
+if /i "%netshwifi%"=="back" (echo. & echo Returning to SWH Network Shell & echo. & goto swhnetsh)
+if /i "%netshwifi%"=="showpassword" (goto netsh_wifi_showpassword)
+if /i "%netshwifi%"=="help" (goto netsh_wifi_help)
+if /i "%netshwifi%"=="connections" (goto netsh_wifi_connections)
+echo Incorrect command. Type "help" to view command list
+goto swhnetshwifi
+
+:netsh_wifi_help
+echo.
+echo back: Returns back on Scripting Windows Host Network Shell
+echo connections: Shows all networks that have been connected in the computer
+echo help: Shows this message
+echo showpassword: Shows password for WiFi that has been saved
+echo.
+goto swhnetshwifi
+
+
+:netsh_wifi_connections
+echo.
+echo.
+netsh wlan show profiles | findstr "      :"
+echo.
+echo.
+goto swhnetshwifi
+
+:netsh_wifi_showpassword
+echo.
+::WiFi name
+echo =WiFi that you want to view his password:
+set /p currentwifi=(To view WiFi password type in WiFi module "connections")
+
+::Search WiFi password
+Netsh wlan export profile name="%currentwifi%" key=clear folder="%PATHSWH%\Temp">nul
+
+for /f "delims=" %%a in ('findstr /C:keyMaterial "%pathswh%\Temp\Wi-Fi-%currentwifi%.xml"') do @set "keywifi=%%a"
+if errorlevel 1 (goto error_netsh_wifi_showpassword)
+set keywifi_final=%keywifi:~17,-14%
+
+echo.
+echo To view WiFi password you must enter SWH Password (If you haven't set a password press enter)
+
+::Credentials
+set show_wifipsd=
+set "psCommand=powershell -Command "$pword = read-host 'Password' -AsSecureString ; ^
+     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
+                 [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
+for /f "usebackq delims=" %%P in (`%psCommand%`) do set show_wifipsd=%%P
+if "%show_wifipsd%"=="%DecryptPSD%" (
+	echo.
+	echo Password of WiFi that is currently connected: %keywifi_final%
+	echo.
+	cd /d "%cdirectory%"
+	
+	::Destroy variables
+	set tmp_currentwifi=
+	set keywifi=
+	set currentwifi=
+	set keywifi_final=
+	set show_wifipsd=
+	
+	goto swhnetshwifi
+) else (
+	::Destroy variables
+	set tmp_currentwifi=
+	set currentwifi=
+	set keywifi_final=
+	set keywifi=
+	
+	echo.
+	echo Incorrect Scripting Windows Host Password
+	echo.
+	cd /d "%cdirectory%"
+	goto swhnetshwifi
+)
+
+:error_netsh_wifi_showpassword
+echo Error!
+echo.
+echo   - Check if you are currently connected to this WiFi
+echo   - Check if you have connected to the WiFi. If not, run the command in SWH Network Shell WiFi "connect"
+echo.
+goto swhnetshwifi
+
+
+
+:netsh_firewalladmin
+if %admin%==0 (
+	echo.
+	echo Please run Scripting Windows Host as administrator to perform this action
+	echo.
+	goto swhnetsh
+)
+echo.
+echo Firewall module is now selected 
+echo.
+
+:netsh_firewall
+set netshfirewall={ENTER:mk98phn9aX7jh1z5IquF}
+set /p "netshfirewall=SWH Network Shell - Firewall> "
+
+if /i "%netshfirewall%"=="off" (goto firewalloff)
+
+
+NetSh Advfirewall set allprofiles state off
+NetSh Advfirewall set allprofiles state on
+
+
+if "%netshfirewall%"=="{ENTER:mk98phn9aX7jh1z5IquF}" (goto netsh_firewall
+if /i "%netshfirewall%"=="back" (echo. & echo Returning to SWH Network Shell & echo. & goto swhnetsh)
+goto netsh_firewall
+
+:firewalloff
+echo.
+echo Are you sure you want to turn off firewall?
+set /p firewallsureoff=Your computer will be more vulnerable from attacks! (y/n): 
+if /i "%firewallsureoff%"=="Y" (
+	echo.
+	echo Turning off firewall...
+	
+
+
+
+
+
+
+
+
+
+
+:qr
+
+if exist "%pathswh%\Temp\QR_UTF-8.txt" del "%pathswh%\Temp\QR_UTF-8.txt" /Q>NUL
+
+for %%a in (
+
+
+"ÛÛÛÛÛÛÛÛÛÛÛÛÛÛ  ÛÛÛÛ            ÛÛ  ÛÛÛÛÛÛÛÛÛÛÛÛÛÛ"
+"ÛÛ          ÛÛ  ÛÛÛÛÛÛÛÛ  ÛÛÛÛ  ÛÛ  ÛÛ          ÛÛ"
+"ÛÛ  ÛÛÛÛÛÛ  ÛÛ  ÛÛ  ÛÛ  ÛÛÛÛ  ÛÛ    ÛÛ  ÛÛÛÛÛÛ  ÛÛ"
+"ÛÛ  ÛÛÛÛÛÛ  ÛÛ    ÛÛ      ÛÛÛÛ      ÛÛ  ÛÛÛÛÛÛ  ÛÛ"
+"ÛÛ  ÛÛÛÛÛÛ  ÛÛ  ÛÛÛÛÛÛÛÛÛÛ    ÛÛÛÛ  ÛÛ  ÛÛÛÛÛÛ  ÛÛ"
+"ÛÛ          ÛÛ    ÛÛ  ÛÛ    ÛÛ  ÛÛ  ÛÛ          ÛÛ"
+"ÛÛÛÛÛÛÛÛÛÛÛÛÛÛ  ÛÛ  ÛÛ  ÛÛ  ÛÛ  ÛÛ  ÛÛÛÛÛÛÛÛÛÛÛÛÛÛ"
+"                  ÛÛÛÛ  ÛÛÛÛÛÛÛÛ                  "
+"ÛÛ    ÛÛÛÛÛÛÛÛÛÛÛÛÛÛ    ÛÛÛÛÛÛÛÛ  ÛÛ    ÛÛ  ÛÛÛÛÛÛ"
+"  ÛÛÛÛÛÛ          ÛÛ        ÛÛÛÛÛÛ    ÛÛÛÛÛÛÛÛÛÛ  "
+"        ÛÛ  ÛÛÛÛ  ÛÛ  ÛÛ  ÛÛ  ÛÛÛÛÛÛ      ÛÛ    ÛÛ"
+"      ÛÛ  ÛÛ  ÛÛ  ÛÛ    ÛÛ  ÛÛÛÛ    ÛÛ    ÛÛÛÛÛÛÛÛ"
+"  ÛÛÛÛÛÛÛÛÛÛÛÛ  ÛÛ  ÛÛ    ÛÛ    ÛÛ  ÛÛÛÛ        ÛÛ"
+"ÛÛ    ÛÛÛÛ    ÛÛÛÛ  ÛÛ  ÛÛÛÛ  ÛÛ  ÛÛ    ÛÛ    ÛÛ  " 
+"ÛÛÛÛ  ÛÛ    ÛÛÛÛ  ÛÛÛÛ      ÛÛÛÛ  ÛÛÛÛ  ÛÛÛÛÛÛÛÛÛÛ"
+"ÛÛ  ÛÛ    ÛÛ    ÛÛ  ÛÛ  ÛÛ      ÛÛ  ÛÛÛÛ  ÛÛÛÛ  ÛÛ"
+"ÛÛ        ÛÛÛÛÛÛ    ÛÛÛÛÛÛ      ÛÛÛÛÛÛÛÛÛÛ  ÛÛÛÛ  "
+"                ÛÛ  ÛÛÛÛ  ÛÛ  ÛÛÛÛ      ÛÛ  ÛÛÛÛ  "
+"ÛÛÛÛÛÛÛÛÛÛÛÛÛÛ  ÛÛ  ÛÛ  ÛÛÛÛÛÛ  ÛÛ  ÛÛ  ÛÛ      ÛÛ"
+"ÛÛ          ÛÛ  ÛÛ    ÛÛ  ÛÛ  ÛÛÛÛ      ÛÛ        "
+"ÛÛ  ÛÛÛÛÛÛ  ÛÛ  ÛÛÛÛ  ÛÛ  ÛÛ  ÛÛÛÛÛÛÛÛÛÛÛÛ    ÛÛÛÛ"
+"ÛÛ  ÛÛÛÛÛÛ  ÛÛ  ÛÛÛÛÛÛ  ÛÛÛÛÛÛ  ÛÛ  ÛÛ        ÛÛÛÛ"
+"ÛÛ  ÛÛÛÛÛÛ  ÛÛ        ÛÛ  ÛÛ    ÛÛÛÛ    ÛÛÛÛÛÛÛÛÛÛ"
+"ÛÛ          ÛÛ    ÛÛÛÛÛÛÛÛÛÛ          ÛÛÛÛ  ÛÛÛÛÛÛ"
+"ÛÛÛÛÛÛÛÛÛÛÛÛÛÛ  ÛÛÛÛ  ÛÛÛÛÛÛ    ÛÛÛÛ      ÛÛ    ÛÛ"
+
+
+) do (echo %%~a >> "%pathswh%\Temp\QR_UTF-8.txt")
+
+
+
+PowerShell -Command Get-Content -Path "%PATHSWH%\Temp\QR_UTF-8.txt" ^| Out-File -FilePath "%PATHSWH%\Temp\QR.txt" -Encoding ASCII
+
+
+
+
+if exist "%PATHSWH%\Temp\QR.bat" del "%PATHSWH%\Temp\QR.bat" /Q>NUL
+for %%q in (
+	"@echo off"
+	"cls"
+	"title Scripting Windows Host QR Code"
+	"color f0"
+	"mode con: cols=52 lines=26"
+	"type "%pathswh%\Temp\QR.txt""
+	"pause>nul"
+	"exit /B"
+) do (echo %%~q >> "%PATHSWH%\Temp\QR.bat")
+
+
+start cmd.exe /c "%PATHSWH%\Temp\QR.bat"
+echo.
+goto swh
+
+:release
+echo.
+echo Scripting Windows Host %PREVER%
+echo.
+goto swh
+
+
+
+
+
+
+
+
 
 
 
@@ -1237,14 +1483,19 @@ echo Original command ^| Alias
 echo.
 echo calc             ^| calculator
 echo cd ^>^> \          ^| cd\
-echo cd ^>^> :          ^| cd..
+echo cd ^>^> ..         ^| cd..
 echo cls              ^| clear
 echo dir              ^| ls ^& directory
+echo download         ^| wget
 echo email            ^| mail
-echo exec             ^| execute
+echo endtask          ^| kill
+echo exec             ^| execute ^& start
 echo exit             ^| quit
+echo folder           ^| md ^& mkdir
 echo help             ^| man
+echo read             ^| cat ^& type
 echo ver              ^| version
+echo rel              ^| release
 echo.
 goto swh
 
@@ -1311,9 +1562,14 @@ goto swh
 
 :if_condition
 echo.
-
+echo If syntax in Scripting Windows Host (*.swh)
 echo.
-echo If syntax:
+echo If $var_1 = $var_2 [command] 
+echo.
+echo Examples: 
+echo If $potatoes = $apples say Apples equal potatoes
+echo.
+echo If syntax in Scripting Windows Host Console:
 echo.
 echo If
 echo var_1
@@ -1373,14 +1629,32 @@ echo.
 goto swh
 
 
+:filehash
+echo.
+set /p filehash=File to have his hash: 
+if not exist "%filehash%" (
+	echo.
+	echo "%filehash%" does not exist
+	echo.
+	goto swh
+)
+
+
+CertUtil -hashfile %filehash% MD2
+CertUtil -hashfile %filehash% MD4
+CertUtil -hashfile %filehash% MD5
+CertUtil -hashfile %filehash% SHA1
+
+CertUtil -hashfile %filehash% SHA256
+CertUtil -hashfile %filehash% SHA384
+CertUtil -hashfile %filehash% SHA512
+
+
 :invertcolors
-echo Set objShell = WScript.CreateObject("WScript.Shell") > "%pathswh%\Temp\InvertColors.vbs"
-echo objShell.Run "cmd.exe /c start /min %systemroot%\System32\magnify.exe",vbHide >> "%pathswh%\Temp\InvertColors.vbs"
-echo WScript.Sleep(1000) >> "%pathswh%\Temp\InvertColors.vbs"
-echo wscript.echo "pressing..." >> "%pathswh%\Temp\InvertColors.vbs"
-echo objShell.SendKeys "^%%I" >> "%pathswh%\Temp\InvertColors.vbs"
-echo WScript.Quit >> "%pathswh%\Temp\InvertColors.vbs"
-start "wscript.exe" "%pathswh%\Temp\InvertColors.vbs"
+start /min %systemroot%\System32\magnify.exe"
+reg add HKCU\Software\Microsoft\ScreenMagnifier /v Invert /t REG_DWORD /d 1 /f>nul
+echo.
+echo To put colours normally, press Ctrl + Alt + I and then Windows + Esc
 echo.
 goto swh
 
@@ -1391,9 +1665,11 @@ echo IMPORTANT: If you have a password and you change the key, you will be NOT a
 echo.
 set /p surechangepasswordkey=Change key anyway? (y/n): 
 if /i "%surechangepasswordkey%"=="Y" goto changingpasswordkey
-
+echo.
+goto swh
 
 :changingpasswordkey
+echo.
 echo Generating new key for password...
 cd /d "%pathswh%\Temp"
 :generatepasswordkey
@@ -1413,12 +1689,14 @@ set randomkeypassword=%randomKey1%-%randomKey2%-%randomKey3%
 echo %randomkeypassword% >> "%pathswh%\Temp\KeyPSD"
 for %%D in (KeyPSD) do (set lenghtkeypsd=%%~zD)
 if "%lenghtkeypsd%"=="19" (cd /d "%cdirectory%" & goto changedpasswordkey)
-
+goto generatepasswordkey
 :changedpasswordkey
 echo.
 del "%pathswh%\Temp\KeyPSD" /q /f
 set /p viewnewkeypassword=Do you want to view current key? (y/n): 
 if /i "%viewnewkeypassword%"=="Y" (goto credentialchangedpasswordkey)
+echo.
+goto swh
 
 :credentialchangedpasswordkey
 echo.
@@ -1429,10 +1707,33 @@ if /i not "%userswh%"=="%username%" (
 	echo.
 	goto swh
 )
-set /p passwordSWH=SWH Password: 
+
+set "psCommand=powershell -Command "$pword = read-host 'Password' -AsSecureString ; ^
+     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
+                 [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
+for /f "usebackq delims=" %%P in (`%psCommand%`) do set passwordswh=%%P
+
 if "%passwordSWH%"=="%DecryptPSD%" (
+	echo.
+	echo Decrypting password...
+	echo Checking password...
+	timeout /t 1 /nobreak>nul
+	echo.
+	echo Correct password.
+	echo.
 	echo New password key: %randomkeypassword%
 	echo.
+	set "randomkeypassword= " 
+	set "randomGen1=0 "
+	set "randomGen2=0 "
+	set "randomGen3=0 "
+	set "randomKey1=0 "
+	set "randomKey2=0 "
+	set "randomKey3=0 "
+	set "randomKey4=0 "
+	set "randomKey5=0 "
+	set "randomKey6=0 "
+	
 	goto swh
 ) else (
 	echo.
@@ -1564,7 +1865,7 @@ if exist "%pathswh%\Downloads\%namesavedownloadinternet%" (echo File has been su
 	echo Error downloading file! Try this:
 	echo.
 	echo    - Check your Internet connection
-	echo    - Make sure that you have Windows PowerShell on your computer
+	echo    - Make sure that you have Windows PowerShell 3.0 on your computer
 	echo    - Check that the website is existent or available
 	echo    - Check that you haven't writted a special symbol in list
 	echo.
@@ -1623,7 +1924,7 @@ echo $Body = "%msgbody_contact%     - Sent from computer: %computername% , user:
 echo $SMTPServer = "smtp.gmail.com" >> %pathswh%\Temp\ContactSWH.ps1 >> %pathswh%\Temp\ContactSWH.ps1
 echo $SMTPClient = New-Object Net.Mail.SmtpClient($SmtpServer, 587) >> %pathswh%\Temp\ContactSWH.ps1
 echo $SMTPClient.EnableSsl = $true >> %pathswh%\Temp\ContactSWH.ps1
-echo $SMTPClient.Credentials = New-Object System.Net.NetworkCredential("swh.usercontact@gmail.com", "SWH_%r%%z%%a%%g%%t%"); >> %pathswh%\Temp\ContactSWH.ps1
+echo $SMTPClient.Credentials = New-Object System.Net.NetworkCredential("swh.usercontact@gmail.com", "SWHConsole-123456"); >> %pathswh%\Temp\ContactSWH.ps1
 echo $SMTPClient.Send($EmailFrom, $EmailTo, $Subject, $Body) >> %pathswh%\Temp\ContactSWH.ps1
 powershell.exe "%pathswh%\Temp\ContactSWH.ps1"
 echo.
@@ -1957,6 +2258,8 @@ if /i %userunblock%==y (
 
 :setpassword
 if %admin%==0 goto adminpermission
+icacls "%programfiles%\SWH\ApplicationData" /grant Everyone:(F,MA)>nul
+
 echo.
 if "%psd%"=="[{CLSID:8t4tvry4893tvy2nq4928trvyn14098vny84309tvny493q8tvn0943tyvnu0q943t8vn204vmy10vn05}]" (goto notpasswordsettet)
 set /p enterpassword2setit=Enter the current password to change it: 
@@ -2153,10 +2456,12 @@ if exist "%programfiles%\SWH\ApplicationData\PS.dat" (del "%programfiles%\SWH\Ap
 start /wait WScript.exe "%pathswh%\Temp\Encrypt.vbs"
 move "%pathswh%\Temp\PS.dat" "%programfiles%\SWH\ApplicationData\PS.dat">nul
 
-
+takeown /f "%programfiles%\SWH\ApplicationData">nul
+icacls "%programfiles%\SWH\ApplicationData" /deny Everyone:(F,MA)>nul
 echo.
 cd /d "%cdirectory%"
 echo New password is %setpassword1%
+
 echo.
 if exist "%pathswh%\Temp\Encrypt.vbs" (del "%pathswh%\Temp\Encrypt.vbs" /q)
 goto swh
@@ -2274,13 +2579,10 @@ goto swh
 :updateswh
 echo.
 
-
-echo $url = "https://raw.githubusercontent.com/anic17/SWH/master/SWH.bat" > %pathswh%\Temp\UpdateSWH.ps1
-echo $output = "%pathswh%\Temp\SWH.bat" >> %pathswh%\Temp\UpdateSWH.ps1
-echo $start_time = Get-Date >> %pathswh%\Temp\UpdateSWH.ps1
-echo Invoke-WebRequest -Uri $url -OutFile $output >> %pathswh%\Temp\UpdateSWH.ps1
 echo Dowloading SWH...
-powershell.exe "%pathswh%\Temp\UpdateSWH.ps1"
+
+
+powershell.exe -ExecutionPolicy Unrestricted -Command Invoke-WebRequest -Uri "https://raw.githubusercontent.com/anic17/SWH/master/SWH.bat" -OutFile "%pathswh%\Temp\SWH.bat"
 if exist "%pathswh%\Temp\SWH.bat" (goto supdated) else (goto errorupdatingswh)
 
 :errorupdatingswh
@@ -2293,9 +2595,10 @@ echo SWH has been updated!
 echo swh=Msgbox("SWH has successfully been updated",4160,"SWH has successfully been updated") > "%pathswh%\Temp\SUpdated.vbs"
 start wscript.exe "%pathswh%\Temp\SUpdated.vbs"
 echo.
-goto swh
-
-
+echo To apply changes you must restart Scripting Windows Host Console
+echo.
+echo Press any key to restart Scripting Windows Host Console...
+goto abstartswh
 
 
 :decrypttext
@@ -2626,23 +2929,12 @@ echo.
 goto swh
 
 :abstartswh
-if not exist "%pathswh%\SWH.*" (
-	echo.
-	echo Please install SWH to use this function
-	echo.
-	echo You can install it with the command "setup"
-	echo Note: Install SWH requires administrator privileges
-	echo.
-	goto swh
-)
+echo CreateObject("Wscript.Shell").Run "CMD.exe /C %PATHSWH%\SWH.bat" > "%PATHSWH%\Temp\RestartSWH.vbs"
+start /Wait WScript.exe "%PATHSWH%\Temp\RestartSWH.vbs"
+exit /B
 
-echo @echo off > "%pathswh%\Temp\CommandSWH.bat"
-echo mode con: cols=15 lines=1 >> "%pathswh%\Temp\CommandSWH.bat"
-echo start conhost.exe "%pathswh%\%~nx0" >> "%pathswh%\Temp\CommandSWH.bat"
-echo exit >> "%pathswh%\Temp\CommandSWH.bat"
-cd /d %pathswh%\Temp
-start conhost.exe CommandSWH.bat
-exit /b
+
+
 
 :clsTemp
 echo.
@@ -3217,6 +3509,8 @@ if /i "%startexecprog%"=="None" (
 
 :file
 echo.
+echo Note: FILE command is being obsolete. Please use in this case NOTEPAD
+echo.
 set /p namefile=Name of the file: 
 set /p filecreation=Text to the file: 
 echo %filecreation% > %namefile%
@@ -3527,11 +3821,39 @@ if "%surenewhour%"=="y" (
 )
 
 :echosay
-set /p say=Text to say: 
+set /p "say=Text to say: "
+if /i "%SAY%"=="on" goto devmodesay
 echo.
 echo %say%
 echo.
 echo Say:%say% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+goto swh
+
+
+:devmodesay
+echo.
+echo To enter Scripting Windows Host Developper Mode you will need to authenticate you
+echo.
+set "psCommand=powershell -Command "$pword = read-host 'Password' -AsSecureString ; ^
+     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
+                 [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
+for /f "usebackq delims=" %%P in (`%psCommand%`) do set "password_devmode=%%P"
+
+if "%DecryptPSD%"=="%password_devmode%" (
+	
+
+
+
+
+
+echo Do you want to enter Scripting Windows Host Developper Mode?
+set /p devmode=You can disable it by typing SAY and then OFF (y/n): 
+if /i "%devmode%"=="Y" (
+	echo.
+	echo Turning ON developper mode...
+	echo.
+	echo on
+)
 goto swh
 
 :credits
