@@ -47,8 +47,6 @@ Supported versions and end of support:
 
 3.x - End of support 31 of May 2019
 
-1.x - End of support 31 of March 2019
-
 4.x - End of support 31 of June 2019
 
 5.x - End of support 31 of July 2019
