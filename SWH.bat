@@ -6,8 +6,6 @@ set execdate=%date%
 set exectime=%time%
 set execdir=%cd%
 set execname=%~nx0
-
-mode con: cols=70 lines=18
 set moreCMD=0
 set pathswh=%localappdata%\ScriptingWindowsHost
 if "%os%"=="Windows_NT" (goto startingWindowsNT)
@@ -130,10 +128,10 @@ echo.
 pause>nul
 exit /b
 :checkingPassword
-icacls "%programfiles%\SWH\ApplicationData" /grant Everyone:(F,MA)>nul
+icacls "%programfiles%\SWH\ApplicationData" /grant %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>nul
 if exist "%programfiles%\SWH\ApplicationData\PS.dat" (goto putpassword) else (
 	set psd=[{CLSID:8t4tvry4893tvy2nq4928trvyn14098vny84309tvny493q8tvn0943tyvnu0q943t8vn204vmy10vn05}]
-	icacls "%programfiles%\SWH\ApplicationData" /deny Everyone:(F,MA)
+	icacls "%programfiles%\SWH\ApplicationData" /deny %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)
 	goto params_slash
 )
 
@@ -192,6 +190,14 @@ echo.
 goto swh
 
 :putpassword
+cd /d "%programfiles%\SWH\ApplicationData"
+if not exist "PS.dat" (goto TryingRemovePSD)
+
+for /f "delims=" %%P in (PS.dat) do (set "cryptpassword=%%P") 
+icacls "%programfiles%\SWH\ApplicationData" /deny %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>nul
+
+
+
 echo [%date% %time%] - Password=1 >> %pathswh%\StartLog.log
 
 
@@ -201,25 +207,17 @@ set password=[{CLSID:5378cv5t593vyn539n58tv2598ty5btvy3y9vn53439t57y483wv95ntvy5
 set "psCommand=powershell -Command "$pword = read-host 'Password to start SWH' -AsSecureString ; ^
      $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
                  [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
-for /f "usebackq delims=" %%P in (`%psCommand%`) do set password=%%P
-
-
+for /f "usebackq delims=" %%P in (`%psCommand%`) do set "password=%%P"
 
 
 
 ::Read encrypted password
 
 
-cd /d "%programfiles%\SWH\ApplicationData"
-if not exist "PS.dat" (goto TryingRemovePSD)
-
-for /f "delims=" %%P in (PS.dat) do (set cryptpassword=%%P) 
-icacls "%programfiles%\SWH\ApplicationData" /deny Everyone:(F,MA)>nul
-
-
 
 :firstPSDchk
 cd /d "%PATHSWH%\Temp"
+
 ::Decrypt Password
 if exist Decrypt.txt del Decrypt.txt /q
 if exist Decrypt.vbs del Decrypt.vbs /q
@@ -265,30 +263,43 @@ echo       Decrypt = Newstr >> Decrypt.vbs
 echo End Function >> Decrypt.vbs
 start /Wait WScript.exe "%pathswh%\Temp\Decrypt.vbs"
 
+for /f "delims=" %%F in (Decrypt.txt) do (set B64psd_dec=%%F)
 
-cd /d "%pathswh%\Temp"
-for /f "delims=" %%F in (Decrypt.txt) do (set DecryptPSD=%%F)
+
+::Encode password in Base64 
+powershell -Command [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('%B64psd_dec%')) > B64ps.tmp
+for /f "delims=" %%f in (B64ps.tmp) do (set "DecryptPSD=%%f")
+
+if exist "%pathswh%\Temp\B64ps.tmp" del "%pathswh%\Temp\B64ps.tmp" /q /f>nul
+if exist "%pathswh%\Temp\Decrypt.txt" del "%pathswh%\Temp\Decrypt.txt" /q /f>nul
+if exist "%pathswh%\Temp\Decrypt.vbs" del "%pathswh%\Temp\Decrypt.vbs" /q /f>nul
+
+
 if "%password%"=="%DecryptPSD%" (goto startingswhpassword) else (goto failedpassword)>nul
 
-set password2="%password%"
-if %password2%=="%psd%" (goto startingswhpassword) else (goto failedpassword)>nul
-
+:TryingRemovePSD
+cls
+echo You have tried to remove the password
+:pauseloop
+pause>nul
+goto pauseloop
 
 :failedpassword
 echo.
-del "%pathswh%\Temp\Decrypt.txt" /q>nul
-del "%pathswh%\Temp\Decrypt.vbs" /q>nul
+if exist "%pathswh%\Temp\Decrypt.txt" del "%pathswh%\Temp\Decrypt.txt" /q /f>nul
+if exist "%pathswh%\Temp\Decrypt.vbs" del "%pathswh%\Temp\Decrypt.vbs" /q /f>nul
 echo Incorrect password! Press any key to try again...
 echo [%date% %time%] Failed to access SWH. Reason: Incorrect Password: %password% >> %pathswh%\StartLog.log
-
 pause>nul
 cls
-goto putpassword
+goto SWH_InitFirst
+
+
 
 :execdir_ChangeCD
 set cdirectory="%~2"
 set execdir_cd=1
-goto next_CD_execdir
+goto checkingPassword
 
 :startingswhpassword
 
@@ -307,7 +318,7 @@ set firstDirCD_=%cd%
 if %execdir_cd%==1 (
 	set cdirectory="%~2"
 	set executiondir_established="%~2"
-	cd /d "%~2"
+	cd /d "%cdirectory%"
 )
 ::echo %cdirectory%
 
@@ -340,12 +351,13 @@ if not exist SWH_History.txt (
 )
 
 :startswh
+if exist "%pathswh%\Temp\B64ps.tmp" del "%pathswh%\Temp\B64ps.tmp" /q /f>nul
 set a=X
 set g=Y
 set t=Z
 set r=123
 set z=456
-rem Start SWH
+rem Start Scripting Windows Host Console
 cd /d "%pathswh%\Settings"
 mode con: cols=120 lines=30
 if exist Size.opt (
@@ -382,7 +394,7 @@ if exist IncorrectCommand.opt (
 	echo [%date% %time%] - Unexistant Setting: %pathswh%\Settings\IncorrectCommand.opt >> %pathswh%\StartLog.log
 )
 set cmd=Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}
-set ver=10.6
+set ver=10.6.1
 set prever=[Pre-release %VER%]
 set securever=%ver%
 set secureprever=%PREVER%
@@ -774,6 +786,7 @@ if /i %cmd%=="networkshell!" (goto networkshell)
 if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
 
 :swh
+if "%DecryptPSD%" neq "" icacls "%PROGRAMFILES%\SWH\ApplicationData" /deny %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>NUL
 if "%next_exit%"=="1" (set next_exit=0 & exit /B)
 if not exist "\" (echo. & set errordisk_=%cd% & goto errornotdisk)
 set cmd=Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}
@@ -782,11 +795,6 @@ set /p cmd=%cd% %commandtoexecute%
 set cmd2=%cmd%
 set cmd="%cmd2%"
 if %cmd%=="help" (goto cmdhelp) else (goto other1cmd)
-
-:foundedpassword_gotoswh
-if "%psd%"=="[{CLSID:8t4tvry4893tvy2nq4928trvyn14098vny84309tvny493q8tvn0943tyvnu0q943t8vn204vmy10vn05}]"
-set /p enterpassword_gotoswh=Enter SWH password please: 
-goto swh
 
 :runasadmin
 echo.
@@ -826,9 +834,7 @@ set /p suredisableswh_reg=Are you sure you want to disable SWH? (y/n):
 if /i "%suredisableswh_reg%"=="y" (
 	reg add HKCU\Software\ScriptingWindowsHost /v DisableSWH /t REG_DWORD /d 1 /f>nul
 	echo.
-	echo SWH has been blocked. Please run the following command to unblock SWH:
-	echo.
-	echo CMD.exe /k REG ADD HKCU\Software\ScriptingWindowsHost /v DisableSWH /t REG_DWORD /d 0 /f
+	echo SWH has been blocked.
 	echo.
 	echo When you press a key, you will not be able to start SWH
 	pause>nul
@@ -2019,9 +2025,11 @@ goto swh
 echo.
 echo What's new on Scripting Windows Host Console %ver%?
 echo.
+echo.
 echo Encrypted password:
 echo In previous versions, the password was visible in his password file.
 echo Now it is encrypted, making Scripting Windows Host Console access only for people that know the password.
+echo Also, we have added another security layer for the password.
 echo.
 echo More functions, less size:
 echo Scripting Windows Host Console Version %ver% tries to be more accessible with only %sizeSWHkB% kB, and with a lot of functions.
@@ -2033,10 +2041,10 @@ echo.
 echo Encrypt/Decrypt:
 echo In previous versions, your encryption wasn't very safe if a person has your encrypted string and Scripting Windows Host Console.
 echo Now you will create a key for add more security at your encryption.
-echo To decrypt, you will need the key.
+echo To decrypt, you will need the key that you used for encryption or you will not able to get back your string.
 echo.
 echo File Encryption/Decryption:
-echo Now you can safely encrypt your personal files to make it innaccessible for other users, but accessible for you
+echo Now you can safely encrypt your personal files to make it innaccessible for other users, but accessible for you.
 echo.
 echo More commands, more graphical:
 echo Now Scripting Windows Host Console has 2 more packages:
@@ -2049,10 +2057,12 @@ echo Fastest than never:
 echo Scripting Windows Host Console start time has been reduced. In version 9 it takes 0,19 seconds to load
 echo With the newest modifications, it takes only 0,08 seconds
 echo.
-echo Messaging and E-Mails
-echo We have a command to send E-Mails without opening your E-mail program. And to receive E-Mails, to!
-
-
+echo Messaging and E-Mails:
+echo We have the command 'email' to send E-Mails without opening your E-mail program.
+echo.
+echo Network Shell:
+echo This new command allows you to do network operations like viewing your WiFi password, viewing your
+echo accessible networks, enabling Windows Firewall, connect to a network and viewing all devices in your network
 echo.
 goto swh
 
@@ -2258,15 +2268,23 @@ if /i %userunblock%==y (
 
 :setpassword
 if %admin%==0 goto adminpermission
-icacls "%programfiles%\SWH\ApplicationData" /grant Everyone:(F,MA)>nul
-
 echo.
 if "%psd%"=="[{CLSID:8t4tvry4893tvy2nq4928trvyn14098vny84309tvny493q8tvn0943tyvnu0q943t8vn204vmy10vn05}]" (goto notpasswordsettet)
-set /p enterpassword2setit=Enter the current password to change it: 
-set enterpassword2setit="%enterpassword2setit%" 
-if not "%psd%"==""%enterpassword2setit%"" (goto errorremovingpsd)
+set /p "enterpassword2setit=Enter the current password to change it: "
+if not "%DecryptPSD%"=="%enterpassword2setit%" (goto errorremovingpsd)
+
+
 :notpasswordsettet
-set /p setpassword1=Password to set in SWH: 
+set "psCommand=powershell -Command "$pword = read-host 'Password to set in SWH' -AsSecureString ; ^
+     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
+                 [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
+for /f "usebackq delims=" %%P in (`%psCommand%`) do set "setpassword1=%%P"
+
+
+
+
+
+
 if /i "%setpassword1%"=="" (goto swh)
 set password2qwerty="%setpassword1%"
 if /i %password2qwerty%=="qwerty" (goto easypassword)
@@ -2377,18 +2395,23 @@ if /i %password2qwerty%=="123" (goto easypassword)
 cd /d "%pathswh%\Temp"
 echo %password2qwerty% > "%pathswh%\Temp\ckps"
 for %%P in (ckps) do (set psdlenght=%%~zP)
-::if exist "%pathswh%\Temp\ckps" del "%pathswh%\Temp\ckps" /q /f 
-set /a psdlenght_=%psdlenght%-3
+
+
+set /a psdlenght=%psdlenght%-3
 cd /d "%cdirectory%"
-if "%psdlenght_%" leq "5" (goto easypassword)
+if "%psdlenght%" leq "5" (goto easypassword)
 
 
 
 
 
+set "psCommand=powershell -Command "$pword = read-host 'Repeat password' -AsSecureString ; ^
+     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
+                 [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
+for /f "usebackq delims=" %%P in (`%psCommand%`) do set "setpassword2=%%P"
 
 
-set /p setpassword2=Repeat password: 
+
 if "%setpassword2%"=="%setpassword1%" (goto changingpassword) else (goto errorchangingpassword)
 
 :easypassword
@@ -2404,16 +2427,15 @@ echo.
 goto swh
 
 :changingpassword
-
-
 cd /d "%pathswh%\Temp"
-
+powershell -Command [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes('%setpassword2%')) > B64ps.tmp
+for /f "delims=" %%F in (B64ps.tmp) do (set base64psd=%%F)
 
 
 echo Option Explicit > Encrypt.vbs
 echo Dim temp, key, objShell, objFSO, crypt >> Encrypt.vbs
 echo Set objShell = WScript.CreateObject("WScript.Shell") >> Encrypt.vbs
-echo temp = "%setpassword2%" >> Encrypt.vbs
+echo temp = "%base64psd%" >> Encrypt.vbs
 echo key = "4Ou8fa94pfx3WV3AsnhoAz7xWbtkA5T36SMX7sOB9I8WazaCirdOT1HfhBJBKvZlQDMRIGEH49vPK5KTDPTaIPVT8h3F57QW3RYbJ0WrT90Fxk3EBcMCz0APGZebZWkZH2JvGuFqs8mvICYG4uZW2MYnXwPmnVa8S4HCEgeQRPIDoWdH8V9S263pW2PMA5kgIkn2ONZ9j7WCZP38Vf4IRQ0261QCeJHPBj71LKIqGDbWBTrLBh8wPONCYVM0F4RPIDoWdH8V9S263pW2PMA5kgIkn2ONZ9j7WCZP38Vf4" >> Encrypt.vbs
 echo temp = Encrypt(temp,key) >> Encrypt.vbs
 
@@ -2454,24 +2476,41 @@ echo       Decrypt = Newstr >> Encrypt.vbs
 echo End Function >> Encrypt.vbs
 if exist "%programfiles%\SWH\ApplicationData\PS.dat" (del "%programfiles%\SWH\ApplicationData\PS.dat" /q)
 start /wait WScript.exe "%pathswh%\Temp\Encrypt.vbs"
+if exist "%PATHSWH%\Temp\ckps" del "%PATHSWH%\Temp\ckps" /q /f>nul
+if exist "%PATHSWH%\Temp\B64ps.tmp" del "%PATHSWH%\Temp\B64ps.tmp /q /f">nul
+
+icacls "%programfiles%\SWH\ApplicationData" /grant %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>nul
+
+
 move "%pathswh%\Temp\PS.dat" "%programfiles%\SWH\ApplicationData\PS.dat">nul
 
 takeown /f "%programfiles%\SWH\ApplicationData">nul
-icacls "%programfiles%\SWH\ApplicationData" /deny Everyone:(F,MA)>nul
+icacls "%programfiles%\SWH\ApplicationData" /deny %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>nul
 echo.
 cd /d "%cdirectory%"
-echo New password is %setpassword1%
-
+echo Password successfully changed
 echo.
 if exist "%pathswh%\Temp\Encrypt.vbs" (del "%pathswh%\Temp\Encrypt.vbs" /q)
 goto swh
 
+
+
 :removepassword
+if %admin%==0 goto adminpermission
+
+icacls "%programfiles%\SWH\ApplicationData" /grant %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>nul
+takeown /f "%programfiles%\SWH\ApplicationData" /a>nul
+if not exist "%programfiles%\SWH\ApplicationData\PS.dat" goto nopassword_removepassword
+
+icacls "%programfiles%\SWH\ApplicationData" /deny %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>nul
+
 echo.
-set /p removingpasswordchk=To remove the password you need to enter it first: 
-if "%removingpasswordchk%"=="%psd%" (goto removingpsd) else (goto errorremovingpsd)
+set /p "removingpasswordchk=To remove the password you need to enter it first: "
+if "%removingpasswordchk%"=="%DecryptPSD%" (goto removingpsd) else (goto errorremovingpsd)
 :removingpsd
-del "%programfiles%\SWH\ApplicationData\PS.dat" /q
+icacls "%programfiles%\SWH\ApplicationData" /grant %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>nul
+takeown /f "%programfiles%\SWH\ApplicationData" /a>nul
+if exist "%programfiles%\SWH\ApplicationData\PS.dat" (del "%programfiles%\SWH\ApplicationData\PS.dat" /q)
 echo.
 echo Password successfully removed
 echo.
@@ -2483,6 +2522,14 @@ echo Incorrect password
 echo.
 goto swh
 
+:nopassword_removepassword
+echo.
+echo You don't have a password for Scripting Windows Host
+echo.
+goto swh
+
+
+
 :adminpermission
 SETLOCAL EnableDelayedExpansion
 for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do (
@@ -2493,33 +2540,7 @@ rem Please run SWH as administrator
 
 
 echo.
-call :ColorText 0C "P"
-call :ColorText 0C "l"
-call :ColorText 0C "e"
-call :ColorText 0C "a"
-call :ColorText 0C "s"
-call :ColorText 0C "e "
-call :ColorText 0C " r"
-call :ColorText 0C "u"
-call :ColorText 0C "n "
-call :ColorText 0C " S"
-call :ColorText 0C "W"
-call :ColorText 0C "H "
-call :ColorText 0C " a"
-call :ColorText 0C "s "
-call :ColorText 0C " a"
-call :ColorText 0C "d"
-call :ColorText 0C "m"
-call :ColorText 0C "i"
-call :ColorText 0C "n" 
-call :ColorText 0C "i"
-call :ColorText 0C "s"
-call :ColorText 0C "t"
-call :ColorText 0C "r"
-call :ColorText 0C "a"
-call :ColorText 0C "t"
-call :ColorText 0C "o"
-call :ColorText 0C "r"
+call :ColorText 0C "Please run Scripting Windows Host Console as administrator"
 echo.
 echo. & goto swh
 
@@ -2598,6 +2619,7 @@ echo.
 echo To apply changes you must restart Scripting Windows Host Console
 echo.
 echo Press any key to restart Scripting Windows Host Console...
+pause>nul
 goto abstartswh
 
 
