@@ -395,7 +395,7 @@ if exist IncorrectCommand.opt (
 )
 set cmd=Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}
 set ver=10.6.1
-set prever=[Pre-release %VER%]
+set prever=[Release %VER%]
 set securever=%ver%
 set secureprever=%PREVER%
 if not "%executiondir_established%"=="%userprofile%" (cd /d "%~2") else (cd /d "%cdirectory%")
