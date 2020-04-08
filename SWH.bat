@@ -1122,7 +1122,7 @@ goto swhnetshwifi
 :netsh_wifi_connections
 echo.
 echo.
-netsh wlan show profiles | findstr "      :"
+netsh wlan show networks | findstr "      :"
 echo.
 echo.
 goto swhnetshwifi
@@ -1130,8 +1130,8 @@ goto swhnetshwifi
 :netsh_wifi_showpassword
 echo.
 ::WiFi name
-echo =WiFi that you want to view his password:
-set /p currentwifi=(To view WiFi password type in WiFi module "connections")
+echo WiFi that you want to view his password:
+set /p currentwifi=To view WiFi password type in WiFi module "connections": 
 
 ::Search WiFi password
 Netsh wlan export profile name="%currentwifi%" key=clear folder="%PATHSWH%\Temp">nul
@@ -3844,39 +3844,13 @@ if "%surenewhour%"=="y" (
 
 :echosay
 set /p "say=Text to say: "
-if /i "%SAY%"=="on" goto devmodesay
 echo.
-echo %say%
+powershell -Command Write-Host "%SAY%"
 echo.
-echo Say:%say% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
 goto swh
 
 
-:devmodesay
-echo.
-echo To enter Scripting Windows Host Developper Mode you will need to authenticate you
-echo.
-set "psCommand=powershell -Command "$pword = read-host 'Password' -AsSecureString ; ^
-     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
-                 [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
-for /f "usebackq delims=" %%P in (`%psCommand%`) do set "password_devmode=%%P"
 
-if "%DecryptPSD%"=="%password_devmode%" (
-	
-
-
-
-
-
-echo Do you want to enter Scripting Windows Host Developper Mode?
-set /p devmode=You can disable it by typing SAY and then OFF (y/n): 
-if /i "%devmode%"=="Y" (
-	echo.
-	echo Turning ON developper mode...
-	echo.
-	echo on
-)
-goto swh
 
 :credits
 echo.
@@ -3895,7 +3869,7 @@ goto swh
 if not exist "\" (echo. & set errordisk_=%cd% & goto errornotdisk)
 dir
 echo.
-echo dir:%cd% >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo dir:%cd% >> "%pathswh%\SWH_History.txt"
 goto swh
 
 :rename
