@@ -2,9 +2,8 @@ An easy-to-use terminal, created by anic17.
 
 Wrotten in Batch, VBScript and PowerShell.
 
-The file size is 141 kB, and doesn't need any installation. Only downlaod the file and run it.
 
-To use all functions, install SWH via SWH_Setup.bat.
+The file size is 141 kB, and doesn't need any installation. Only downlaod the file and run it.
 
 
 NOTE:
@@ -18,11 +17,14 @@ You can find files in:
 %LocalAppData%\ScriptingWindowsHost
 
 
+
 Also, SWH has a mode to be compatible with Recovery OS mode.
 
 Only type "bootmode" and SWH will be running perfectly.
 
+
 To view command list, type "help". If you cannot view all commands, type first "more" and then "help"
+
 
 To update, type "updateswh"
 
@@ -67,6 +69,7 @@ Once now is not possible to download older versions, you can download Scripting 
 
 
 :)
+
 
 
 
