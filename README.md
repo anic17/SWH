@@ -9,11 +9,10 @@ Wrotten in Batch, VBScript and PowerShell.
 SWH creates some files, used to load various settings, logs and command history.
 
 You can find files in:
-
+```
 %ProgramFiles%\SWH
-
 %LocalAppData%\ScriptingWindowsHost
-
+```
 
 
 Also, SWH has a mode to be compatible with Recovery OS mode.
@@ -76,10 +75,9 @@ Download [here](http://https://raw.githubusercontent.com/anic17/SWH/master/SWH_C
 
 
 
-## SWH Team (anic17)
+## Contact information
 
-
-### Website: https://anic17.github.io/SWHConsole
+Website: https://anic17.github.io/SWHConsole
 
 E-Mail: SWH.Console@gmail.com
 
