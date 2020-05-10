@@ -1,10 +1,10 @@
-#Scripting Windows Host Console
+# Scripting Windows Host Console
 
-###An easy-to-use terminal, created by anic17. More than 90 commands, including cryptography, string reversing, typical commands (creating folders and files and deleting them) and more!
+An easy-to-use terminal, created by anic17. More than 90 commands, including cryptography, string reversing, typical commands (creating folders and files and deleting them) and more!
 
 Wrotten in Batch, VBScript and PowerShell.
 
-###NOTE:
+### NOTE:
 
 SWH creates some files, used to load various settings, logs and command history.
 
@@ -42,7 +42,7 @@ You can also use parameters to run in console, ex:
 ```
 
 
-##Supported versions and end of support:
+## Supported versions and end of support:
 
 
 1.x - End of support 31 of March 2019
@@ -76,10 +76,10 @@ Download [here](http://https://raw.githubusercontent.com/anic17/SWH/master/SWH_C
 
 
 
-#SWH Team (anic17)
+## SWH Team (anic17)
 
 
-###Website: https://anic17.github.io/SWHConsole
+### Website: https://anic17.github.io/SWHConsole
 
 E-Mail: SWH.Console@gmail.com
 
