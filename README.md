@@ -14,31 +14,37 @@ You can find files in:
 %LocalAppData%\ScriptingWindowsHost
 ```
 
+## Compatibility
 
-Also, SWH has a mode to be compatible with Recovery OS mode.
+### Operating System
 
-Only type "bootmode" and SWH will be running perfectly.
+Scripting Windows Host Console is compatible with versions of Windows between Windows Vista and Windows 10
+
+### Recovery mode
+
+SWH has a mode to be compatible with Recovery OS mode.
+
+Type "bootmode" and SWH will be running fine.
 
 
 To view command list, type "help". If you cannot view all commands, type first "more" and then "help"
 
 
-To update, type "updateswh"
+To update Scripting Windows Host Console, type "updateswh"
 
-You can also use parameters to run in console, ex:
-```
+You can also use parameters to run in console, for example:
 
-	* "SWH.bat" /c updateswh
+* "SWH.bat" /c updateswh
 	
-	* "SWH.bat" /admin
+* "SWH.bat" /admin
 	
-	* "SWH.bat" /?
+* "SWH.bat" /?
 	
-	* "SWH.bat" /h"
+* "SWH.bat" /h"
 	
-	* "SWH.bat" /execdir C:\
+* "SWH.bat" /execdir C:\
 	
-```
+
 
 
 ## Supported versions and end of support:
@@ -65,7 +71,7 @@ You can also use parameters to run in console, ex:
 10.x - End of support 31 of June 2020
 
 
-Once now is not possible to download older versions, you can download Scripting Windows Host 10.6 with support
+Once now is not possible to download older versions, you can download Scripting Windows Host 10.6.1 with support
 
 
 
@@ -81,4 +87,7 @@ Website: https://anic17.github.io/SWHConsole
 
 E-Mail: SWH.Console@gmail.com
 
-Official contributors: [RazorRipzee](https://github.com/RazorRipzee)
+If you have any problem, please use the command CONTACT to send a message (bug fixes, errors, new ideas...)
+
+
+### Official contributors: [RazorRipzee](https://github.com/RazorRipzee)
