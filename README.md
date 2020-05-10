@@ -83,3 +83,5 @@ Download [here](http://https://raw.githubusercontent.com/anic17/SWH/master/SWH_C
 ###Website: https://anic17.github.io/SWHConsole
 
 E-Mail: SWH.Console@gmail.com
+
+Official contributors: [RazorRipzee](https://github.com/RazorRipzee)
