@@ -1,14 +1,10 @@
 #Scripting Windows Host Console
 
-An easy-to-use terminal, created by anic17.
+###An easy-to-use terminal, created by anic17. More than 90 commands, including cryptography, string reversing, typical commands (creating folders and files and deleting them) and more!
 
 Wrotten in Batch, VBScript and PowerShell.
 
-
-The file size is 141 kB, and doesn't need any installation. Only downlaod the file and run it.
-
-
-NOTE:
+###NOTE:
 
 SWH creates some files, used to load various settings, logs and command history.
 
@@ -31,18 +27,22 @@ To view command list, type "help". If you cannot view all commands, type first "
 To update, type "updateswh"
 
 You can also use parameters to run in console, ex:
+```
 
-	- "SWH.bat" /c updateswh
+	* "SWH.bat" /c updateswh
 	
-	- "SWH.bat" /admin
+	* "SWH.bat" /admin
 	
-	- "SWH.bat" /?
+	* "SWH.bat" /?
 	
-	- "SWH.bat" /h"
+	* "SWH.bat" /h"
+	
+	* "SWH.bat" /execdir C:\
+	
+```
 
 
-
-Supported versions and end of support:
+##Supported versions and end of support:
 
 
 1.x - End of support 31 of March 2019
@@ -72,12 +72,14 @@ Once now is not possible to download older versions, you can download Scripting 
 
 :)
 
+Download [here](http://https://raw.githubusercontent.com/anic17/SWH/master/SWH_Console.zip) Scripting Windows Host Console Version 10.6.1
 
 
 
-SWH Team (anic17)
+
+#SWH Team (anic17)
 
 
-Website: https://anic17.github.io/SWHConsole
+###Website: https://anic17.github.io/SWHConsole
 
 E-Mail: SWH.Console@gmail.com
