@@ -1,3 +1,5 @@
+#Scripting Windows Host Console
+
 An easy-to-use terminal, created by anic17.
 
 Wrotten in Batch, VBScript and PowerShell.
