@@ -1,6 +1,6 @@
 # Scripting Windows Host Console
 
-An easy-to-use terminal, created by anic17. More than 90 commands, including cryptography, string reversing, typical commands (creating folders and files and deleting them) and more!
+An easy-to-use terminal, created by anic17. More than 90 commands, including cryptography, string reversing, typical commands (creating folders and files and deleting them), network manipulation, and more!
 
 Wrotten in Batch, VBScript and PowerShell.
 
