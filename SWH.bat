@@ -1,5 +1,5 @@
-cls
 @echo off
+setlocal EnableDelayedExpansion
 :SWH_InitFirst
 echo [%date% %time%] - SWH Started in %computername% > %localappdata%\ScriptingWindowsHost\StartLog.log
 set execdate=%date%
@@ -8,15 +8,12 @@ set execdir=%cd%
 set execname=%~nx0
 set moreCMD=0
 set pathswh=%localappdata%\ScriptingWindowsHost
-if "%os%"=="Windows_NT" (goto startingWindowsNT)
+if /I "%os%"=="Windows_NT" (goto startingWindowsNT) else (
+	echo This program cannot be run in DOS mode.
+	endlocal
+	exit /B
+)
 
-echo SWH is not compatible with this version of Windows
-echo.
-echo SWH is compatible with Windows Vista and next (Recomended Windows 10)
-echo Would you run SWH anyways knowing this version of Windows is not compatible? (Y/N)
-choice /c:NY /N
-if errorlevel 2 (goto startingWindowsNT)
-if errorlevel 1 (exit /B)
 if exist "%pathswh%\SWH.bat" (goto chkifinstalled) else (set installedswh=0 & goto startingWindowsNT)
 
 :chkifinstalled
@@ -105,6 +102,7 @@ echo SWH has been disabled by an administrator
 echo.
 echo Press any key to exit SWH...
 pause>nul
+endlocal
 exit /b
 
 :regYesBlockCHK
@@ -126,12 +124,13 @@ echo.
 echo Press any key to exit SWH...
 echo.
 pause>nul
+endlocal
 exit /b
 :checkingPassword
-icacls "%programfiles%\SWH\ApplicationData" /grant %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>nul
+icacls "%programfiles%\SWH\ApplicationData" /grant %username%:^(F,MA,RA,WA,DE^) > nul
 if exist "%programfiles%\SWH\ApplicationData\PS.dat" (goto putpassword) else (
 	set psd=[{CLSID:8t4tvry4893tvy2nq4928trvyn14098vny84309tvny493q8tvn0943tyvnu0q943t8vn204vmy10vn05}]
-	icacls "%programfiles%\SWH\ApplicationData" /deny %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)
+	icacls "%programfiles%\SWH\ApplicationData" /deny %username%:^(F,MA,RA,WA,DE^)>nul
 	goto params_slash
 )
 
@@ -166,6 +165,7 @@ echo "%~nx0" /execdir %systemdrive%\               ^| This command will run SWH 
 echo "%~nx0" /c powershell              ^| This command will open Windows PowerShell
 ::echo "%~nx0" /p ^<password^>   ^| If the password is existent, type the password and access SWH. (Creating)
 echo.
+endlocal
 exit /B
 
 
@@ -183,6 +183,7 @@ echo objShell.Run "cmd.exe /c %pathswh%\SWH.bat" >> %pathswh%\Temp\AdminSWH.vbs
 echo.
 start wscript.exe "%pathswh%\Temp\AdminSWH.vbs"
 echo.
+endlocal
 exit /B
 :nonexist_PARAMSWH
 echo Error! Type "%~nx0" /? to get help about how to start SWH with parameters
@@ -193,89 +194,78 @@ goto swh
 cd /d "%programfiles%\SWH\ApplicationData"
 if not exist "PS.dat" (goto TryingRemovePSD)
 
-for /f "delims=" %%P in (PS.dat) do (set "cryptpassword=%%P") 
-icacls "%programfiles%\SWH\ApplicationData" /deny %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>nul
+icacls "%programfiles%\SWH\ApplicationData" /deny %username%:(F,MA,RA,WA,DE,WO,WDAC,RC,REA,WEA,AD,WD,AS)>nul
 
+set antiinject=0
 
-
-echo [%date% %time%] - Password=1 >> %pathswh%\StartLog.log
+echo [%date% %time%] - Password=1 >> "%pathswh%\StartLog.log"
 
 
 title %~dpnx0 - Enter the password to start SWH
-set password=[{CLSID:5378cv5t593vyn539n58tv2598ty5btvy3y9vn53439t57y483wv95ntvy54tn9v5y4vtn58tvu8}]
+set password=cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e
+echo $pword = read-host 'Password to start SWH' -AsSecureString ; > "%PATHSWH%\Temp\GetPassword.ps1"
+echo     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); >> "%PATHSWH%\Temp\GetPassword.ps1"
+echo                 $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)  >> "%PATHSWH%\Temp\GetPassword.ps1"
+echo Function Get-StringHash([String] $String,$HashName = "SHA512") >> "%pathswh%\Temp\GetPassword.ps1"
+echo { >>  "%pathswh%\Temp\GetPassword.ps1"
+echo $StringBuilder = New-Object System.Text.StringBuilder >>  "%pathswh%\Temp\GetPassword.ps1"
+echo [System.Security.Cryptography.HashAlgorithm]::Create($HashName).ComputeHash([System.Text.Encoding]::UTF8.GetBytes($String))^|%%{ >>  "%pathswh%\Temp\GetPassword.ps1"
+echo [Void]$StringBuilder.Append($_.ToString("x2")) >>  "%pathswh%\Temp\GetPassword.ps1"
+echo } >>  "%pathswh%\Temp\GetPassword.ps1"
+echo $StringBuilder.ToString() >>  "%pathswh%\Temp\GetPassword.ps1"
+echo } >>  "%pathswh%\Temp\GetPassword.ps1"
+echo $PSDefaultParameterValues['Out-File:Encoding'] = 'ascii' >>  "%pathswh%\Temp\GetPassword.ps1"
+echo Get-StringHash $password ^> "%pathswh%\Temp\SHA512_.tmp" >>  "%pathswh%\Temp\GetPassword.ps1"
+powershell -ExecutionPolicy Unrestricted -Command "%PATHSWH%\Temp\GetPassword.ps1"
 
-set "psCommand=powershell -Command "$pword = read-host 'Password to start SWH' -AsSecureString ; ^
-     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
-                 [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
-for /f "usebackq delims=" %%P in (`%psCommand%`) do set "password=%%P"
+
+for /f "usebackq delims=" %%a in ("%pathswh%\Temp\SHA512_.tmp") do (set "password_sha512=%%a")
+::Read hashed password
+for /f "usebackq delims=" %%A in ("%programfiles%\SWH\ApplicationData\PS.dat") do (set "stored_sha512=%%A")
+
+::Destroy password
+echo 000000000000000000000000000000000000000000 > "%PATHSWH%\Temp\pass.txt"
+del "%PATHSWH%\Temp\pass.txt" /q /f > nul
+echo 000000000000000000000000000000000000000000 > "%PATHSWH%\Temp\pass.txt"
+del "%PATHSWH%\Temp\pass.txt" /q /f > nul
+echo 000000000000000000000000000000000000000000 > "%PATHSWH%\Temp\pass.txt"
+del "%PATHSWH%\Temp\pass.txt" /q /f > nul
+
+
+del "%PATHSWH%\Temp\GetPassword.ps1" /q /f > nul
+echo 000000000000000000000000000000000000000000 > "%PATHSWH%\Temp\GetPassword.ps1"
+del "%PATHSWH%\Temp\GetPassword.ps1" /q /f > nul
+echo 000000000000000000000000000000000000000000 > "%PATHSWH%\Temp\GetPassword.ps1"
+del "%PATHSWH%\Temp\GetPassword.ps1" /q /f > nul
+echo 000000000000000000000000000000000000000000 > "%PATHSWH%\Temp\GetPassword.ps1"
+del "%PATHSWH%\Temp\GetPassword.ps1" /q /f > nul
+
+if "%stored_sha512% "=="%password_sha512% " (goto startingswhpassword) else (goto failedpassword)
+@echo off
+pause>nul
 
 
 
-::Read encrypted password
 
 
 
+
+for /f "usebackq delims=" %%P in ("%PATHSWH%\Temp\pass.txt") do (set "password=%%P")
+
+
+
+
+
+pause>nul
 :firstPSDchk
 cd /d "%PATHSWH%\Temp"
 
 ::Decrypt Password
-if exist Decrypt.txt del Decrypt.txt /q
-if exist Decrypt.vbs del Decrypt.vbs /q
-echo Option Explicit > Decrypt.vbs
-echo Dim temp, key, objShell >> Decrypt.vbs
-echo Dim objFSO, Dcrypt >> Decrypt.vbs
-echo Set objShell = WScript.CreateObject("WScript.Shell") >> Decrypt.vbs
-echo temp = "%cryptpassword%" >> Decrypt.vbs
-echo key = "4Ou8fa94pfx3WV3AsnhoAz7xWbtkA5T36SMX7sOB9I8WazaCirdOT1HfhBJBKvZlQDMRIGEH49vPK5KTDPTaIPVT8h3F57QW3RYbJ0WrT90Fxk3EBcMCz0APGZebZWkZH2JvGuFqs8mvICYG4uZW2MYnXwPmnVa8S4HCEgeQRPIDoWdH8V9S263pW2PMA5kgIkn2ONZ9j7WCZP38Vf4IRQ0261QCeJHPBj71LKIqGDbWBTrLBh8wPONCYVM0F4RPIDoWdH8V9S263pW2PMA5kgIkn2ONZ9j7WCZP38Vf4" >> Decrypt.vbs
-echo temp = Decrypt(temp,key) >> Decrypt.vbs
-echo Set objFSO = createobject("scripting.filesystemobject") >> Decrypt.vbs
-echo Set Dcrypt = objfso.createtextfile("Decrypt.txt",true)  >> Decrypt.vbs
-echo Dcrypt.writeline "" ^&temp >> Decrypt.vbs
-echo Dcrypt.close >> Decrypt.vbs
-echo Function encrypt(Str, key) >> Decrypt.vbs
-echo  Dim lenKey, KeyPos, LenStr, x, Newstr >> Decrypt.vbs
-echo  Newstr = "" >> Decrypt.vbs
-echo  lenKey = Len(key) >> Decrypt.vbs
-echo  KeyPos = 1 >> Decrypt.vbs
-echo  LenStr = Len(Str) >> Decrypt.vbs
-echo  str = StrReverse(str) >> Decrypt.vbs
-echo  For x = 1 To LenStr >> Decrypt.vbs
-echo       Newstr = Newstr ^& chr(asc(Mid(str,x,1)) + Asc(Mid(key,KeyPos,1))) >> Decrypt.vbs
-echo       KeyPos = keypos+1 >> Decrypt.vbs
-echo       If KeyPos ^> lenKey Then KeyPos = 1 >> Decrypt.vbs
-echo  Next >> Decrypt.vbs
-echo  encrypt = Newstr >> Decrypt.vbs
-echo End Function >> Decrypt.vbs
-echo Function Decrypt(str,key) >> Decrypt.vbs
-echo  Dim lenKey, KeyPos, LenStr, x, Newstr >> Decrypt.vbs
-echo  Newstr = "" >> Decrypt.vbs
-echo  lenKey = Len(key) >> Decrypt.vbs
-echo  KeyPos = 1 >> Decrypt.vbs
-echo  LenStr = Len(Str) >> Decrypt.vbs
-echo  str=StrReverse(str) >> Decrypt.vbs
-echo  For x = LenStr To 1 Step -1 >> Decrypt.vbs
-echo       Newstr = Newstr ^& chr(asc(Mid(str,x,1)) - Asc(Mid(key,KeyPos,1))) >> Decrypt.vbs
-echo       KeyPos = KeyPos+1 >> Decrypt.vbs
-echo       If KeyPos ^> lenKey Then KeyPos = 1 >> Decrypt.vbs
-echo       Next >> Decrypt.vbs
-echo       Newstr=StrReverse(Newstr) >> Decrypt.vbs
-echo       Decrypt = Newstr >> Decrypt.vbs
-echo End Function >> Decrypt.vbs
-start /Wait WScript.exe "%pathswh%\Temp\Decrypt.vbs"
-
-for /f "delims=" %%F in (Decrypt.txt) do (set B64psd_dec=%%F)
 
 
-::Encode password in Base64 
-powershell -Command [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('%B64psd_dec%')) > B64ps.tmp
-for /f "delims=" %%f in (B64ps.tmp) do (set "DecryptPSD=%%f")
-
-if exist "%pathswh%\Temp\B64ps.tmp" del "%pathswh%\Temp\B64ps.tmp" /q /f>nul
-if exist "%pathswh%\Temp\Decrypt.txt" del "%pathswh%\Temp\Decrypt.txt" /q /f>nul
-if exist "%pathswh%\Temp\Decrypt.vbs" del "%pathswh%\Temp\Decrypt.vbs" /q /f>nul
 
 
-if "%password%"=="%DecryptPSD%" (goto startingswhpassword) else (goto failedpassword)>nul
+
 
 :TryingRemovePSD
 cls
@@ -332,7 +322,6 @@ if exist "%Windir%\SWH_TestFileAdmin.tmp" (
 ) else (set admin=0)
 set commandtoexecute=SWH: 
 cls
-
 title Starting Scripting Windows Host Console...
 echo Starting Scripting Windows Host Console...
 
@@ -342,7 +331,7 @@ set userblock=0
 set sizeverify=0
 set colmodesize=0
 set linemodesize=0
-
+set contact_antispam=0
 title Scripting Windows Host Console
 cd /d "%PATHSWH%"
 if not exist SWH_History.txt (
@@ -351,6 +340,8 @@ if not exist SWH_History.txt (
 )
 
 :startswh
+
+
 if exist "%pathswh%\Temp\B64ps.tmp" del "%pathswh%\Temp\B64ps.tmp" /q /f>nul
 set a=X
 set g=Y
@@ -394,7 +385,7 @@ if exist IncorrectCommand.opt (
 	echo [%date% %time%] - Unexistant Setting: %pathswh%\Settings\IncorrectCommand.opt >> %pathswh%\StartLog.log
 )
 set cmd=Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}
-set ver=10.6.1
+set ver=11.0
 set prever=[Release %VER%]
 set securever=%ver%
 set secureprever=%PREVER%
@@ -403,8 +394,7 @@ echo [%date% %time%] - SWH: Running SWH on user %username% in directory %~dp0 >>
 cls
 echo Welcome to the Scripting Windows Host Console. %PREVER%  %xdiskcomp%
 echo.
-set /p cmd=%cd% %commandtoexecute%
-set cmd="%cmd%"
+set /p "cmd=%cd% %commandtoexecute%"
 goto other1cmd
 
 :cmdhelp
@@ -432,7 +422,7 @@ echo clearwintemp: Clears the Windows temporary files in %Systemroot%\Temp >> "%
 echo clipboard: Copies a text in the clipboard >> "%pathswh%\Temp\MoreHelp"
 echo cmd: Starts Command Prompt in the current directory >> "%pathswh%\Temp\MoreHelp"
 echo command: Starts MS-DOS command prompt (command.com) >> "%pathswh%\Temp\MoreHelp"
-echo contact: Shows the contact information >> "%pathswh%\Temp\MoreHelp"
+echo contact: Sends a message to Scripting Windows Host Team >> "%pathswh%\Temp\MoreHelp"
 echo copy: Copies files of the computer >> "%pathswh%\Temp\MoreHelp"
 echo credits: Shows the credits of SWH >> "%pathswh%\Temp\MoreHelp"
 echo date: Changes the date of the computer >> "%pathswh%\Temp\MoreHelp"
@@ -460,9 +450,8 @@ echo invertcolors: Inverts colors of the screen (Classic inversion) >> "%pathswh
 echo more: Makes a pause in a long text every time the page ends >> "%pathswh%\Temp\MoreHelp"
 echo msg: Makes a message box on the screen >> "%pathswh%\Temp\MoreHelp"
 echo networkconnections: Shows the network connections >> "%pathswh%\Temp\MoreHelp"
-echo networkmsg: Chats with a computer on the same network than you >> "%pathswh%\Temp\MoreHelp"
+echo networkshell: Starts Scripting Windows Host Network Shell >> "%pathswh%\Temp\MoreHelp"
 echo newswh: Starts a new instance of Scripting Windows Host Console >> "%pathswh%\Temp\MoreHelp"
-echo passwordkey: Generates a new key for the password AES encryption (Beta) >> "%pathswh%\Temp\MoreHelp"
 echo path: Changes the actual path of Scripting Windows Host >> "%pathswh%\Temp\MoreHelp"
 echo pkg: Installs/Removes Scripting Windows Host packages >> "%pathswh%\Temp\MoreHelp"
 echo powershell: Starts Windows PowerShell in the current directory >> "%pathswh%\Temp\MoreHelp"
@@ -516,7 +505,7 @@ goto swh
 
 :normalHelp
 echo.
-echo help >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo help >> "%PATHSWH%\SWH_History.txt"
 rem Help command
 echo Commands:
 echo.
@@ -540,7 +529,7 @@ echo clearwintemp: Clears the Windows temporary files in %Systemroot%\Temp
 echo clipboard: Copies a text in the clipboard
 echo cmd: Starts Command Prompt in the current directory
 echo command: Starts MS-DOS command prompt (command.com)
-echo contact: Shows the contact information
+echo contact: Sends a message to Scripting Windows Host Team
 echo copy: Copies files of the computer
 echo credits: Shows the credits of SWH
 echo date: Changes the date of the computer
@@ -569,9 +558,8 @@ echo ipconfig: Shows the IP and his configuration
 echo more: Makes a pause in a long text every time the page ends
 echo msg: Makes a message box on the screen
 echo networkconnections: Shows the network connections
-echo networkmsg: Chats with a computer on the same network than you
+echo networkshell: Starts Scripting Windows Host Network Shell
 echo news: Shows the news of SWH %ver%
-echo passwordkey: Generates a new key for the password AES encryption (Beta)
 echo path: Changes the actual path of SWH
 echo pkg: Installs/Removes Scripting Windows Host packages
 echo powershell: Starts Windows PowerShell in the current directory
@@ -618,7 +606,7 @@ echo.
 goto swh
 
 :helpproject
-echo HelpProject >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+echo HelpProject >> "%PATHSWH%\SWH_History.txt"
 echo.
 echo How to create your own project:
 echo.
@@ -630,171 +618,170 @@ goto swh
 
 :other1cmd
 rem "" antibug
-if /i %cmd%=="help" (goto cmdhelp)
-if /i %cmd%=="Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}" (
+if /i "%cmd%"=="help" (goto cmdhelp)
+if /i "%cmd%"=="Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}" (
 	echo Enter >> "%pathswh%\SWH_History.txt"
 	goto swh
 )
-if /i %cmd%=="execute" (goto start)
-if /i %cmd%=="exec" (goto start)
-if /i %cmd%=="folder" (goto mkdir)
-if /i %cmd%=="shutdown" (goto shutdown)
-if /i %cmd%=="cd" (goto cd)
-if /i %cmd%=="title" (goto title)
-if /i %cmd%=="file" (goto file)
-if /i %cmd%=="cls" (goto cls)
-if /i %cmd%=="clear" (goto cls)
-if /i %cmd%=="del" (goto del)
-if /i %cmd%=="color" (goto color)
-if /i %cmd%=="endtask" (goto taskkill)
-if /i %cmd%=="tasklist" (goto tasklist)
-if /i %cmd%=="taskmgr" (goto taskmgr)
-if /i %cmd%=="removefolder" (goto rfolder)
-if /i %cmd%=="exit" (echo.&echo Exiting SWH...& title %windir%\System32\cmd.exe & exit /b)
-if /i %cmd%=="copy" (goto copyfiles)
-if /i %cmd%=="cmd" (goto cmdscreen)
-if /i %cmd%=="swh" (goto startswh)
-if /i %cmd%=="msg" (goto msgbox)
-if /i %cmd%=="date" (goto chdate)
-if /i %cmd%=="time" (goto chtime)
-if /i %cmd%=="say" (goto echosay)
-if /i %cmd%=="credits" (goto credits)
-if /i %cmd%=="directory" (goto dir)
-if /i %cmd%=="dir" (goto dir)
-if /i %cmd%=="cancelshutdown" (goto cancelshutdown)
-if /i %cmd%=="rename" (goto rename)
-if /i %cmd%=="history" (goto history)
-if /i %cmd%=="clearhistory" (goto clearhistory)
-if /i %cmd%=="calc" (goto calc)
-if /i %cmd%=="calculator" (goto calc)
-if /i %cmd%=="size" (goto consize)
-if /i %cmd%=="project" (goto scriptproject)
-if /i %cmd%=="helpproject"(goto HelpProject2)
-if /i %cmd%=="voice" (goto voice)
-if /i %cmd%=="networkconnections" (goto networkconnections)
-if /i %cmd%=="prompt" (goto consoleinput)
-if /i %cmd%=="t-rex" (goto trexgame)
-if /i %cmd%=="search" (goto searchfiles)
-if /i %cmd%=="powershell" (goto :PowerShell)
-if /i %cmd%=="url" (goto url)
-if /i %cmd%=="systemconfig" (goto bootconfig)
-if /i %cmd%=="variable" (goto variable)
-if /i %cmd%=="swhvariables" (goto swhvariables)
-if /i %cmd%=="vol" (goto vol)
-if /i %cmd%=="settings" (goto settings)
-if /i %cmd%=="run" (goto SWHrunDialog)
+if exist ""%cmd%"" ("%cmd%" & echo. & goto swh)
+if /i "%cmd%"=="execute" (goto start)
+if /i "%cmd%"=="exec" (goto start)
+if /i "%cmd%"=="folder" (goto mkdir)
+if /i "%cmd%"=="shutdown" (goto shutdown)
+if /i "%cmd%"=="cd" (goto cd)
+if /i "%cmd%"=="title" (goto title)
+if /i "%cmd%"=="file" (goto file)
+if /i "%cmd%"=="cls" (goto cls)
+if /i "%cmd%"=="clear" (goto cls)
+if /i "%cmd%"=="del" (goto del)
+if /i "%cmd%"=="color" (goto color)
+if /i "%cmd%"=="endtask" (goto taskkill)
+if /i "%cmd%"=="tasklist" (goto tasklist)
+if /i "%cmd%"=="taskmgr" (goto taskmgr)
+if /i "%cmd%"=="removefolder" (goto rfolder)
+if /i "%cmd%"=="exit" (echo.&echo Exiting SWH...& title %windir%\System32\cmd.exe & endlocal & exit /b)
+if /i "%cmd%"=="copy" (goto copyfiles)
+if /i "%cmd%"=="cmd" (goto cmdscreen)
+if /i "%cmd%"=="swh" (goto startswh)
+if /i "%cmd%"=="msg" (goto msgbox)
+if /i "%cmd%"=="date" (goto chdate)
+if /i "%cmd%"=="time" (goto chtime)
+if /i "%cmd%"=="say" (goto echosay)
+if /i "%cmd%"=="credits" (goto credits)
+if /i "%cmd%"=="directory" (goto dir)
+if /i "%cmd%"=="dir" (goto dir)
+if /i "%cmd%"=="cancelshutdown" (goto cancelshutdown)
+if /i "%cmd%"=="rename" (goto rename)
+if /i "%cmd%"=="history" (goto history)
+if /i "%cmd%"=="clearhistory" (goto clearhistory)
+if /i "%cmd%"=="calc" (goto calc)
+if /i "%cmd%"=="calculator" (goto calc)
+if /i "%cmd%"=="size" (goto consize)
+if /i "%cmd%"=="project" (goto scriptproject)
+if /i "%cmd%"=="helpproject"(goto HelpProject2)
+if /i "%cmd%"=="voice" (goto voice)
+if /i "%cmd%"=="networkconnections" (goto networkconnections)
+if /i "%cmd%"=="prompt" (goto consoleinput)
+if /i "%cmd%"=="t-rex" (goto trexgame)
+if /i "%cmd%"=="search" (goto searchfiles)
+if /i "%cmd%"=="powershell" (goto :PowerShell)
+if /i "%cmd%"=="url" (goto url)
+if /i "%cmd%"=="systemconfig" (goto bootconfig)
+if /i "%cmd%"=="variable" (goto variable)
+if /i "%cmd%"=="swhvariables" (goto swhvariables)
+if /i "%cmd%"=="vol" (goto vol)
+if /i "%cmd%"=="settings" (goto settings)
+if /i "%cmd%"=="run" (goto SWHrunDialog)
 rem "not swh" antibug
-if /i %cmd%=="""not swh""" (goto incommand)
-if /i %cmd%=="swhzip" (goto swhzip)
-if /i %cmd%=="helpsettings" (goto hsettings)
-if /i %cmd%=="ipconfig" (goto ipconfig)
-if /i %cmd%=="random" (goto randomnumber)
-if /i %cmd%=="resetsettings" (goto resetsettings)
-if /i %cmd%=="systeminfo" (goto SysInfo)
-if /i %cmd%=="restartswh" (goto abstartswh)
-if /i %cmd%=="path" (goto chPath)
-if /i %cmd%=="faq" (goto FAQ)
-if /i %cmd%=="systempath" (goto Syspath)
-if /i %cmd%=="command" (goto commandCom)
-if /i %cmd%=="execinfo" (goto execinfo)
-if /i %cmd%=="cd.." (goto cdBack)
-if /i %cmd%=="cd\" (goto cdDisk)
-if /i %cmd%=="clearwintemp" (goto clsWinTMP)
-if /i %cmd%=="cleartemp" (goto clsTemp)
-if /i %cmd%=="swhdiskcleaner" (goto SWHdiskCleaner)
-if /i %cmd%=="encrypttext" (goto encrypttext)
-if /i %cmd%=="updateswh" (goto updateswh)
-if /i %cmd%=="more" (goto moreWalk)
-if /i %cmd%=="read" (goto read)
-if /i %cmd%=="ver" (goto swhver)
-if /i %cmd%=="version" (goto swhver)
-if /i %cmd%=="setpassword" (goto setpassword)
-if /i %cmd%=="removepassword" (goto removepassword)
-if /i %cmd%=="blockusers" (goto accessonlyuser)
-if /i %cmd%=="winver" (goto winver)
-if /i %cmd%=="clipboard" (goto cmdClip)
-if /i %cmd%=="decrypttext" (goto decrypttext)
-if /i %cmd%=="userinfo" (goto userinfo)
-if /i %cmd%=="viewstartlog" (goto viewstartlog)
-if /i %cmd%=="resetstartlog" (goto resetstartlog)
-if /i %cmd%=="bootmode" (goto xdiskbootask)
-if /i %cmd%=="widedir" (goto widedir)
-if /i %cmd%=="firmware" (goto firmwareaccess)
-if /i %cmd%=="news" (goto newsSWH)
-if /i %cmd%=="setup" (goto startSetup)
-if /i %cmd%=="base64encode" (goto base64encode)
-if /i %cmd%=="base64decode" (goto base64decode)
-if /i %cmd%=="contact" (goto swhcontact)
-if /i %cmd%=="swhadmin" (goto swh_admin)
-if /i %cmd%=="download" (goto download_internet)
-if /i %cmd%=="editswh" (goto editswh_github)
-if /i %cmd%=="networkmsg" (goto networkmsg)
-if /i %cmd%=="checkprocess" (goto checkprocess)
-if /i %cmd%=="pkg" (goto pkg)
-if /i %cmd%=="pkg install" (goto pkg_install)
-if /i %cmd%=="pkg install calc" (goto pkg_install_calc)
-if /i %cmd%=="pkg install trex" (goto pkg_install_trex)
-if /i %cmd%=="pkg list" (goto pkglist)
-if /i %cmd%=="pkg remove calc" (goto pkgremovecalc)
-if /i %cmd%=="pkg remove trex" (goto pkgremovetrex)
-if /i %cmd%=="pkg listinstall" (goto pkg_listinstall)
-if /i %cmd%=="scanvirus" (goto scanvirus)
-if /i %cmd%=="google" (goto searchgoogle)
-if /i %cmd%=="filesize" (goto filesize)
-if /i %cmd%=="invertcolors" (goto invertcolors)
-if /i %cmd%=="passwordkey" (goto passwordkey)
-if /i %cmd%=="disableswh" (goto disableswh)
-if /i %cmd%=="reversetext" (goto reversetext)
-if /i %cmd%=="runasadmin" (goto runasadmin)
-if /i %cmd%=="if!" (goto if_condition)
-if /i %cmd%=="base64encodefile" (goto base64encodefile)
-if /i %cmd%=="base64decodefile" (goto base64decodefile)
-if /i %cmd%=="email" (goto email)
-if /i %cmd%=="decompressfile" (goto decompressfile)
-if /i %cmd%=="compressfile" (goto compressfile)
-if /i %cmd%=="encryptfile" (goto encryptfile)
-if /i %cmd%=="alias" (goto alias)
-if /i %cmd%=="ls" (goto dir)
-if /i %cmd%=="website" (start https://anic17.github.io/SWHConsole & echo. & goto swh)
-if /i %cmd%=="man" (goto cmdhelp)
-if /i %cmd%=="quit" (echo.&echo Exiting SWH...& title %windir%\System32\cmd.exe & exit /b)
-if /i %cmd%=="mail" (goto email)
-if /i %cmd%=="audiovol" (goto audiovol)
-if /i %cmd%=="audiovolume" (goto audiovol)
-if /i %cmd%=="preventprocess" (goto preventprocess)
-if /i %cmd%=="pkg install notepad" (goto pkg_install_notepad)
-if /i %cmd%=="pkg install paint" (goto pkg_install_paint)
-if /i %cmd%=="filehash" (goto filehash)
-if /i %cmd%=="qr" (goto qr)
+if /i "%cmd%"=="""not swh""" (goto incommand)
+if /i "%cmd%"=="swhzip" (goto swhzip)
+if /i "%cmd%"=="helpsettings" (goto hsettings)
+if /i "%cmd%"=="ipconfig" (goto ipconfig)
+if /i "%cmd%"=="random" (goto randomnumber)
+if /i "%cmd%"=="resetsettings" (goto resetsettings)
+if /i "%cmd%"=="systeminfo" (goto SysInfo)
+if /i "%cmd%"=="restartswh" (goto abstartswh)
+if /i "%cmd%"=="path" (goto chPath)
+if /i "%cmd%"=="faq" (goto FAQ)
+if /i "%cmd%"=="systempath" (goto Syspath)
+if /i "%cmd%"=="command" (goto commandCom)
+if /i "%cmd%"=="execinfo" (goto execinfo)
+if /i "%cmd%"=="cd.." (goto cdBack)
+if /i "%cmd%"=="cd\" (goto cdDisk)
+if /i "%cmd%"=="clearwintemp" (goto clsWinTMP)
+if /i "%cmd%"=="cleartemp" (goto clsTemp)
+if /i "%cmd%"=="swhdiskcleaner" (goto SWHdiskCleaner)
+if /i "%cmd%"=="encrypttext" (goto encrypttext)
+if /i "%cmd%"=="updateswh" (goto updateswh)
+if /i "%cmd%"=="more" (goto moreWalk)
+if /i "%cmd%"=="read" (goto read)
+if /i "%cmd%"=="ver" (goto swhver)
+if /i "%cmd%"=="version" (goto swhver)
+if /i "%cmd%"=="setpassword" (goto setpassword)
+if /i "%cmd%"=="removepassword" (goto removepassword)
+if /i "%cmd%"=="blockusers" echo. & echo We are remaking this command. & echo Sorry for the inconveniance :( & echo. & goto swh
+if /i "%cmd%"=="winver" (goto winver)
+if /i "%cmd%"=="clipboard" (goto clipboard)
+if /i "%cmd%"=="decrypttext" (goto decrypttext)
+if /i "%cmd%"=="viewstartlog" (goto viewstartlog)
+if /i "%cmd%"=="resetstartlog" (goto resetstartlog)
+if /i "%cmd%"=="bootmode" (goto xdiskbootask)
+if /i "%cmd%"=="widedir" (goto widedir)
+if /i "%cmd%"=="firmware" (goto firmwareaccess)
+if /i "%cmd%"=="news" (goto newsSWH)
+if /i "%cmd%"=="setup" (goto startSetup)
+if /i "%cmd%"=="base64encode" (goto base64encode)
+if /i "%cmd%"=="base64decode" (goto base64decode)
+if /i "%cmd%"=="contact" (goto swhcontact)
+if /i "%cmd%"=="swhadmin" (goto swh_admin)
+if /i "%cmd%"=="download" (goto download_internet)
+if /i "%cmd%"=="editswh" (goto editswh_github)
+if /i "%cmd%"=="checkprocess" (goto checkprocess)
+if /i "%cmd%"=="pkg" (goto pkg)
+if /i "%cmd%"=="pkg install" (goto pkg_install)
+if /i "%cmd%"=="pkg install calc" (goto pkg_install_calc)
+if /i "%cmd%"=="pkg install trex" (goto pkg_install_trex)
+if /i "%cmd%"=="pkg list" (goto pkglist)
+if /i "%cmd%"=="pkg remove calc" (goto pkgremovecalc)
+if /i "%cmd%"=="pkg remove trex" (goto pkgremovetrex)
+if /i "%cmd%"=="pkg listinstall" (goto pkg_listinstall)
+if /i "%cmd%"=="scanvirus" (goto scanvirus)
+if /i "%cmd%"=="google" (goto searchgoogle)
+if /i "%cmd%"=="filesize" (goto filesize)
+if /i "%cmd%"=="invertcolors" (goto invertcolors)
+if /i "%cmd%"=="passwordkey" (echo. & echo This command is no longer available & echo. & goto swh)
+if /i "%cmd%"=="disableswh" (goto disableswh)
+if /i "%cmd%"=="reversetext" (goto reversetext)
+if /i "%cmd%"=="runasadmin" (goto runasadmin)
+if /i "%cmd%"=="if!" (goto if_condition)
+if /i "%cmd%"=="base64encodefile" (goto base64encodefile)
+if /i "%cmd%"=="base64decodefile" (goto base64decodefile)
+if /i "%cmd%"=="email" (goto email)
+if /i "%cmd%"=="decompressfile" (goto decompressfile)
+if /i "%cmd%"=="compressfile" (goto compressfile)
+if /i "%cmd%"=="encryptfile" (goto encryptfile)
+if /i "%cmd%"=="alias" (goto alias)
+if /i "%cmd%"=="website" (start https://anic17.github.io/SWHConsole & echo. & goto swh)
+if /i "%cmd%"=="man" (goto cmdhelp)
+if /i "%cmd%"=="quit" (echo.&echo Exiting SWH...& title %windir%\System32\cmd.exe & endlocal & exit /b)
+if /i "%cmd%"=="mail" (goto email)
+if /i "%cmd%"=="audiovol" (goto audiovol)
+if /i "%cmd%"=="audiovolume" (goto audiovol)
+if /i "%cmd%"=="preventprocess" (goto preventprocess)
+if /i "%cmd%"=="pkg install notepad" (goto pkg_install_notepad)
+if /i "%cmd%"=="pkg install paint" (goto pkg_install_paint)
+if /i "%cmd%"=="filehash" (goto filehash)
+if /i "%cmd%"=="qr" (goto qr)
 
-if /i %cmd%=="wget" (goto download_internet)
-if /i %cmd%=="kill" (goto taskkill)
-if /i %cmd%=="cat" (goto read)
-if /i %cmd%=="type" (goto read)
+if /i "%cmd%"=="wget" (goto download_internet)
+if /i "%cmd%"=="kill" (goto taskkill)
+if /i "%cmd%"=="cat" (goto read)
+if /i "%cmd%"=="type" (goto read)
+
+if /i "%cmd%"=="rel" (goto release)
+if /i "%cmd%"=="release" (goto release)
+if /i "%cmd%"=="start" (goto start)
+
+if /i "%cmd%"=="md" (goto mkdir)
+if /i "%cmd%"=="mkdir" (goto mkdir)
+if /i "%cmd%"=="networkshell" (goto networkshell)
+if /i "%cmd%"=="swhrun" (goto swhrun)
+if /i "%cmd%"=="win" (goto wineaster_egg)
+if /i "%cmd%"=="win.com" (goto wineaster_egg)
+if /i "%cmd%"=="var" (goto variable)
+if /i "%cmd%"=="swhvar" (goto swhvariables)
 
 
-if /i %cmd%=="rel" (goto release)
-if /i %cmd%=="release" (goto release)
-if /i %cmd%=="start" (goto start)
-
-if /i %cmd%=="md" (goto mkdir)
-if /i %cmd%=="mkdir" (goto mkdir)
-if /i %cmd%=="networkshell!" (goto networkshell)
-
-
-
-if /i %cmd%=="bugs" (goto bugs) else (goto incommand)
+if /i "%cmd%"=="bugs" (goto bugs) else (goto incommand)
 
 :swh
-if "%DecryptPSD%" neq "" icacls "%PROGRAMFILES%\SWH\ApplicationData" /deny %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>NUL
-if "%next_exit%"=="1" (set next_exit=0 & exit /B)
+icacls "%PROGRAMFILES%\SWH\ApplicationData" /deny %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>NUL
+if "%next_exit%"=="1" (set next_exit=0 & endlocal & exit /B)
 if not exist "\" (echo. & set errordisk_=%cd% & goto errornotdisk)
 set cmd=Enter{VD-FF24F4FV54F-TW5THW5-4Y5Y-245UNW-54NYUW}
 echo SWH:Automatic >> "%pathswh%\SWH_History.txt"
 set /p cmd=%cd% %commandtoexecute%
-set cmd2=%cmd%
-set cmd="%cmd2%"
-if %cmd%=="help" (goto cmdhelp) else (goto other1cmd)
+if "%cmd%"=="help" (goto cmdhelp) else (goto other1cmd)
 
 :runasadmin
 echo.
@@ -841,6 +828,7 @@ if /i "%suredisableswh_reg%"=="y" (
 	echo.
 	echo Exiting SWH... Reason: SWH blocked
 	echo.
+	endlocal
 	exit /B
 ) else (
 	echo.
@@ -855,7 +843,7 @@ echo Syntax:
 echo.
 echo pkg install ^<package^> : Installs a package
 echo pkg remove ^<package^> : Removes a package
-echo pkg list : Lists all avaiable packages
+echo pkg list : Lists all available packages
 echo pkg listinstall : Lists all installed packages
 echo.
 echo Examples:
@@ -944,7 +932,7 @@ cd /d "%cdirectory%"
 goto swh
 :pkglist
 echo.
-echo Avaiable packages:
+echo Available packages:
 echo.
 echo T-Rex game (pkg install trex)
 echo SWH Calculator (pkg install calc)
@@ -1061,6 +1049,20 @@ if not exist "%pathswh%\pkg\SWH_Paint.bat" (
 echo.
 goto swh
 
+:swhrun
+echo.
+set /p swhrun=Program to run inside Scripting Windows Host Console: 
+echo.
+%swhrun%
+echo.
+goto swh
+
+:wineaster_egg
+echo.
+echo I know that always you win :)
+echo.
+goto swh
+
 
 :networkshell
 echo.
@@ -1083,12 +1085,14 @@ goto swhnetsh
 ::Help
 :swhnetshhelp
 echo.
+echo cls: Clears the screen
 echo exit: Returns back to Scripting Windows Host Console
 echo firewall: Shows and edits firewall state
 echo help: Shows this message
 echo wifi: Starts SWH Network Shell WiFi module
 echo.
-goto swhnetshwifi
+goto swhnetsh
+
 
 
 
@@ -1102,88 +1106,116 @@ set "netshwifi={ENTER:mk98phn9aX7jh1z5IquF}"
 
 set /p "netshwifi=SWH Network Shell - WiFi> "
 if "%netshwifi%"=="{ENTER:mk98phn9aX7jh1z5IquF}" (goto swhnetshwifi)
-if /i "%netshwifi%"=="back" (echo. & echo Returning to SWH Network Shell & echo. & goto swhnetsh)
+if /i "%netshwifi%"=="back" (echo. & echo Returning to SWH Network Shell... & echo. & goto swhnetsh)
 if /i "%netshwifi%"=="showpassword" (goto netsh_wifi_showpassword)
 if /i "%netshwifi%"=="help" (goto netsh_wifi_help)
 if /i "%netshwifi%"=="connections" (goto netsh_wifi_connections)
+if /i "%netshwifi%"=="speed" (goto netsh_wifi_speed)
+if /i "%netshwifi%"=="signal" (goto netsh_wifi_signal)
+if /i "%netshwifi%"=="networks" (goto netsh_wifi_networks)
+if /i "%netshwifi%"=="cls" (cls & goto swhnetshwifi)
+if /i "%netshwifi%"=="guid" (goto netsh_wifi_guid)
+echo.
 echo Incorrect command. Type "help" to view command list
+echo.
 goto swhnetshwifi
 
 :netsh_wifi_help
 echo.
 echo back: Returns back on Scripting Windows Host Network Shell
+echo cls: Clears the screen
 echo connections: Shows all networks that have been connected in the computer
+echo guid: Shows WiFi GUID
 echo help: Shows this message
+echo networks: Shows all visible networks
 echo showpassword: Shows password for WiFi that has been saved
+echo signal: Shows WiFi signal
+echo speed: Shows WiFi speed in Mbps of WiFi that is currently connected
 echo.
 goto swhnetshwifi
 
 
 :netsh_wifi_connections
 echo.
-echo.
-netsh wlan show networks | findstr "      :"
-echo.
+if exist "%tmp%\profile.tm_" del "%tmp%\profile.tm_" /q>nul
+if exist "%tmp%\profile.tmp" del "%tmp%\profile.tmp" /q>nul
+
+
+netsh wlan show profiles | findstr /c:"    :" > profile.tmp
+for /f "delims=" %%a in (profile.tmp) do call :substring %%a
+type "%TMP%\profile.tm_"
+if exist "profile.tm_" del "profile.tm_" /q>nul
+if exist "profile.tmp" del "profile.tmp" /q>nul
+
+if exist "%tmp%\profile.tm_" del "%tmp%\profile.tm_" /q>nul
+if exist "%tmp%\profile.tmp" del "%tmp%\profile.tmp" /q>nul
+
 echo.
 goto swhnetshwifi
 
+:substring
+SET line=%*
+set str=%line:~35%
+echo %str% >> "%TMP%\profile.tm_"
+goto :EOF
+
 :netsh_wifi_showpassword
-echo.
-::WiFi name
-echo WiFi that you want to view his password:
-set /p currentwifi=To view WiFi password type in WiFi module "connections": 
-
-::Search WiFi password
-Netsh wlan export profile name="%currentwifi%" key=clear folder="%PATHSWH%\Temp">nul
-
-for /f "delims=" %%a in ('findstr /C:keyMaterial "%pathswh%\Temp\Wi-Fi-%currentwifi%.xml"') do @set "keywifi=%%a"
-if errorlevel 1 (goto error_netsh_wifi_showpassword)
-set keywifi_final=%keywifi:~17,-14%
 
 echo.
-echo To view WiFi password you must enter SWH Password (If you haven't set a password press enter)
+::List all profiles
+netsh wlan show profiles | findstr /c:"    :" > profile.tmp
+for /f "delims=" %%a in (profile.tmp) do call :substring_showpassword %%a
 
-::Credentials
-set show_wifipsd=
-set "psCommand=powershell -Command "$pword = read-host 'Password' -AsSecureString ; ^
-     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
-                 [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
-for /f "usebackq delims=" %%P in (`%psCommand%`) do set show_wifipsd=%%P
-if "%show_wifipsd%"=="%DecryptPSD%" (
-	echo.
-	echo Password of WiFi that is currently connected: %keywifi_final%
-	echo.
-	cd /d "%cdirectory%"
-	
-	::Destroy variables
-	set tmp_currentwifi=
-	set keywifi=
-	set currentwifi=
-	set keywifi_final=
-	set show_wifipsd=
-	
-	goto swhnetshwifi
-) else (
-	::Destroy variables
-	set tmp_currentwifi=
-	set currentwifi=
-	set keywifi_final=
-	set keywifi=
-	
-	echo.
-	echo Incorrect Scripting Windows Host Password
-	echo.
-	cd /d "%cdirectory%"
-	goto swhnetshwifi
-)
+if exist "profile.tm_" del "profile.tm_" /q>nul
+if exist "profile.tmp" del "profile.tmp" /q>nul
+
+echo.
+goto swhnetshwifi
 
 :error_netsh_wifi_showpassword
 echo Error!
 echo.
-echo   - Check if you are currently connected to this WiFi
-echo   - Check if you have connected to the WiFi. If not, run the command in SWH Network Shell WiFi "connect"
+echo   - Check if you have connected to any WiFi.
 echo.
 goto swhnetshwifi
+
+
+
+
+:netsh_wifi_speed
+netsh wlan show interfaces | findstr /c:Mbps > profile.tmp
+for /f "delims=" %%a in (profile.tmp) do (set speed_bad=%%a)
+set speed=%speed_bad:~38%
+echo WiFi speed: %speed% Mbps
+echo.
+goto swhnetshwifi
+
+
+
+
+
+
+
+:netsh_wifi_guid
+netsh wlan show interfaces | findstr /c:"GUID" > "%TMP%\profile.tmp"
+for /f "usebackq delims=" %%a in ("%TMP%\profile.tmp") do (set guid_bad=%%a)
+set guid=%guid_bad:~29%
+echo WiFi GUID: %guid%
+echo.
+goto swhnetshwifi
+
+:netsh_wifi_networks
+netsh wlan show networks | findstr /c:"SSID" > "%TMP%\profile.tmp"
+for /f "usebackq delims=" %%a in ("%TMP%\profile.tmp") do call :networks_wifi %%a
+echo.
+goto swhnetshwifi
+:networks_wifi
+SET line_network=%*
+set str_net=%line_network:~9%
+echo Visible SSID: %str_net%
+goto :EOF
+
+
 
 
 
@@ -1203,15 +1235,34 @@ set netshfirewall={ENTER:mk98phn9aX7jh1z5IquF}
 set /p "netshfirewall=SWH Network Shell - Firewall> "
 
 if /i "%netshfirewall%"=="off" (goto firewalloff)
+if /i "%netshfirewall%"=="on" (
+	echo.
+	netsh advfirewall set allprofiles state on>nul
+	echo Firewall has been turned on
+	echo.
+	goto netsh_firewall
+)
+if /i "%netshfirewall%"=="help" (goto firewallhelp)
 
-
-NetSh Advfirewall set allprofiles state off
-NetSh Advfirewall set allprofiles state on
-
-
-if "%netshfirewall%"=="{ENTER:mk98phn9aX7jh1z5IquF}" (goto netsh_firewall
-if /i "%netshfirewall%"=="back" (echo. & echo Returning to SWH Network Shell & echo. & goto swhnetsh)
+if "%netshfirewall%"=="{ENTER:mk98phn9aX7jh1z5IquF}" (goto netsh_firewall)
+if /i "%netshfirewall%"=="back" (echo. & echo Returning to SWH Network Shell... & echo. & goto swhnetsh)
+if /i "%netshfirewall%"=="cls" (cls & goto netsh_firewall)
+echo.
+echo Incorrect command. Type "help" to view command list
+echo.
 goto netsh_firewall
+
+
+:firewallhelp
+echo.
+echo back: Returns back on Scripting Windows Host Network Shell
+echo cls: Clears the screen
+echo off: Turns off the firewall
+echo on: Turns on the firewall
+echo.
+goto netsh_firewall
+
+
 
 :firewalloff
 echo.
@@ -1220,11 +1271,39 @@ set /p firewallsureoff=Your computer will be more vulnerable from attacks! (y/n)
 if /i "%firewallsureoff%"=="Y" (
 	echo.
 	echo Turning off firewall...
-	
+	netsh advfirewall set allprofiles state off > nul
+	echo.
+	goto netsh_firewall
+) else (
+	goto netsh_firewall
+)
 
 
 
 
+
+
+:substring_showpassword
+
+::Get WiFi
+
+SET line=%*
+set str=%line:~35%
+
+::Get WiFi password in XML
+
+netsh wlan export profile name="%str%" key=clear folder="%PATHSWH%\Temp">nul
+
+::Find and extract WiFi password in the XML document
+for /f "delims=" %%a in ('findstr /C:keyMaterial "%pathswh%\Temp\Wi-Fi-%str%.xml"') do @set "keywifi=%%a"
+set wifipassword=%keywifi:~17,-14%
+
+
+if /i "%wifipassword%" equ "~17,-14" echo SSID: %str% ; Unexistent password & set wifipassword= & goto :EOF
+::Show the SSID and his respective password
+echo SSID: %str% ; Password: %wifipassword%
+set wifipassword=
+goto :EOF
 
 
 
@@ -1232,51 +1311,46 @@ if /i "%firewallsureoff%"=="Y" (
 
 
 :qr
-
 if exist "%pathswh%\Temp\QR_UTF-8.txt" del "%pathswh%\Temp\QR_UTF-8.txt" /Q>NUL
 
 for %%a in (
 
 
-"ÛÛÛÛÛÛÛÛÛÛÛÛÛÛ  ÛÛÛÛ            ÛÛ  ÛÛÛÛÛÛÛÛÛÛÛÛÛÛ"
-"ÛÛ          ÛÛ  ÛÛÛÛÛÛÛÛ  ÛÛÛÛ  ÛÛ  ÛÛ          ÛÛ"
-"ÛÛ  ÛÛÛÛÛÛ  ÛÛ  ÛÛ  ÛÛ  ÛÛÛÛ  ÛÛ    ÛÛ  ÛÛÛÛÛÛ  ÛÛ"
-"ÛÛ  ÛÛÛÛÛÛ  ÛÛ    ÛÛ      ÛÛÛÛ      ÛÛ  ÛÛÛÛÛÛ  ÛÛ"
-"ÛÛ  ÛÛÛÛÛÛ  ÛÛ  ÛÛÛÛÛÛÛÛÛÛ    ÛÛÛÛ  ÛÛ  ÛÛÛÛÛÛ  ÛÛ"
-"ÛÛ          ÛÛ    ÛÛ  ÛÛ    ÛÛ  ÛÛ  ÛÛ          ÛÛ"
-"ÛÛÛÛÛÛÛÛÛÛÛÛÛÛ  ÛÛ  ÛÛ  ÛÛ  ÛÛ  ÛÛ  ÛÛÛÛÛÛÛÛÛÛÛÛÛÛ"
-"                  ÛÛÛÛ  ÛÛÛÛÛÛÛÛ                  "
-"ÛÛ    ÛÛÛÛÛÛÛÛÛÛÛÛÛÛ    ÛÛÛÛÛÛÛÛ  ÛÛ    ÛÛ  ÛÛÛÛÛÛ"
-"  ÛÛÛÛÛÛ          ÛÛ        ÛÛÛÛÛÛ    ÛÛÛÛÛÛÛÛÛÛ  "
-"        ÛÛ  ÛÛÛÛ  ÛÛ  ÛÛ  ÛÛ  ÛÛÛÛÛÛ      ÛÛ    ÛÛ"
-"      ÛÛ  ÛÛ  ÛÛ  ÛÛ    ÛÛ  ÛÛÛÛ    ÛÛ    ÛÛÛÛÛÛÛÛ"
-"  ÛÛÛÛÛÛÛÛÛÛÛÛ  ÛÛ  ÛÛ    ÛÛ    ÛÛ  ÛÛÛÛ        ÛÛ"
-"ÛÛ    ÛÛÛÛ    ÛÛÛÛ  ÛÛ  ÛÛÛÛ  ÛÛ  ÛÛ    ÛÛ    ÛÛ  " 
-"ÛÛÛÛ  ÛÛ    ÛÛÛÛ  ÛÛÛÛ      ÛÛÛÛ  ÛÛÛÛ  ÛÛÛÛÛÛÛÛÛÛ"
-"ÛÛ  ÛÛ    ÛÛ    ÛÛ  ÛÛ  ÛÛ      ÛÛ  ÛÛÛÛ  ÛÛÛÛ  ÛÛ"
-"ÛÛ        ÛÛÛÛÛÛ    ÛÛÛÛÛÛ      ÛÛÛÛÛÛÛÛÛÛ  ÛÛÛÛ  "
-"                ÛÛ  ÛÛÛÛ  ÛÛ  ÛÛÛÛ      ÛÛ  ÛÛÛÛ  "
-"ÛÛÛÛÛÛÛÛÛÛÛÛÛÛ  ÛÛ  ÛÛ  ÛÛÛÛÛÛ  ÛÛ  ÛÛ  ÛÛ      ÛÛ"
-"ÛÛ          ÛÛ  ÛÛ    ÛÛ  ÛÛ  ÛÛÛÛ      ÛÛ        "
-"ÛÛ  ÛÛÛÛÛÛ  ÛÛ  ÛÛÛÛ  ÛÛ  ÛÛ  ÛÛÛÛÛÛÛÛÛÛÛÛ    ÛÛÛÛ"
-"ÛÛ  ÛÛÛÛÛÛ  ÛÛ  ÛÛÛÛÛÛ  ÛÛÛÛÛÛ  ÛÛ  ÛÛ        ÛÛÛÛ"
-"ÛÛ  ÛÛÛÛÛÛ  ÛÛ        ÛÛ  ÛÛ    ÛÛÛÛ    ÛÛÛÛÛÛÛÛÛÛ"
-"ÛÛ          ÛÛ    ÛÛÛÛÛÛÛÛÛÛ          ÛÛÛÛ  ÛÛÛÛÛÛ"
-"ÛÛÛÛÛÛÛÛÛÛÛÛÛÛ  ÛÛÛÛ  ÛÛÛÛÛÛ    ÛÛÛÛ      ÛÛ    ÛÛ"
+"██████████████  ████            ██  ██████████████"
+"██          ██  ████████  ████  ██  ██          ██"
+"██  ██████  ██  ██  ██  ████  ██    ██  ██████  ██"
+"██  ██████  ██    ██      ████      ██  ██████  ██"
+"██  ██████  ██  ██████████    ████  ██  ██████  ██"
+"██          ██    ██  ██    ██  ██  ██          ██"
+"██████████████  ██  ██  ██  ██  ██  ██████████████"
+"                  ████  ████████                  "
+"██    ██████████████    ████████  ██    ██  ██████"
+"  ██████          ██        ██████    ██████████  "
+"        ██  ████  ██  ██  ██  ██████      ██    ██"
+"      ██  ██  ██  ██    ██  ████    ██    ████████"
+"  ████████████  ██  ██    ██    ██  ████        ██"
+"██    ████    ████  ██  ████  ██  ██    ██    ██  " 
+"████  ██    ████  ████      ████  ████  ██████████"
+"██  ██    ██    ██  ██  ██      ██  ████  ████  ██"
+"██        ██████    ██████      ██████████  ████  "
+"                ██  ████  ██  ████      ██  ████  "
+"██████████████  ██  ██  ██████  ██  ██  ██      ██"
+"██          ██  ██    ██  ██  ████      ██        "
+"██  ██████  ██  ████  ██  ██  ████████████    ████"
+"██  ██████  ██  ██████  ██████  ██  ██        ████"
+"██  ██████  ██        ██  ██    ████    ██████████"
+"██          ██    ██████████          ████  ██████"
+"██████████████  ████  ██████    ████      ██    ██"
 
 
-) do (echo %%~a >> "%pathswh%\Temp\QR_UTF-8.txt")
-
-
-
-PowerShell -Command Get-Content -Path "%PATHSWH%\Temp\QR_UTF-8.txt" ^| Out-File -FilePath "%PATHSWH%\Temp\QR.txt" -Encoding ASCII
-
+) do (echo %%~a >> "%pathswh%\Temp\QR.txt")
 
 
 
 if exist "%PATHSWH%\Temp\QR.bat" del "%PATHSWH%\Temp\QR.bat" /Q>NUL
 for %%q in (
 	"@echo off"
+	"chcp 65001 > nul"
 	"cls"
 	"title Scripting Windows Host QR Code"
 	"color f0"
@@ -1284,6 +1358,7 @@ for %%q in (
 	"type "%pathswh%\Temp\QR.txt""
 	"pause>nul"
 	"exit /B"
+	
 ) do (echo %%~q >> "%PATHSWH%\Temp\QR.bat")
 
 
@@ -1336,8 +1411,6 @@ if /i "%ss_prevstart%"=="taskmgr.exe" (echo. & echo Cannot prevent to start Task
 
 if /i "%ss_prevstart%"=="svchost.exe" (goto accessdeniedprev_ss)
 
-if /i "%ss_prevstart%"=="winlogon.exe" (goto accessdeniedprev_ss)
-
 
 
 
@@ -1362,50 +1435,28 @@ set /p base64encodefile=File to encode into Base64:
 
 
 
-echo ' https://stackoverflow.com/questions/496751/base64-encode-string-in-vbscript > "%pathswh%\Temp\base64_encodefile.vbs"
-echo ' code using encoding abilities of MSXml2.DOMDocument object and saves >> "%pathswh%\Temp\base64_encodefile.vbs"
-echo ' the resulting data to encoded.txt file >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Const fsDoOverwrite     = true  > "%pathswh%\Temp\base64_encodefile.vbs"
+echo Const fsAsASCII         = false >> "%pathswh%\Temp\base64_encodefile.vbs"
+echo Const adTypeBinary      = 1    >> "%pathswh%\Temp\base64_encodefile.vbs"
 
-echo Option Explicit >> "%pathswh%\Temp\base64_encodefile.vbs"
 
-echo Const fsDoOverwrite     = true  ' Overwrite file with base64 code >> "%pathswh%\Temp\base64_encodefile.vbs"
-echo Const fsAsASCII         = false ' Create base64 code file as ASCII file >> "%pathswh%\Temp\base64_encodefile.vbs"
-echo Const adTypeBinary      = 1     ' Binary file is encoded >> "%pathswh%\Temp\base64_encodefile.vbs"
-
-echo ' Variables for writing base64 code to file >> "%pathswh%\Temp\base64_encodefile.vbs"
-echo Dim objFSO >> "%pathswh%\Temp\base64_encodefile.vbs"
-echo Dim objFileOut >> "%pathswh%\Temp\base64_encodefile.vbs"
-
-echo ' Variables for encoding >> "%pathswh%\Temp\base64_encodefile.vbs"
-echo Dim objXML >> "%pathswh%\Temp\base64_encodefile.vbs"
-echo Dim objDocElem >> "%pathswh%\Temp\base64_encodefile.vbs"
-
-echo ' Variable for reading binary picture >> "%pathswh%\Temp\base64_encodefile.vbs"
-echo Dim objStream >> "%pathswh%\Temp\base64_encodefile.vbs"
-
-echo ' Open data stream from picture >> "%pathswh%\Temp\base64_encodefile.vbs"
 echo Set objStream = CreateObject("ADODB.Stream") >> "%pathswh%\Temp\base64_encodefile.vbs"
 echo objStream.Type = adTypeBinary >> "%pathswh%\Temp\base64_encodefile.vbs"
 echo objStream.Open() >> "%pathswh%\Temp\base64_encodefile.vbs"
 echo objStream.LoadFromFile("%base64encodefile%") >> "%pathswh%\Temp\base64_encodefile.vbs"
 
-echo ' Create XML Document object and root node >> "%pathswh%\Temp\base64_encodefile.vbs"
-echo ' that will contain the data >> "%pathswh%\Temp\base64_encodefile.vbs"
 echo Set objXML = CreateObject("MSXml2.DOMDocument") >> "%pathswh%\Temp\base64_encodefile.vbs"
 echo Set objDocElem = objXML.createElement("Base64Data") >> "%pathswh%\Temp\base64_encodefile.vbs"
 echo objDocElem.dataType = "bin.base64" >> "%pathswh%\Temp\base64_encodefile.vbs"
 
-echo ' Set binary value >> "%pathswh%\Temp\base64_encodefile.vbs"
 echo objDocElem.nodeTypedValue = objStream.Read() >> "%pathswh%\Temp\base64_encodefile.vbs"
 
-echo ' Open data stream to base64 code file >> "%pathswh%\Temp\base64_encodefile.vbs"
+
 echo Set objFSO = CreateObject("Scripting.FileSystemObject") >> "%pathswh%\Temp\base64_encodefile.vbs"
 echo Set objFileOut = objFSO.CreateTextFile("%base64encodefile%.base64", fsDoOverwrite, fsAsASCII) >> "%pathswh%\Temp\base64_encodefile.vbs"
 
-echo ' Get base64 value and write to file >> "%pathswh%\Temp\base64_encodefile.vbs"
 echo objFileOut.Write objDocElem.text >> "%pathswh%\Temp\base64_encodefile.vbs"
 echo objFileOut.Close() >> "%pathswh%\Temp\base64_encodefile.vbs"
-echo ' Clean all >> "%pathswh%\Temp\base64_encodefile.vbs"
 echo Set objFSO = Nothing >> "%pathswh%\Temp\base64_encodefile.vbs"
 echo Set objFileOut = Nothing >> "%pathswh%\Temp\base64_encodefile.vbs"
 echo Set objXML = Nothing >> "%pathswh%\Temp\base64_encodefile.vbs"
@@ -1664,95 +1715,6 @@ echo To put colours normally, press Ctrl + Alt + I and then Windows + Esc
 echo.
 goto swh
 
-:passwordkey
-if %admin%==0 (call :adminpermission)
-echo.
-echo IMPORTANT: If you have a password and you change the key, you will be NOT able to start SWH.
-echo.
-set /p surechangepasswordkey=Change key anyway? (y/n): 
-if /i "%surechangepasswordkey%"=="Y" goto changingpasswordkey
-echo.
-goto swh
-
-:changingpasswordkey
-echo.
-echo Generating new key for password...
-cd /d "%pathswh%\Temp"
-:generatepasswordkey
-set randomKey1=%random:~-1%%random:~-1%%random:~-1%%random:~-1%%random:~-1%
-set randomKey2=%random:~-1%%random:~-1%%random:~-1%%random:~-1%%random:~-1%
-set randomKey3=%random:~-1%%random:~-1%%random:~-1%%random:~-1%
-set randomKey4=%random:~-1%%random:~-1%%random:~-1%%random:~-1%
-set randomKey5=%random:~-1%%random:~-1%%random:~-1%%random:~-1%
-set randomKey6=%random:~-1%%random:~-1%%random:~-1%%random:~-1%
-
-
-set randomGen1=(%randomKey1%*%randomKey2%)/2
-set randomGen2=(%randomKey3%*%randomKey4%)/2
-set randomGen3=(%randomKey5%*%randomKey6%)/2
-
-set randomkeypassword=%randomKey1%-%randomKey2%-%randomKey3%
-echo %randomkeypassword% >> "%pathswh%\Temp\KeyPSD"
-for %%D in (KeyPSD) do (set lenghtkeypsd=%%~zD)
-if "%lenghtkeypsd%"=="19" (cd /d "%cdirectory%" & goto changedpasswordkey)
-goto generatepasswordkey
-:changedpasswordkey
-echo.
-del "%pathswh%\Temp\KeyPSD" /q /f
-set /p viewnewkeypassword=Do you want to view current key? (y/n): 
-if /i "%viewnewkeypassword%"=="Y" (goto credentialchangedpasswordkey)
-echo.
-goto swh
-
-:credentialchangedpasswordkey
-echo.
-set /p userswh=Username: 
-if /i not "%userswh%"=="%username%" (
-	echo.
-	echo Incorrect user
-	echo.
-	goto swh
-)
-
-set "psCommand=powershell -Command "$pword = read-host 'Password' -AsSecureString ; ^
-     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
-                 [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
-for /f "usebackq delims=" %%P in (`%psCommand%`) do set passwordswh=%%P
-
-if "%passwordSWH%"=="%DecryptPSD%" (
-	echo.
-	echo Decrypting password...
-	echo Checking password...
-	timeout /t 1 /nobreak>nul
-	echo.
-	echo Correct password.
-	echo.
-	echo New password key: %randomkeypassword%
-	echo.
-	set "randomkeypassword= " 
-	set "randomGen1=0 "
-	set "randomGen2=0 "
-	set "randomGen3=0 "
-	set "randomKey1=0 "
-	set "randomKey2=0 "
-	set "randomKey3=0 "
-	set "randomKey4=0 "
-	set "randomKey5=0 "
-	set "randomKey6=0 "
-	
-	goto swh
-) else (
-	echo.
-	echo Incorrect SWH password
-	echo.
-	goto swh
-)
-
-
-
-
-
-
 :scanvirus
 echo.
 if not exist "%programfiles%\Windows Defender\MpCmdRun.exe" (goto errornowindowsdefender)
@@ -1786,18 +1748,6 @@ goto swh
 :filesize
 echo.
 set /p filesize=File to have his size: 
-
-
-Dim fso:Set fso = WScript.CreateObject("Scripting.FileSystemObject")
-Dim oFile:Set oFile = fso.GetFile("%filesize%")
-Wscript.Echo oFile.Name ^& " : " ^& round(oFile.Size/1024/1024,2)
-
-
-
-
-
-
-
 if not exist "%filesize%" (goto notexistfile_size)
 for %%a in (%filesize%) do (set sizefileB=%%~za)
 echo.
@@ -1921,12 +1871,19 @@ echo.
 goto swh
 :swhcontact
 echo.
+set /a contact_antispam=%contact_antispam%+1
+if %contact_antispam% geq 4 (
+	echo Please do not spam
+	echo.
+	goto swh
+)
+set /p email_contact=Your E-Mail (needed for replying your message): 
 set /p subject_contact=Subject: 
 set /p msgbody_contact=Message: 
 echo $EmailFrom = "swh.usercontact@gmail.com" > %pathswh%\Temp\ContactSWH.ps1
 echo $EmailTo = "SWH.Console@gmail.com" >> %pathswh%\Temp\ContactSWH.ps1
 echo $Subject = "%subject_contact%" >> %pathswh%\Temp\ContactSWH.ps1
-echo $Body = "%msgbody_contact%     - Sent from computer: %computername% , user: %username%." >> %pathswh%\Temp\ContactSWH.ps1
+echo $Body = "%msgbody_contact%     - Sent from computer: %computername% , user: %username%. E-Mail: %email_contact%" >> %pathswh%\Temp\ContactSWH.ps1
 echo $SMTPServer = "smtp.gmail.com" >> %pathswh%\Temp\ContactSWH.ps1 >> %pathswh%\Temp\ContactSWH.ps1
 echo $SMTPClient = New-Object Net.Mail.SmtpClient($SmtpServer, 587) >> %pathswh%\Temp\ContactSWH.ps1
 echo $SMTPClient.EnableSsl = $true >> %pathswh%\Temp\ContactSWH.ps1
@@ -1979,40 +1936,6 @@ echo.
 goto swh
 
 
-:networkmsg
-echo.
-echo Note: Two computers will need SWH in message mode and needs administrator permission the first time
-echo.
-set /p networkchatcomputer=Computer to send message: 
-net share SWH_Chat=%pathswh% & echo Sharing SWH chat directory...
-
-echo Message (Type "Send" to send message): 
-:ntworkmsg_text
-set networkchatmsg=[{CLSID:SWH-SendMessage-Key:g438tfhqon57wg4rejonwr8og5ut9w430ntung805-ENTER}]
-set /p networkchatmsg=
-if "%networkchatmsg%"=="[{CLSID:SWH-SendMessage-Key:g438tfhqon57wg4rejonwr8og5ut9w430ntung805-ENTER}]" (echo. >> "%pathswh%\Temp\Chat%networkchatcomputer%")
-if "%networkchatmsg%"=="Send" (goto sendnetwork_msg) else (echo %networkchatmsg% >> "%pathswh%\Temp\Chat%networkchatcomputer%")
-
-:sendnetwork_msg
-copy "%pathswh%\Temp\Chat%networkchatcomputer%" "\\%networkchatcomputer%\SWH_Chat\Sended%networkchatcomputer%">nul
-if exist "\\%networkchatcomputer%\SWH_Chat\Sended%networkchatcomputer%" (echo Message sent &goto ntworkmsg_text)
-
-
-
-
-
-
-if exist "%pathswh%\Temp\Sended%networkchatcomputer%" (goto received_msg_chat)
-:received_msg_chat
-echo.
-type "%pathswh%\Temp\Sended%networkchatcomputer%"
-echo.
-goto ntworkmsg_text
-
-
-
-
-
 
 :viewstartlog
 echo.
@@ -2041,10 +1964,7 @@ echo.
 echo Encrypt/Decrypt:
 echo In previous versions, your encryption wasn't very safe if a person has your encrypted string and Scripting Windows Host Console.
 echo Now you will create a key for add more security at your encryption.
-echo To decrypt, you will need the key that you used for encryption or you will not able to get back your string.
-echo.
-echo File Encryption/Decryption:
-echo Now you can safely encrypt your personal files to make it innaccessible for other users, but accessible for you.
+echo To decrypt, you will need the key that you used for encryption or you will not able to decrypt your string.
 echo.
 echo More commands, more graphical:
 echo Now Scripting Windows Host Console has 2 more packages:
@@ -2055,10 +1975,10 @@ echo functions and it will be more graphical (Menus, mouse clicking...)
 echo.
 echo Fastest than never:
 echo Scripting Windows Host Console start time has been reduced. In version 9 it takes 0,19 seconds to load
-echo With the newest modifications, it takes only 0,08 seconds
+echo With the newest modifications, it takes only 0,15 seconds
 echo.
 echo Messaging and E-Mails:
-echo We have the command 'email' to send E-Mails without opening your E-mail program.
+echo We have the command 'email' to send E-Mails without opening your E-mail program or browser.
 echo.
 echo Network Shell:
 echo This new command allows you to do network operations like viewing your WiFi password, viewing your
@@ -2113,25 +2033,12 @@ echo.
 cd /d "%cdirectory%"
 goto swh
 
-
-
-
-
-
-
-
-
-
 :startSetup
 echo.
-echo Starting Scripting Windows Host Setup...
-cd /d "%pathswh%\Temp"
-echo $Url = "https://raw.githubusercontent.com/anic17/SWH/master/SWH_Setup.bat" > DownloadSWH_Setup.ps1
-echo $output = "%pathswh%\Temp\SWH_Setup.bat" >> DownloadSWH_Setup.ps1
-echo Invoke-WebRequest -Uri $url -OutFile $output >> DownloadSWH_Setup.ps1
-PowerShell.exe "%pathswh%\Temp\DownloadSWH_Setup.ps1"
-start cmd.exe /c "%pathswh%\Temp\SWH_Setup.bat"
-cd /d "%cdirectory%"
+echo Downloading Scripting Windows Host Setup...
+echo.
+PowerShell.exe -Command Invoke-WebRequest -Uri https://raw.githubusercontent.com/anic17/SWH/master/SWH_Setup.bat -OutFile "%pathswh%\Temp\SWH_Setup.bat"
+if not exist "%pathswh%\Temp\SWH_Setup.bat" (echo Error while downloading Scripting Windows Host Setup) else (echo Starting Scripting Windows Host Setup... & start cmd.exe /c "%pathswh%\Temp\SWH_Setup.bat")
 echo.
 goto swh
 
@@ -2176,11 +2083,10 @@ if /i "%surelocalappdata%"=="y" (
 :surecorrectlocalappdata
 set /p correctlocalappdatanameboot=This time %localappdata% is %correctlocalappdatanamebootask%? (y/n): 
 if /i "%correctlocalappdatanameboot%"=="y" (goto startingbootmode) else (
-	echo You will be changed to SWH (Normal mode)
+	echo You will be changed to Scripting Windows Host (Normal mode)
 	echo.
 	goto swh
 )
-
 
 echo.
 goto swh
@@ -2195,7 +2101,11 @@ if /i %sureenterbios2%=="y" (goto enteringBIOS) else (
 )
 :enteringBIOS
 echo Entering computer firmware... (UEFI/BIOS)
-shutdown -r -t 0 -fw
+shutdown -r -t 10 -fw -c "Your computer is shutting down because you want to enter the UEFI/BIOS, so you'll need to restart for that"
+echo.
+echo Press any to cancel shutdown...
+pause>nul
+shutdown -a
 echo.
 goto swh
 
@@ -2205,19 +2115,13 @@ start /wait wscript.exe "%pathswh%\Temp\FW_ErrorAdmin.vbs"
 echo.
 goto swh
 
-:userinfo
-set /p userinfo_=User that you would to have his information: 
-net user %userinfo_%
-echo.
-goto swh
-
 :incommand
-echo Incorrect command: %cmd% >> "%pathswh%\SWH_History.txt"
+echo Incorrect command: "%cmd%" >> "%pathswh%\SWH_History.txt"
 echo %incotext%
 echo.
 goto swh
 
-:cmdClip
+:clipboard
 set /p texttclip=Text to copy in the clipboard: 
 echo %texttclip% | clip
 echo.
@@ -2269,9 +2173,22 @@ if /i %userunblock%==y (
 :setpassword
 if %admin%==0 goto adminpermission
 echo.
-if "%psd%"=="[{CLSID:8t4tvry4893tvy2nq4928trvyn14098vny84309tvny493q8tvn0943tyvnu0q943t8vn204vmy10vn05}]" (goto notpasswordsettet)
-set /p "enterpassword2setit=Enter the current password to change it: "
-if not "%DecryptPSD%"=="%enterpassword2setit%" (goto errorremovingpsd)
+icacls "%programfiles%\SWH\ApplicationData" /grant %username%:(F,MA,WA,RA) > nul
+if not exist "%programfiles%\SWH\ApplicationData\PS.dat" goto notpasswordsettet
+if errorlevel 1 goto wrong
+if "%psd%"=="cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e" (goto notpasswordsettet)
+
+echo To change Scripting Windows Host password you must enter it first
+echo.
+call :Get-Credential
+if "%access%"=="0" (
+	echo.
+	echo Incorrect Scripting Windows Host password
+	echo.
+	goto swh
+)
+if "%access%"=="1" goto notpasswordsettet
+goto wrong
 
 
 :notpasswordsettet
@@ -2286,7 +2203,7 @@ for /f "usebackq delims=" %%P in (`%psCommand%`) do set "setpassword1=%%P"
 
 
 if /i "%setpassword1%"=="" (goto swh)
-set password2qwerty="%setpassword1%"
+set "password2qwerty="%setpassword1%""
 if /i %password2qwerty%=="qwerty" (goto easypassword)
 if /i %password2qwerty%=="123456" (goto easypassword)
 if /i %password2qwerty%=="qwertz" (goto easypassword)
@@ -2427,100 +2344,75 @@ echo.
 goto swh
 
 :changingpassword
-cd /d "%pathswh%\Temp"
-powershell -Command [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes('%setpassword2%')) > B64ps.tmp
-for /f "delims=" %%F in (B64ps.tmp) do (set base64psd=%%F)
+
+echo Function Get-StringHash([String] $String,$HashName = "SHA512") > "%pathswh%\Temp\SHA512.ps1"
+echo { >> "%pathswh%\Temp\SHA512.ps1"
+echo $StringBuilder = New-Object System.Text.StringBuilder >> "%pathswh%\Temp\SHA512.ps1"
+echo [System.Security.Cryptography.HashAlgorithm]::Create($HashName).ComputeHash([System.Text.Encoding]::UTF8.GetBytes($String))^|%%{ >> "%pathswh%\Temp\SHA512.ps1"
+echo [Void]$StringBuilder.Append($_.ToString("x2")) >> "%pathswh%\Temp\SHA512.ps1"
+echo } >> "%pathswh%\Temp\SHA512.ps1"
+echo $StringBuilder.ToString() >> "%pathswh%\Temp\SHA512.ps1"
+echo } >> "%pathswh%\Temp\SHA512.ps1"
+
+echo $PSDefaultParameterValues['Out-File:Encoding'] = 'ascii' >> "%pathswh%\Temp\SHA512.ps1"
+
+echo Get-StringHash "%setpassword2%" ^> "%pathswh%\Temp\PS.dat" >> "%pathswh%\Temp\SHA512.ps1"
+
+powershell -ExecutionPolicy Unrestricted "%pathswh%\Temp\SHA512.ps1"
 
 
-echo Option Explicit > Encrypt.vbs
-echo Dim temp, key, objShell, objFSO, crypt >> Encrypt.vbs
-echo Set objShell = WScript.CreateObject("WScript.Shell") >> Encrypt.vbs
-echo temp = "%base64psd%" >> Encrypt.vbs
-echo key = "4Ou8fa94pfx3WV3AsnhoAz7xWbtkA5T36SMX7sOB9I8WazaCirdOT1HfhBJBKvZlQDMRIGEH49vPK5KTDPTaIPVT8h3F57QW3RYbJ0WrT90Fxk3EBcMCz0APGZebZWkZH2JvGuFqs8mvICYG4uZW2MYnXwPmnVa8S4HCEgeQRPIDoWdH8V9S263pW2PMA5kgIkn2ONZ9j7WCZP38Vf4IRQ0261QCeJHPBj71LKIqGDbWBTrLBh8wPONCYVM0F4RPIDoWdH8V9S263pW2PMA5kgIkn2ONZ9j7WCZP38Vf4" >> Encrypt.vbs
-echo temp = Encrypt(temp,key) >> Encrypt.vbs
 
-echo Set objFSO = createobject("scripting.filesystemobject") >> Encrypt.vbs
-echo Set crypt = objfso.createtextfile("PS.dat",true)  >> Encrypt.vbs
-echo crypt.writeline "" ^&temp >> Encrypt.vbs
-echo crypt.close >> Encrypt.vbs
 
-echo temp = Decrypt(temp,key) >> Encrypt.vbs
-echo Function encrypt(Str, key) >> Encrypt.vbs
-echo  Dim lenKey, KeyPos, LenStr, x, Newstr >> Encrypt.vbs
-echo  Newstr = "" >> Encrypt.vbs
-echo  lenKey = Len(key) >> Encrypt.vbs
-echo  KeyPos = 1 >> Encrypt.vbs
-echo  LenStr = Len(Str) >> Encrypt.vbs
-echo  str = StrReverse(str) >> Encrypt.vbs
-echo  For x = 1 To LenStr >> Encrypt.vbs
-echo       Newstr = Newstr ^& chr(asc(Mid(str,x,1)) + Asc(Mid(key,KeyPos,1))) >> Encrypt.vbs
-echo       KeyPos = keypos+1 >> Encrypt.vbs
-echo       If KeyPos ^> lenKey Then KeyPos = 1 >> Encrypt.vbs >> Encrypt.vbs
-echo  Next >> Encrypt.vbs
-echo  encrypt = Newstr >> Encrypt.vbs
-echo End Function >> Encrypt.vbs
-echo Function Decrypt(str,key) >> Encrypt.vbs
-echo  Dim lenKey, KeyPos, LenStr, x, Newstr >> Encrypt.vbs
-echo  Newstr = "" >> Encrypt.vbs
-echo  lenKey = Len(key) >> Encrypt.vbs
-echo  KeyPos = 1 >> Encrypt.vbs >> Encrypt.vbs
-echo  LenStr = Len(Str) >> Encrypt.vbs
-echo  str=StrReverse(str) >> Encrypt.vbs
-echo  For x = LenStr To 1 Step -1 >> Encrypt.vbs
-echo       Newstr = Newstr ^& chr(asc(Mid(str,x,1)) - Asc(Mid(key,KeyPos,1))) >> Encrypt.vbs
-echo       KeyPos = KeyPos+1 >> Encrypt.vbs
-echo       If KeyPos ^> lenKey Then KeyPos = 1 >> Encrypt.vbs
-echo       Next >> Encrypt.vbs
-echo       Newstr=StrReverse(Newstr) >> Encrypt.vbs
-echo       Decrypt = Newstr >> Encrypt.vbs
-echo End Function >> Encrypt.vbs
-if exist "%programfiles%\SWH\ApplicationData\PS.dat" (del "%programfiles%\SWH\ApplicationData\PS.dat" /q)
-start /wait WScript.exe "%pathswh%\Temp\Encrypt.vbs"
-if exist "%PATHSWH%\Temp\ckps" del "%PATHSWH%\Temp\ckps" /q /f>nul
-if exist "%PATHSWH%\Temp\B64ps.tmp" del "%PATHSWH%\Temp\B64ps.tmp /q /f">nul
-
-icacls "%programfiles%\SWH\ApplicationData" /grant %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>nul
+takeown /f "%programfiles%\SWH\ApplicationData">nul
+icacls "%programfiles%\SWH\ApplicationData" /grant %username%:(F,MA,RA,WA,DE,WO,WDAC,RC,REA,WEA,AD,WD,AS)>nul
 
 
 move "%pathswh%\Temp\PS.dat" "%programfiles%\SWH\ApplicationData\PS.dat">nul
 
 takeown /f "%programfiles%\SWH\ApplicationData">nul
-icacls "%programfiles%\SWH\ApplicationData" /deny %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>nul
+icacls "%programfiles%\SWH\ApplicationData" /deny %username%:(F,MA,RA,WA,DE,WO,WDAC,RC,REA,WEA,AD,WD,AS)>nul
 echo.
 cd /d "%cdirectory%"
 echo Password successfully changed
 echo.
-if exist "%pathswh%\Temp\Encrypt.vbs" (del "%pathswh%\Temp\Encrypt.vbs" /q)
+if exist "%pathswh%\Temp\Encrypt.vbs" (del "%pathswh%\Temp\Encrypt.vbs" /q>nul)
 goto swh
+
+
+
+
+
+
+
+
 
 
 
 :removepassword
 if %admin%==0 goto adminpermission
 
-icacls "%programfiles%\SWH\ApplicationData" /grant %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>nul
+icacls "%programfiles%\SWH\ApplicationData" /grant %username%:(F,MA,RA,WA,DE,WO,WDAC,RC,REA,WEA,AD,WD,AS)>nul
 takeown /f "%programfiles%\SWH\ApplicationData" /a>nul
 if not exist "%programfiles%\SWH\ApplicationData\PS.dat" goto nopassword_removepassword
 
-icacls "%programfiles%\SWH\ApplicationData" /deny %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>nul
-
+icacls "%programfiles%\SWH\ApplicationData" /deny %username%:(F,MA,RA,WA,DE,WO,WDAC,RC,REA,WEA,AD,WD,AS)>nul
+echo To remove Scripting Windows Host password you must enter it first
 echo.
-set /p "removingpasswordchk=To remove the password you need to enter it first: "
-if "%removingpasswordchk%"=="%DecryptPSD%" (goto removingpsd) else (goto errorremovingpsd)
-:removingpsd
-icacls "%programfiles%\SWH\ApplicationData" /grant %username%:(F,MA,RA,WA,DE,WO,WDAC,M,RC,REA,WEA,AD,WD,AS)>nul
-takeown /f "%programfiles%\SWH\ApplicationData" /a>nul
-if exist "%programfiles%\SWH\ApplicationData\PS.dat" (del "%programfiles%\SWH\ApplicationData\PS.dat" /q)
-echo.
-echo Password successfully removed
-echo.
-goto swh
-
-:errorremovingpsd
-echo.
-echo Incorrect password
-echo.
-goto swh
+call :Get-Credential
+if "%access%"=="1" (
+	icacls "%programfiles%\SWH\ApplicationData" /grant %username%:^(F,MA,RA,WA,DE,WO,WDAC,RC,REA,WEA,AD,WD,AS^)>nul
+	takeown /f "%programfiles%\SWH\ApplicationData" /a>nul
+	if exist "%programfiles%\SWH\ApplicationData\PS.dat" del "%programfiles%\SWH\ApplicationData\PS.dat" /q
+	echo.
+	echo Password successfully removed
+	echo.
+	goto swh
+) else (
+	echo.
+	echo Incorrect password
+	echo.
+	goto swh
+)
 
 :nopassword_removepassword
 echo.
@@ -2601,9 +2493,10 @@ goto swh
 echo.
 
 echo Dowloading SWH...
+cd /d "%pathswh%\Temp"
 
-
-powershell.exe -ExecutionPolicy Unrestricted -Command Invoke-WebRequest -Uri "https://raw.githubusercontent.com/anic17/SWH/master/SWH.bat" -OutFile "%pathswh%\Temp\SWH.bat"
+powershell.exe -ExecutionPolicy Unrestricted -Command [Text.Encoding]::Utf8.GetString([Convert]::FromBase64String('SW52b2tlLVdlYlJlcXVlc3QgLVVyaSAiaHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2FuaWMxNy9TV0gvbWFzdGVyL1NXSC5iYXQiIC1PdXRGaWxlICJTV0guYmF0Ig==')) ^> "%pathswh%\Temp\UpdateSWH.ps1"
+powershell -ExecutionPolicy Unrestricted -Command "%PATHSWH%\Temp\UpdateSWH.ps1"
 if exist "%pathswh%\Temp\SWH.bat" (goto supdated) else (goto errorupdatingswh)
 
 :errorupdatingswh
@@ -2889,18 +2782,6 @@ cd /d %cdirectory%
 goto swh
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 :settings
 echo.
 set /p settingssave=Settings (Type "helpsettings" in SWH Console to see the available settings): 
@@ -2910,12 +2791,12 @@ if %settingssave%=="size" (goto SettingsSize)
 if %settingssave%=="consoletext" (goto SettingContext) else (goto incosetting)
 :incosetting
 echo.
-echo This setting does not exist. Type "helpsettings" to see the settings avaiable.
+echo This setting does not exist. Type "helpsettings" to see the settings available.
 echo.
 goto swh
 :SettingsSize
 set /p settingssizesave=Are you sure that you would change the default console size? (y/n): 
-if "%settingssizesave%"=="y" (goto savingsettingssize1) else (
+if /i "%settingssizesave%"=="y" (goto savingsettingssize1) else (
 	echo.
 	goto swh
 )
@@ -2953,6 +2834,7 @@ goto swh
 :abstartswh
 echo CreateObject("Wscript.Shell").Run "CMD.exe /C %PATHSWH%\SWH.bat" > "%PATHSWH%\Temp\RestartSWH.vbs"
 start /Wait WScript.exe "%PATHSWH%\Temp\RestartSWH.vbs"
+endlocal
 exit /B
 
 
@@ -3051,7 +2933,15 @@ echo.
 echo 4)
 echo With what method of encryption my password is ensured?
 echo.
-echo SWH uses a self-created encryption method. We cannot say it, because decrypting the password will be easier.
+echo Scripting Windows Host Console use Secure Hash Algorithm 2 (SHA512)
+echo It is one of the strongest hashing methods, so nobody, including Scripting Windows Host,
+echo can decrypt your password
+echo.
+echo 5)
+echo If I have forgotten the password, it is possible to recover it?
+echo.
+echo No, if you forgot the password you won't be able to use Scripting Windows Host
+echo.
 goto swh
 
 :commandCom
@@ -3061,7 +2951,7 @@ start command.com
 cd /d "%cdirectory%"
 goto swh
 :commandcom_NotExist
-echo swh=MsgBox("SWH can't find the file %windir%\System32\command.com",4112,"SWH can't find the file %windir%\System32\command.com") > %pathswh%\Temp\ErrorCommand.vbs
+echo swh=MsgBox("Scripting Windows Host can't find the file %windir%\System32\command.com",4112,"SWH can't find the file %windir%\System32\command.com") > %pathswh%\Temp\ErrorCommand.vbs
 start /wait wscript.exe "%pathswh%\Temp\ErrorCommand.vbs"
 echo.
 goto swh
@@ -3081,7 +2971,7 @@ echo.
 echo Path stablished only %path%
 echo.
 echo.
-echo Note that setting an incorrect path will make SWH not work good.
+echo Note that setting an incorrect path will make Scripting Windows Host not work good.
 goto swh
 
 :aftersyspathvar
@@ -3090,7 +2980,7 @@ goto RsysPathvar
 
 :chPath
 echo.
-echo Note: Changing incorrectelly the path can do that SWH don't work!
+echo Note: Changing incorrectelly the path can do that Scripting Windows Host don't work!
 echo.
 if %syspathvar%==1 (
 	echo Path won't add %Windir% and %Windir%\System32 because systempath is disabled.
@@ -3100,7 +2990,7 @@ if %syspathvar%==0 (
 	echo Path will add %Windir% and %Windir%\System32 because systempath is enabled.
 	echo.
 )
-echo Press Y to change path, press N to return to SWH
+echo Press Y to change path, press N to return to Scripting Windows Host
 choice /c:NY /N>nul
 if errorlevel==2 (goto changingpath)
 if errorlevel==1 (
@@ -3273,27 +3163,13 @@ echo.
 goto swh
 :SWHrunDialog
 echo.
-set runfile=0{SWH-RUN-KEY______RUN.Antibug_DeteCtor}
 set /p runfile=Folder, file or Internet ressource to open: 
-set runfile2="%runfile%"
-set runfile=%runfile2%
-if %runfile%=="0{SWH-RUN-KEY______RUN.Antibug_DeteCtor}" (goto errorRunning)
 start %runfile%
 echo.
 goto swh
 
-:errorRunning
-echo.
-echo You need to enter the name of the file, folder or Internet ressource that you would open
-cd /d %userprofile%\AppData\Local\ScriptingWindowsHost
-echo swh=MsgBox("You need to write the name, you can't put on blank",4112,"You need to write the name, you can't put on blank") > %pathswh%\Temp\ErrorRun.vbs
-start /wait wscript.exe ErrorRun.vbs
-cd /d %cdirectory%
-echo.
-goto swh
-
 :title
-set /p titlecon=Title of SWH Console: 
+set /p titlecon=Title of Scripting Windows Host Console: 
 if "%username%"=="SYSTEM" (title %titlecon% - Running as NT AUTHORITY\SYSTEM) else (title %titlecon%)
 echo.
 echo Title: %titlecon% >> "%pathswh%\SWH_History.txt"
@@ -3307,38 +3183,62 @@ goto swh
 
 :variable
 echo.
-echo Note: changing SWH variables can do SWH that doesn't work correctly.
+echo Note: changing Scripting Windows Host variables can do that doesn't work correctly.
 echo See "swhvariables" for info of the variables that you mustn't change
 echo.
-set /a varcount=%varcount%+1
 set /p variablename=Variable name: 
 set /p variabletext=Variable text: 
 echo.
-echo Variable saved as "%variablename%_%varcount%"
-set %variablename%_%varcount%=%variabletext%
+echo Variable saved as $%variablename%
+set "$%variablename%=%variabletext%"
 echo.
 echo Variable: variablename:%variablename%; variabletext:%variabletext% >> "%pathswh%\SWH_History.txt"
 goto swh
 
 :swhvariables
+cd /d "%pathswh%\Temp"
+wmic useraccount where name='%username%' get sid | findstr /c:"-"> "%PATHSWH%\Temp\user.sid"
+for /f "delims=" %%S in (user.sid) do (set usersid=%%S)
+cd /d "%cdirectory%"
 echo.
-echo SWH variables:
+echo Environment variables:
 echo.
-echo cd: Sets the %cd% text. Changing will do that SWH don't change the directory
-echo cdirectory: cdirectory is the second directory variable, used for internal commands
-echo cmd: cmd is the command variable. Changing it could make that commands don't work correctly.
-echo commandtoexecute: It is the %commandtoexecute% text. It can be changed by "prompt".
-echo localappdata: Changing LocalAppData will make many errors of the correct working of SWH
-echo ver: Ver is the variable that shows the SWH Version. Changing will not show the actual version.
+echo %appdata% --^> $AppData
+echo %localappdata% --^> $LocalAppData
+echo %ProgramFiles% --^> $ProgramFiles
+echo %ProgramFiles(x86)% --^> $ProgramFiles(x86)
+echo %SystemRoot% --^> $SystemRoot
+echo %tmp% --^> $Temp
+echo %userprofile% --^> $UserProfile
 echo.
-echo SwhVariables >> "%pathswh%\SWH_History.txt"
+echo Scripting Windows Host created variables:
+echo.
+echo %userprofile%\3D objects--^> $3DObjects
+echo %userprofile%\Desktop --^> $Desktop
+echo %userprofile%\Documents --^> $Documents
+echo %userprofile%\Downloads --^> $Downloads
+echo %homedrive%\ --^> $LocalDisk
+echo %userprofile%\Music --^> $Music
+echo %userprofile%\Pictures --^> $Pictures
+echo %homedrive%\$Recycle.Bin\%usersid%--^> $RecycleBin
+echo %SystemRoot%\System32 --^> $System
+echo %programdata%\Microsoft\Windows\Start Menu\Programs\Startup --^> $SystemStartup
+echo %SystemRoot%\SysWOW64 --^> $SysWOW64
+echo %appdata%\Microsoft\Windows\Start Menu\Programs\Startup --^> $UserStartup
+echo %userprofile%\Videos --^> $Videos
+echo.
 goto swh
 
 :bugs
 echo Bugs >> "%pathswh%\SWH_History.txt"
-echo Fixed bugs:
+echo Bugs:
+echo.
 echo 0xe0000001: If you write "not swh" it closes automatically
 echo 0xe0000002: If you write ">", "<", "&" or "|" it closes automatically
+echo.
+echo Fixed bugs:
+echo.
+echo Fixed the bug that allows you to bypass password (Thanks to RazorRipzee)
 echo.
 goto swh
 
@@ -3480,6 +3380,91 @@ goto swh
 
 :cd
 set /p cdirectory=Directory to access: 
+
+if /i "%cdirectory%"=="%%appdata%%" (
+	cd /d "%appdata%"
+	set cdirectory=%cd%
+	echo.
+	goto swh
+)
+if /i "%cdirectory%"=="%%localappdata%%" (
+	cd /d "%localappdata%"
+	set cdirectory=%cd%
+	echo.
+	goto swh
+)
+if /i "%cdirectory%"=="%%SystemRoot%%" (
+	cd /d "%SystemRoot%"
+	set cdirectory=%cd%
+	echo.
+	goto swh
+)
+if /i "%cdirectory%"=="%%windir%%" (
+	cd /d "%windir%"
+	set cdirectory=%cd%
+	echo.
+	goto swh
+)
+
+if /i "%cdirectory%"=="%%userprofile%%" (
+	cd /d "%userprofile%"
+	set cdirectory=%cd%
+	echo.
+	goto swh
+)
+if /i "%cdirectory%"=="%%username%%" (
+	if exist "%username%" (
+		cd /d "%username%"
+		set cdirectory=%cd%
+		echo.
+		goto swh
+	) else (
+	echo Directory "%cdirectory%" not founded!
+	set cdirectory=%cd%
+	echo cd %cdirectory% does not exist >> C:\Users\%username%\AppData\Local\ScriptingWindowsHost\SWH_History.txt
+	echo.
+	goto swh
+	)
+)
+
+if /i "%cdirectory%"=="%%programdata%%" (
+	cd /d "%programdata%"
+	set cdirectory=%cd%
+	echo.
+	goto swh
+)
+if /i "%cdirectory%"=="%%programfiles%%" (
+	cd /d "%programfiles%"
+	set cdirectory=%cd%
+	echo.
+	goto swh
+)
+if /i "%cdirectory%"=="%%programfiles(x86)%%" (
+	cd /d "%programfiles(x86)%"
+	set cdirectory=%cd%
+	echo.
+	goto swh
+)
+
+if /i "%cdirectory%"=="%%wintemp%%" (
+	cd /d "%windir%\Temp"
+	set cdirectory=%cd%
+	echo.
+	goto swh
+)
+if /i "%cdirectory%"=="%%temp%%" (
+	cd /d "%tmp%"
+	set cdirectory=%cd%
+	echo.
+	goto swh
+)
+if /i "%cdirectory%"=="%%driverdata%%" (
+	cd /d "%driverdata%"
+	set cdirectory=%cd%
+	echo.
+	goto swh
+)
+
 if exist %cdirectory% (
 	cd /d %cdirectory%
 	set cdirectory=%cd%
@@ -4079,3 +4064,46 @@ goto commandPROJECT
 <nul set /p ".=%DEL%" > "%~2"
 findstr /v /a:%1 /R "^$" "%~2" nul
 del "%~2" > nul 2>&1
+goto :EOF
+
+:Get-Credential
+echo $pword = read-host 'Password' -AsSecureString ; > "%PATHSWH%\Temp\GetPassword.ps1"
+echo     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); >> "%PATHSWH%\Temp\GetPassword.ps1"
+echo                 $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)  >> "%PATHSWH%\Temp\GetPassword.ps1"
+echo Function Get-StringHash([String] $String,$HashName = "SHA512") >> "%pathswh%\Temp\GetPassword.ps1"
+echo { >>  "%pathswh%\Temp\GetPassword.ps1"
+echo $StringBuilder = New-Object System.Text.StringBuilder >>  "%pathswh%\Temp\GetPassword.ps1"
+echo [System.Security.Cryptography.HashAlgorithm]::Create($HashName).ComputeHash([System.Text.Encoding]::UTF8.GetBytes($String))^|%%{ >>  "%pathswh%\Temp\GetPassword.ps1"
+echo [Void]$StringBuilder.Append($_.ToString("x2")) >>  "%pathswh%\Temp\GetPassword.ps1"
+echo } >>  "%pathswh%\Temp\GetPassword.ps1"
+echo $StringBuilder.ToString() >>  "%pathswh%\Temp\GetPassword.ps1"
+echo } >>  "%pathswh%\Temp\GetPassword.ps1"
+echo $PSDefaultParameterValues['Out-File:Encoding'] = 'ascii' >>  "%pathswh%\Temp\GetPassword.ps1"
+echo Get-StringHash $password ^> "%pathswh%\Temp\SHA512_.tmp" >>  "%pathswh%\Temp\GetPassword.ps1"
+powershell -ExecutionPolicy Unrestricted -Command "%PATHSWH%\Temp\GetPassword.ps1"
+
+
+for /f "usebackq delims=" %%a in ("%pathswh%\Temp\SHA512_.tmp") do (set "password_sha512=%%a")
+::Read hashed password
+for /f "usebackq delims=" %%A in ("%programfiles%\SWH\ApplicationData\PS.dat") do (set "stored_sha512=%%A")
+if "%stored_sha512%"=="cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e" (
+	set "stored_sha512=cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e "
+	set "pass_sha512=nul"
+	goto :EOF
+)
+if "%stored_sha512%"=="%password_sha512%" (
+	set "access=1"
+	set "pass_sha512=%stored_sha512%"
+	set "stored_sha512=%stored_sha512% "
+	goto :EOF
+)
+set "access=0"
+set "stored_sha512=%stored_sha512% "
+set "pass_sha512=%password_sha512%"
+goto :EOF
+
+:wrong
+echo.
+echo Sorry, something went wrong
+echo.
+goto swh
