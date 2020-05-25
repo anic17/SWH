@@ -1,4 +1,15 @@
-# Scripting Windows Host Console
+# Scripting Windows Host
+
+Scripting Windows Host is a small scripting language created for Microsoft Windows.
+
+## Why use Scripting Windows Host?
+
+Scripting Windows Host is a fast and really small in size the interpreter (less than 20 kB!)
+If you think that Scripting Windows Host isn't enought and you want more commands and functionalities, you can always import libraries with the command ``import [library].swhlib``
+
+But, to use it within library imports, contribute to the program
+
+### Scripting Windows Host Console
 
 An easy-to-use terminal, created by anic17. More than 90 commands, including cryptography, string reversing, typical commands (creating folders and files and deleting them), network manipulation, and more!
 
