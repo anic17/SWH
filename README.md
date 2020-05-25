@@ -15,16 +15,6 @@ An easy-to-use terminal, created by anic17. More than 90 commands, including cry
 
 Wrotten in Batch, VBScript and PowerShell.
 
-### NOTE:
-
-SWH creates some files, used to load various settings, logs and command history.
-
-You can find files in:
-```
-%ProgramFiles%\SWH
-%LocalAppData%\ScriptingWindowsHost
-```
-
 ## Compatibility
 
 ### Operating System
