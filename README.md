@@ -1,9 +1,11 @@
 # Scripting Windows Host
 
 Scripting Windows Host is a small scripting language created for Microsoft Windows.
-With that scripting language you can automate system tasks that you may take some time like making a backup of your data, or simply to make your own programs.
+
+With that scripting language you can automate system tasks that you may take some time like making a backup of your data, or simply to make your scripts for your own programs.
+
 We're implementing some math functions, to let you use advanced math at your scripts, like calculating the float of a number, the square/cube, square/cube root, math exponents, pi, phi and e implementation.
-The goal of Scripting Windows Host is to make another programming language, very natural to people with english words.
+The goal of Scripting Windows Host is to make another scripting language, very natural to people with english words.
 
 
 ## Why use Scripting Windows Host?
