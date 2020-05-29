@@ -1,27 +1,43 @@
 # Scripting Windows Host
 
 Scripting Windows Host is a small scripting language created for Microsoft Windows.
+With that scripting language you can automate system tasks that you may take some time like making a backup of your data, or simply to make your own programs.
+We're implementing some math functions, to let you use advanced math at your scripts, like calculating the float of a number, the square/cube, square/cube root, math exponents, pi, phi and e implementation.
+The goal of Scripting Windows Host is to make another programming language, very natural to people with english words.
+
 
 ## Why use Scripting Windows Host?
 
-Scripting Windows Host is a fast and really small in size the interpreter (less than 20 kB!)
+Scripting Windows Host is a fast and really small in size the interpreter (over 20 kB!)
 If you think that Scripting Windows Host isn't enought and you want more commands and functionalities, you can always import libraries with the command ``import [library].swhlib``
+That libraries will be special batch files that you could call to have some other things like WMIC usage or PowerShell script.
 
-But, to use it within library imports, contribute to the program
+In future, library imports will be not that important, because we'll add some new things that will have the librearies.
+For that, contribute to Scripting Windows Host to make it better!
+
+But, to use it within library imports, contribute to the program to make it better!
 
 ### Scripting Windows Host Console
 
-An easy-to-use terminal, created by anic17. More than 90 commands, including cryptography, string reversing, typical commands (creating folders and files and deleting them), network manipulation, and more!
+The terminal for Scripting Windows Host has more than 90 commands, including cryptography, string reversing, typical commands (creating folders and files and deleting them), network manipulation, and more!
 
-Wrotten in Batch, VBScript and PowerShell.
+It has been wrotten in Batch, VBScript, PowerShell (.NET objects) and some HTML. We are now including all commands to scripts, to let you have more options when making a program
 
 ## Compatibility
 
 ### Operating System
 
-Scripting Windows Host Console is compatible with versions of Windows between Windows Vista and Windows 10
+Scripting Windows Host is compatible with all versions of Windows  between Windows Vista and Windows 10.
 
-### Recovery mode
+Requirements:
+
+* PowerShell 3.0 or later
+* VBScript, PowerShell and Batch execution enabled (not blocked)
+
+With that, you could enjoy all the program!
+It is not necessary to install Scripting Windows Host, so you can use it as a really small but good script interpreter.
+
+### Windows Recovery
 
 SWH has a mode to be compatible with Recovery OS mode.
 
