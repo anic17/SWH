@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="x-ua-compatible" content="ie=9">
+	<meta charset="utf-8">
+	<title>SWH calculator</title>
+
+
+	<style type="text/css">
+		*{
+			box-sizing:border-box;
+			-webkit-box-sizing:border-box;
+			-moz-box-sizing:border-box;
+		}
+		.wrap{
+			width:400px;
+			margin:auto;
+			height:auto;
+			background:black;
+			padding:15px;
+		}
+		input[type=text]{
+			width:100%;
+			padding:10px;
+			font-size:22px;
+			font-weight:bold;
+			margin-top:20;
+			border-radius:5px; 
+		}
+		input[type=button]{
+			width:87px;
+			padding:10px;
+			font-size:22px;
+			font-weight:bold;
+			border-radius:5px;
+			margin-top:2px;
+			margin-bottom:2px;
+			margin-right:3px;
+			margin-left:3px;
+			text-align:center;
+
+		}
+		#del {
+			width:100%;
+		}
+
+	</style>
+
+	<script type="text/javascript">
+  	 	window.resizeTo(433,415);
+	</script>
+
+</head>
+	<body bgcolor= "#000000" text="white">
+	<p align="center">
+        <div id='calc-contain'>
+            <form name="calculator">
+            <input type="text" name="answer" size="28" />
+            <br>
+            <br>
+	    <center>
+            <input type="button" value="   7   " onclick="calculator.answer.value += '7'" />
+            <input type="button" value="   8   " onclick="calculator.answer.value += '8'" />
+            <input type="button" value="   9   " onclick="calculator.answer.value += '9'" />
+            <input type="button" value="   ÷   " onclick="calculator.answer.value += '/'" />
+            </br>
+
+            <input type="button" value="   4   " onclick="calculator.answer.value += '4'" />
+            <input type="button" value="   5   " onclick="calculator.answer.value += '5'" />
+            <input type="button" value="   6   " onclick="calculator.answer.value += '6'" />
+            <input type="button" value="   ×   " onclick="calculator.answer.value += '*'" />
+            </br>
+
+            <input type="button" value="   1   " onclick="calculator.answer.value += '1'" />
+            <input type="button" value="   2   " onclick="calculator.answer.value += '2'" />
+            <input type="button" value="   3   " onclick="calculator.answer.value += '3'" />
+            <input type="button" value="   -   " onclick="calculator.answer.value += '-'" />
+            </br>
+
+            <input type="button" value="   ,    " onclick="calculator.answer.value += '.'" />
+            <input type="button" value="   0   " onclick="calculator.answer.value += '0'" />
+            <input type="button" value="   =   " onclick="calculator.answer.value = eval(calculator.answer.value)" />
+            <input type="button" value="   +   " onclick="calculator.answer.value += '+'" />
+            </br>
+            <input type="button" value="Clear  all" onclick="calculator.answer.value = ''" id="del"/>
+ 	    </center>
+          </form>
+        </div>
+	</p>
+    </body>
+</html>
