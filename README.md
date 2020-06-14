@@ -11,7 +11,7 @@ The goal of Scripting Windows Host is to make another scripting language, very n
 ## Why use Scripting Windows Host?
 
 Scripting Windows Host is really small, the size of the interpreter is around 20 kB.
-If you think that Scripting Windows Host isn't enought and you want more commands and functionalities, you can always import libraries with the command ``import [library].swhlib``
+If you think that Scripting Windows Host isn't enought and you want more commands and functionalities, you can always import libraries with the command ``import [library].cmd``
 That libraries will be special batch files that you could call to have some other things like WMIC usage or PowerShell script.
 
 In future, library imports will be not that important, because we'll add some new things that will have the librearies.
