@@ -1,1 +1,1 @@
-93.176.135.158
+# Here is the list of banned IP addresses
