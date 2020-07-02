@@ -57,7 +57,7 @@ With that you could run a command
 ``SWH.bat /admin``
 To run Scripting Windows Host as administrator
 	
-``"SWH.bat /?``
+``SWH.bat /?``
 To view command-line help (This help meessage)
 
 ``SWH.bat /execdir C:\``
