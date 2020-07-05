@@ -5,12 +5,13 @@ Scripting Windows Host is a small scripting language created for Microsoft Windo
 With that scripting language you can automate system tasks that you may take some time like making a backup of your data, or simply to make your scripts for your own programs.
 
 We're implementing some math functions, to let you use advanced math at your scripts, like calculating the float of a number, the square/cube, square/cube root, math exponents, pi, phi and e implementation.
-The goal of Scripting Windows Host is to make another scripting language, very natural to people with english words.
+The goal of Scripting Windows Host is to make another scripting language, very natural to people with english words, with also some simitudes with C and C++.
 
 
 ## Why use Scripting Windows Host?
 
-Scripting Windows Host is really small, the size of the interpreter is around 20 kB.
+Scripting Windows Host is really small compared to the amout of things you could do.
+It's not the fastest, but as it's very simplified and you need a few lines, that small delay will be not very notable.
 If you think that Scripting Windows Host isn't enought and you want more commands and functionalities, you can always import libraries with the command ``import [library].cmd``
 That libraries will be special batch files that you could call to have some other things like WMIC usage or PowerShell script.
 
@@ -21,9 +22,9 @@ But, to use it within library imports, contribute to the program to make it bett
 
 ### Scripting Windows Host Console
 
-The terminal for Scripting Windows Host has more than 90 commands, including cryptography, string reversing, typical commands (creating folders and files and deleting them), network manipulation, and more!
+The console for Scripting Windows Host has more than 90 commands, including cryptography, string reversing, typical commands (creating folders and files and deleting them), network manipulation, and some other.
 
-As Scripting Windows Host, it has been wrotten in Batch, VBScript, PowerShell (.NET objects) and some HTML. We are now including all commands to scripts, to let you have more options when making a program
+As Scripting Windows Host, it has been wrotten in Batch, VBScript, PowerShell (.NET objects) and some HTML, you don't require any other program to make it run correctly.
 
 ## Compatibility
 
