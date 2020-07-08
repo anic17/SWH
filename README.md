@@ -12,6 +12,7 @@ The goal of Scripting Windows Host is to make another scripting language, very n
 
 Scripting Windows Host is really small compared to the amout of things you could do.
 It's not the fastest, but as it's very simplified and you need a few lines, that small delay will be not very notable.
+That doesn't mean that we aren't working at speed.
 If you think that Scripting Windows Host isn't enought and you want more commands and functionalities, you can always import libraries with the command ``import [library].cmd``
 That libraries will be special batch files that you could call to have some other things like WMIC usage or PowerShell script.
 
