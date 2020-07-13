@@ -1,14 +1,19 @@
 @echo off
-setlocal EnableExtensions
-chcp 65001 > nul
+setlocal EnableDelayedExpansion
 if "%~1"=="/?" goto help
-if /i "%~1"=="commands" if /i "%~2"=="/?" goto help_commandlist
+if /i "%~1"=="--help" goto help
+
+if /i "%~1"=="commands" goto help_commandlist
 if /i "%~1"=="syntax" goto help_syntax
 if /i "%~1"=="hexcolor" goto hexcolor
-
-
+if /i "%~1"=="--command" if "%~2"=="" (
+	echo SWH Error: Cannot run an empty command
+	goto exit
+) else (
+	goto runcommand
+)
 if /i "%~1"=="" (
-	echo SWH Error: No arguments specified
+	echo SWH Error: No arguments specified. Try with '%~n0 --help'
 	goto exit
 )
 if not exist "%~1" (
@@ -20,244 +25,225 @@ if "%~x1" neq ".swh" (
 	goto exit
 )
 
-if /i ["%~2"]==["-n"] (
-	set noreturn=1
-)
-
-if /i ["%~2"]==["/n"] (
-	set noreturn=1
-)
-
 :start
 
-::                        ::
-::                        ::
-:: Scripting Windows Host ::
-:: ___---==========---___ ::
-::                        ::
-::                        
-::Comments are # (hashtags)
-::
+set "pathswh=%LOCALAPPDATA%\ScriptingWindowsHost"
 
-
-:: <file.swh>
-::  #This is a Scripting Windows Host comment
-:: say "Hello world!"
-
-
-set curdir=%CD%
-set pathswh=%LOCALAPPDATA%\ScriptingWindowsHost
-if exist "%pathswh%\Temp\SWH_Return.tmp" (del "%pathswh%\Temp\SWH_Return.tmp" /q > nul)
-
-::
-::Get user SID
-::
-::cd /d "%pathswh%\Temp"
-::wmic useraccount where name='%username%' get sid | findstr /c:"-"> "%PATHSWH%\Temp\user.sid"
-::for /f "delims=" %%S in (user.sid) do (set usersid=%%S)
-::cd /d "%CURDIR%"
-::
 set end=0
 set returncode=0
-set $AppData=%APPDATA%
-set $LocalAppData=%LOCALAPPDATA%
-set $ProgramFiles=%PROGRAMFILES%
-set $ProgramFiles(x86)=%PROGRAMFILES(x86)%
-set $SystemRoot=%SYSTEMROOT%
-set $Temp=%TEMP%
-set $Userprofile=%USERPROFILE%
-set $ProgramData=%PROGRAMDATA%
-set $3DObjects=%USERPROFILE%\3D Objects
-set $Desktop=%USERPROFILE%\Desktop
-set $Documents=%USERPROFILE%\Documents
-set $Downloads=%USERPROFILE%\Downloads
-set $LocalDisk=%HOMEDRIVE%\
-set $Music=%USERPROFILE%\Music
-set $Pictures=%USERPROFILE%\Pictures
-set $Videos=%USERPROFILE%\Videos
-set $System=%SYSTEMROOT%%\System32
-set $SystemStartup=%PROGRAMDATA%\Microsoft\Windows\Start Menu\Programs\Startup
-set $SysWOW64=%SYSTEMROOT%%\SysWOW64
-set $WinTemp=%SYSTEMROOT%\Temp
-set $UserStartup=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup
-set $OS=%OS%
-set $Ver=11.1
-set $ComputerName=%COMPUTERNAME%
-set $CPUArch=%PROCESSOR_ARCHITECTURE%
-set $CPUCount=%NUMBER_OF_PROCESSORS%
+set returning=null
 
-set $FileName=%0
-set $FileName_=%~0
-set $WorkingDirectory=%~dp0
-set $CurrentDrive=%~d0
-set $CurrentHive=%~p0
+set $Arg1=%2
+set $Arg2=%3
+set $Arg3=%4
+set $Arg4=%5
+set $Arg5=%6
+set $Arg6=%7
+set $Arg7=%8
+set $Arg8=%9
+if not "%~9"=="" (
+	shift
+	set $Arg9=%9
+)
 
-set $CurrentName=%~n1
-set $CurrentExt=%~x1
-set $CurrentSize=%~z1
-
-set $Arg1_=%~1
-set $Arg2_=%~2
-set $Arg3_=%~3
-set $Arg4_=%~4
-set $Arg5_=%~5
-set $Arg6_=%~6
-set $Arg7_=%~7
-set $Arg8_=%~8
-set $Arg9_=%~9
-
-set $Arg1=%1
-set $Arg2=%2
-set $Arg3=%3
-set $Arg4=%4
-set $Arg5=%5
-set $Arg6=%6
-set $Arg7=%7
-set $Arg8=%8
-set $Arg9=%9
+set __open_brackets__=0
 
 :readfile
-for /f "tokens=1-30 eol=# usebackq" %%a in ("%~1") do if exist "%pathswh%\Temp\SWH_Return.tmp" (del "%pathswh%\Temp\SWH_Return.tmp" /q 2> nul 1>nul & goto :EOF) else call :command %%a %%b %%c %%d %%e %%f %%g %%h %%i %%j %%k %%m %%n %%o %%p %%q %%r %%s %%t %%u %%v %%w %%x %%y %%z
-:finished
-if not exist "%PATHSWH%\Temp\SWH_Return.tmp" (
-	set returncode=0
-	goto next_finished
-)
-for /f "usebackq delims=" %%a in ("%PATHSWH%\Temp\SWH_Return.tmp") do (set returncode=%%a)
-:next_finished
-if "%noreturn%"=="1" echo %returncode% > "%PATHSWH%\Temp\RC.tmp" & goto exit
-echo.
-echo Process finished with error code %returncode%
-echo %returncode% > "%PATHSWH%\Temp\RC.tmp"
-pause>nul
-goto exit
+for /f "tokens=1-25* eol=# usebackq" %%a in ("%~1") do if "!returning!" neq "null" (goto exit) else call :command %%a %%b %%c %%d %%e %%f %%g %%h %%i %%j %%k %%m %%n %%o %%p %%q %%r %%s %%t %%u %%v %%w %%x %%y %%z
 :exit
-endlocal
-for /f "usebackq delims=" %%a in ("%localappdata%\ScriptingWindowsHost\Temp\RC.tmp") do (set errorlevel=%%a)
-exit /B %errorlevel%
+endlocal & exit /B %returncode%
+exit /B !errorlevel!
 
 :command
-set command=%~1
-if /i "%command%"=="file" (call :file %~2 "%~3" "%~4")
-if /i "%command%"=="say" (call :say "%~2")
+set "command=%~1"
+
+
+if "!_if_!"=="1" (set "command=%~1" & set "_if_=0")
+if /i "%command%"=="if" (call :if %*)
+if /i "%command%"=="{" (
+	if "!__if__!"=="true" call :syntaxerror
+
+)
+if /i "%command%"=="echo" (
+	echo.%~2
+	exit /B
+)
+if /i "%command%"=="echol" (
+	<nul set /p "=%~2"
+	exit /B
+)
+
+if /i "%command%"=="input" (
+	set var=%~2
+	set /p "%~2=%~3"
+	exit /B
+
+)
+
+if /i "%command%"=="int" (
+	if "%~2"=="" goto missing_param
+	for /f "tokens=1 delims=1234567890+-*/%%" %%A in ("%~3") do (
+		<nul set /p "=Not an integer."
+		set "returncode=1"
+		goto exit
+	)
+	set "__intvar_math_argv__=%~3%~4%~5%~6%~7%~8%~9"
+	set "__intvar_math_argv__=!__intvar_math_argv__:{=(!"
+	set "__intvar_math_argv__=!__intvar_math_argv__:}=)!"
+
+	set /a "%~2=!__intvar_math_argv__!"
+	exit /B
+)
+
+
+if /i "%command%"=="string" (
+
+	set "__string_swh_tmpvar__=%~2"
+	set "!__string_swh_tmpvar__!=%~3"
+	echo off
+	exit /B
+	
+)
+
+if /i "%command%"=="double" (call :double "%~2" %~3 %~4 %~5 %~6 %~7 %~8 %~9 & exit /B)
+if /i "%command%"=="bool" (
+	if "%~2"=="" goto missing_param
+	if /i "%~2"=="true" set "%~1=true" & exit /B
+	if /i "%~2"=="false" set "%~1=false" & exit /B
+	echo Invalid boolean value
+	exit /B
+)
+
+if /i "%command%"=="loadenv" (call :loadenv "%~2" & exit /B)
+if /i "%command%"=="file" (call :file %~2 "%~3" "%~4" & exit /B)
 if /i "%command%"=="folder" (
-	if exist "%~2" echo Error: '%~2' already exists & goto :EOF
+	if exist "%~2" echo Error: '%~2' already exists & exit /B
 	md "%~2"
+	exit /B
 )
-if /i "%command%"=="title" (title %~2)
+if /i "%command%"=="title" (title %~2 & exit /B)
 if /i "%command%"=="cd" (
-	if not exist "%~2" echo Error: Cannot find '%~2' & goto :EOF
+	if not exist "%~2" echo Error: Cannot find '%~2' & exit /B
 	cd /d "%~2" 2> nul 1>nul
-	if errorlevel 1 (echo Error: Invalid directory & goto :EOF)
+	if errorlevel 1 echo Error: Invalid directory
+	exit /B
 )
-if /i "%command%"=="color" (color "%~2")
-if /i "%command%"=="date" (date %~2/%~3/%~4)
-if /i "%command%"=="time" (time %~2:%~3:%~4)
+if /i "%command%"=="color" (color "%~2" & exit /B)
+if /i "%command%"=="date" (date %~2/%~3/%~4 > nul & exit /B)
+if /i "%command%"=="time" (time %~2:%~3:%~4 & exit /B)
+if /i "%command%"=="array" (
+	call :array %*
+	exit /B
+)
+if /i "%command%"=="getlen" (call :getlen "%~2" %~3 & exit /B)
+if /i "%command%"=="pause" (pause>nul & exit /B)
+if /i "%command%"=="clear" (cls & exit /B)
+if /i "%command%"=="dir" (dir /b /a "%~2" & exit /B)
+if /i "%command%"=="search" (dir /s /a /B "%~2" & exit /B)
+if /i "%command%"=="copy" (call :copy "%~2" "%~3" & exit /B)
+if /i "%command%"=="move" (call :move "%~2" "%~3" & exit /B)
+if /i "%command%"=="return" (call :Return %~2 & exit /B)
+if /i "%command%"=="colortext" (call :ColorText %~2 "%~3" "%~4" & exit /B)
+if /i "%command%"=="import" (call :import "%~2" %~3 %~4 %~5 %~6 %~7 %~8 %~9 & exit /B)
+if /i "%command%"=="gettitle" (call :gettitle "%~2" & exit /B)
+if /i "%command%"=="reg" (call :reg "%~2" "%~3" "%~4" "%~5" & exit /B)
 
+if /i "%command%"=="abs" (call :abs "%~2" "%~3" & exit /B)
 
-if /i "%command%"=="pause" (pause>nul)
-if /i "%command%"=="clear" (cls)
-if /i "%command%"=="dir" (dir /b /a %~2)
-if /i "%command%"=="search" (dir /s /B "%~2")
-if /i "%command%"=="copy" (call :copy "%~2" "%~3")
-if /i "%command%"=="move" (call :move "%~2" "%~3")
-if /i "%command%"=="input" (call :input "%~2" %~3 %~4 %~5 %~6 %~7 %~8 %~9)
-if /i "%command%"=="return" (call :Return %~2)
-if /i "%command%"=="colortext" (call :ColorText %~2 "%~3" "%~4")
-if /i "%command%"=="import" (call :import "%~2" %~3 %~4 %~5 %~6 %~7 %~8 %~9)
-if /i "%command%"=="if" (call :if "%~2" %~3 %~4 %~5 %~6 %~7 %~8 %~9)
-if /i "%command%"=="string" (call :string "%~2" %~3 %~4 %~5 %~6 %~7 %~8 %~9)
-if /i "%command%"=="int" (call :int "%~2" %~3 %~4 %~5 %~6 %~7 %~8 %~9)
-if /i "%command%"=="double" (call :double "%~2" %~3 %~4 %~5 %~6 %~7 %~8 %~9)
+if /i "%command%"=="" (exit /B)
 
+if /i "%~2"=="0" (echo 0 & exit /B)
+if /i "%~3"=="0" (echo 1 & exit /B)
 
-set param2=%~2
-set param3=%~3
-if /i "%~2"=="0" (echo 0 & goto :EOF)
-if /i "%~3"=="0" (echo 1 & goto :EOF)
+if /i "%command%"=="exp" (call :exp %~2 %~3 %~4 & exit /B)
+if /i "%command%"=="sqrt" (call :sqrt %~2 %~3 & exit /B)
+if /i "%command%"=="cube" (call :cube %~2 %~3 & exit /B)
+if /i "%command%"=="square" (call :square %~2 %~3 & exit /B)
+if /i "%command%"=="cbrt" (call :cbrt %~2 %~3 & exit /B)
+if "!_if_!"=="1" set "_if_=0" & exit /B
+echo Incorrect command: %command% & goto exit
+exit /B
 
-if /i "%~2"=="pi" (set param2=3.1415926535897932)
-if /i "%~2"=="phi" (set param2=1.6180339887498948)
-if /i "%~2"=="e" (set param2=2.7182818284590452)
-if /i "%~3"=="pi" (set param3=3.1415926535897932)
-if /i "%~3"=="phi" (set param3=1.6180339887498948)
-if /i "%~3"=="e" (set param3=2.7182818284590452)
+:getlen
+if "%~1"=="" call :missing_param & exit /B
 
-
-if /i "%command%"=="exp" (call :exp %param2% %param3%)
-if /i "%command%"=="sqrt" (call :sqrt %param2%)
-if /i "%command%"=="cube" (call :cube %param2%)
-if /i "%command%"=="square" (call :square %param2%)
-if /i "%command%"=="cbrt" (call :cbrt %param2%)
-
-goto :EOF
-
-
-:say
-set "say_params=%~1"
-echo.%say_params%
-set say_params=
-goto :EOF
+set "__getlen_tmp_var__=%~1#"
+for %%P in (4096 2048 1024 512 256 128 64 32 16 8 4 2 1) do (
+    if "!__getlen_tmp_var__:~%%P,1!" NEQ "" ( 
+        set /a "__getlen_SWH__+=%%P"
+        set "__getlen_tmp_var__=!__getlen_tmp_var__:~%%P!"
+    )
+)
+if "%~2"=="" (
+	echo !__getlen_SWH__!
+) else ( 
+	set "%~2=!__getlen_SWH__!"
+)
+exit /B
 
 :exp
 set exp=%~1
 set exp2=%~2
 set exp=%exp:,=.%
 set exp2=%exp2:,=.%
+if "%~3"=="" (
 
 echo wscript.echo (%exp%^^%exp2%) > "%PATHSWH%\Temp\exp.vbs"
-cscript.exe //nologo "%PATHSWH%\Temp\exp.vbs" > "%PATHSWH%\Temp\exp.tmp"
-for /f "usebackq delims=" %%E in ("%PATHSWH%\Temp\exp.tmp") do (set exp_dot=%%E)
-echo %exp_dot:,=.%
-goto :EOF
+
+for /f "delims=" %%E in ('cscript.exe //nologo "%PATHSWH%\Temp\exp.vbs"') do (set "exp_dot=%%E")
+echo;%exp_dot:,=.%
+exit /B
 
 :cube
-set cube=%~1
-set cube2=%~2
-set cube=%cube:,=.%
-set cube2=%cube2:,=.%
-
-echo wscript.echo (%cube%^^3) > "%PATHSWH%\Temp\cube.vbs"
-cscript.exe //nologo "%PATHSWH%\Temp\cube.vbs" > "%PATHSWH%\Temp\cube.tmp"
-for /f "usebackq delims=" %%E in ("%PATHSWH%\Temp\cube.tmp") do (set cube_dot=%%E)
-echo %cube_dot:,=.%
-goto :EOF
+echo wscript.echo (%~1^^3) > "%PATHSWH%\Temp\cube.vbs"
+exit /B 
 
 :sqrt
 set sqrt=%~1
 set sqrt2=%~2
 
-set sqrt=%sqrt:,=.%
-set sqrt2=%sqrt2:,=.%
-
 echo wscript.echo sqr(%sqrt%) > "%PATHSWH%\Temp\sqrt.vbs"
 cscript.exe //nologo "%PATHSWH%\Temp\sqrt.vbs" > "%PATHSWH%\Temp\sqrt.tmp"
 for /f "usebackq delims=" %%E in ("%PATHSWH%\Temp\sqrt.tmp") do (set sqrt_dot=%%E)
 echo %sqrt_dot:,=.%
-goto :EOF
+exit /B
 
 :square
 set square=%~1
 set square2=%~2
 
-set square=%square:,=.%
-set square2=%square2:,=.%
-
 echo wscript.echo (%square%*%square%) > "%PATHSWH%\Temp\square.vbs"
-cscript.exe //nologo "%PATHSWH%\Temp\square.vbs" > "%PATHSWH%\Temp\square.tmp"
-for /f "usebackq delims=" %%E in ("%PATHSWH%\Temp\square.tmp") do (set square_dot=%%E)
-echo %square_dot:,=.%
-goto :EOF
+
+for /f "usebackq delims=" %%E in ("cscript.exe //nologo "%PATHSWH%\Temp\square.vbs") do (
+	set "square_dot=%%A"
+	echo !square_dot:,=.!
+)
 
 :cbrt
 set cbrt=%~1
 set cbrt=%cbrt:,=.%
 
 echo wscript.echo (%cbrt% ^^ (1/3)) > "%PATHSWH%\Temp\cbrt.vbs"
-cscript.exe //nologo "%PATHSWH%\Temp\cbrt.vbs" > "%PATHSWH%\Temp\cbrt.tmp"
-for /f "usebackq delims=" %%E in ("%PATHSWH%\Temp\cbrt.tmp") do (set cbrt_dot=%%E)
-echo %cbrt_dot:,=.%
-goto :EOF
+
+
+for /f "delims=" %%A in ('cscript.exe //nologo "%PATHSWH%\Temp\cbrt.vbs"') do (
+	set "cbrt_dot=%%A"
+	echo !cbrt_dot:,=.!
+)
+exit /B
+
+
+::if not exist "%~1" echo %1: No such file or directory & exit /B
+::if "%~2"=="" del "%~2" /a /q 2>nul 1>nul & exit /B
+::if "%~2"=="subdirectories" del "%~2" /s /a 2>nul 1>nul & exit /B
+::if "%~2"=="confirm" (
+::	set /p "__del__confirm__=Are you sure you want to delete %1? (y/n): 
+::	if /i "!__del__confirm__!"=="y" del "%~2" /q /a >nul & exit /B
+::	if /i "!__del__confirm__!"=="n" exit /B
+::)
+::goto syntaxerror
+
+exit /B
 
 
 :copy
@@ -265,163 +251,145 @@ set filecopy="%~1"
 set newfilecopy="%~2"
 copy %filecopy% %newfilecopy% > nul
 if not exist %newfilecopy% (echo Error while copying %filecopy%)
-goto :EOF
+exit /B
 
 :move
 set filemove="%~1"
 set newfilemove="%~2"
 move %filemove% %newfilemove% > nul
 if not exist %newfilemove% (echo Error while moving %filemove%)
-goto :EOF
+exit /B
 
-
-:input
-set input_var=%~1
-
-if not "%~9"=="" (set "var9=%~9")
-if not "%~8"=="" (set "var8=%~8 ") 
-if not "%~7"=="" (set "var7=%~7 ")
-if not "%~6"=="" (set "var6=%~6 ")
-if not "%~5"=="" (set "var5=%~5 ")
-if not "%~4"=="" (set "var4=%~4 ")
-if not "%~3"=="" (set "var3=%~3 ")
-if not "%~2"=="" (set "var2=%~2 ")
-
-::%~3 %~4 %~5 %~6 %~7 %~8 %~9
-set /p "%input_var%=%var2%%var3%%var4%%var5%%var6%%var7%%var8%%var9%"
-goto :EOF
 
 :file
 if "%~1"=="create" (
-	if exist "%~2" (echo Error: "%~2" already exists. Please use 'file overwrite' to overwrite the file & goto :EOF)
+	if exist "%~2" (echo Error: "%~2" already exists. Please use 'file overwrite' to overwrite the file & exit /B)
 	echo %~3 > "%~2"
-	goto :EOF
+	exit /B
 )
 if "%~1"=="overwrite" (
 	echo %~3 > "%~2"
 	if not exist "%~2" (echo Error: Cannot create output file '	%~2')
-	goto :EOF
+	exit /B
 )
 if "%~1"=="open" (
-	if not exist "%~2" (echo Error: "%~2" does not exist & goto :EOF)
+	if not exist "%~2" (echo Error: "%~2" does not exist & exit /B)
 	echo.%~3 >> "%~2"
-	goto :EOF
+	exit /B
 )
-echo Syntax error
-goto :EOF
+if "%~1"=="blank" (
+	if exist "%~2" (Error: "%~2" already exists. & exit /B)
+	<nul set /p "=" > "%~2"
+	exit /B
+)
+set "expected=Expected [create ^| overwrite ^| open ^| blank], but specified '%~1'"
+goto syntaxerror
 
 
 :ColorText
 
-for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do (
-  set "DEL=%%a"
-)
+for /F "tokens=1,2 delims=#" %%a in ('"prompt #$H#$E# & echo on & for %%b in (1) do rem"') do set "__colortext__findstr__=%%a"
 
-<nul set /p ".=%DEL%" > "%~2"
+<nul set /p ".=%__colortext__findstr__%" > "%~2"
 findstr /v /a:%1 /R "^$" "%~2" nul
 del "%~2" > nul 2>&1
 if "%~3"=="" (echo.)
 if "%~3"=="1" (echo.)
-goto :EOF
+exit /B
 
+
+:math
+set "pi=3.1415926535897932"
+set "phi=1.6180339887498948"
+set "e=2.7182818284590452"
+exit /B
+
+:abs
+if "%~2"=="" goto missing_param
+set /a "__math__operation__abs__SWH__absolute__value__math__=%~2 %~4 %~5 %~6 %~7 %~8 %~9"
+
+if !__math__operation__abs__SWH__absolute__value__math__! lss 0 (
+	set /a "%~1=!__math__operation__abs__SWH__absolute__value__math__!"
+	set "__math__operation__abs__SWH__absolute__value__math__=!__math__operation__abs__SWH__absolute__value__math__:~1!"
+	set "%~1=!__math__operation__abs__SWH__absolute__value__math__!"
+) else (
+	set "%~1=!__math__operation__abs__SWH__absolute__value__math__!"
+)
+exit /B
 
 :return
 set returncode=%~1
-echo %returncode% > "%PATHSWH%\Temp\RC.tmp"
-echo %returncode% > "%pathswh%\Temp\SWH_Return.tmp"
-goto :EOF
+set "returning=%~1"
+exit /B
 
 :import
-if /i "%~x1" neq ".swhlib" (echo SWH Import Error: Invalid library & goto :EOF)
-if not exist "%~1" (
-	echo SWH Import error: No such file or directory
-)
-set curdir=%CD%
-cd /d "%~dp1"
-ren "%~1" "%~n1.bat"
-if exist "%~n1.bat" del "%~n1.bat" /q > nul
-for %%a in (%~1) do (echo @%%a >> "%~n1.bat")
-cmd /c "%~dp1%~n1.bat" %~2 %~3 %~4 %~5 %~6 %~7 %~8 %~9
-if exist "%~n1.bat" del "%~n1.bat" /q > nul
-cd /d "%curdir%"
-set curdir=
-goto :EOF
+
+if /i "%~x1" neq ".cmd" if not "%~n1"=="%~nx1" (echo SWH Import Error: Invalid library & exit /B)
+
+if exist "%~n1.cmd" call "%~n1.cmd" %~2 %~3 %~4 %~5 %~6 %~7 %~8 %~9 & exit /B
+if exist "%~nx1" call "%CD%\lib\%~n1.cmd" %~2 %~3 %~4 %~5 %~6 %~7 %~8 %~9 & exit /B
+if exist "%CD%\lib\%~n1.cmd" call "%CD%\lib\%~n1.cmd" %~2 %~3 %~4 %~5 %~6 %~7 %~8 %~9 & exit /B
+if exist "%CD%\lib\%~nx1" call "%CD%\lib\%~n1.cmd" %~2 %~3 %~4 %~5 %~6 %~7 %~8 %~9 & exit /B
+
+echo SWH Import error: No such file or directory
+
+exit /B
 
 :if
-setlocal EnableDelayedExpansion
-echo [debug]
-echo 1: %~1
-echo 2: %~2
-echo 3: %~3
-echo 4: %~4
-echo 5: %~5
-echo [debug]
 
-if not defined %~1 (
-	echo %~1 not defined
-	goto :EOF
+if /i "%~3"=="equ" (set comp=equ)
+if /i "%~3"=="neq" (set comp=neq)
+if /i "%~3"=="leq" (set comp=leq)
+if /i "%~3"=="lss" (set comp=lss)
+if /i "%~3"=="gtr" (set comp=gtr)
+if /i "%~3"=="geq" (set comp=geq)
+
+::Filter
+set passed=0
+
+if %passed%==0 if /i "%comp%"=="neq" (set passed=1)
+if %passed%==0 if /i "%comp%"=="equ" (set passed=1)
+if %passed%==0 if /i "%comp%"=="leq" (set passed=1)
+if %passed%==0 if /i "%comp%"=="lss" (set passed=1)
+if %passed%==0 if /i "%comp%"=="gtr" (set passed=1)
+if %passed%==0 if /i "%comp%"=="geq" (set passed=1)
+if %passed%==0 exit /B
+
+
+set "_if_=1"
+set _if_varcomp_1=%~2
+set _if_varcomp_2=%~4
+if "!_if_varcomp_1!" %comp% "!_if_varcomp_2!" (
+	if "%~5" neq "{" (
+		set "expected=Expected '{' at 'if %~2 %comp% %~4' ^<-- here"
+		call :syntaxerror
+	)
+	set "__if_correct__=true"
+	set "__open_brackets__=true"
+	set "__if__=true"
 )
-if not defined %~3 (
-	echo %~3 not defined
-	goto :EOF
-)
-if "%~2"=="==" (set comp=equ)
-if "%~2"=="!=" (set comp=neq)
-if "%~2"=="<=" (set comp=leq)
-if "%~2"=="=<" (set comp=leq)
-if "%~2"=="<" (set comp=lss)
-if "%~2"==">" (set comp=gtr)
-if "%~2"==">=" (set comp=geq)
-if "%~2"=="=>" (set comp=geq)
+set 
+call :command "%~5" "%~6" "%~7" "%~8" "%~9"
+exit /B 
 
-if /i "%~2"=="equ" (set comp=equ)
-if /i "%~2"=="neq" (set comp=neq)
-if /i "%~2"=="leq" (set comp=leq)
-if /i "%~2"=="lss" (set comp=lss)
-if /i "%~2"=="gtr" (set comp=gtr)
-if /i "%~2"=="geq" (set comp=geq)
-echo on
-if /i "%comp%" neq "equ" neq "leq" neq "lss" neq "gtr" neq "geq" neq "neq" (echo Invalid comparator & goto :EOF)
-if "%~5"=="else" (
-	call :if_else "%~1" "%~2" "%~3" "%~4" "%~5" "%~6"
-	goto :EOF
-)
+exit /B
+
+:open_brackets_if
+
+call :command
 
 
-set dr_crnt_fldr1=%~dp0
-set dr_crnt_fldr1=%dr_crnt_fldr1:~-1%
-if "!%~1" %comp% "!%~3!" ("%~0" %~4)
-set dr_crnt_fldr1=
-set comp=
-endlocal
-goto :EOF
+:else
+echo arribat
+call :command %*
+exit /B 
 
-:if_else
-set dr_crnt_fldr1=%~dp0
-set dr_crnt_fldr1=%dr_crnt_fldr1:~-1%
-if "!%~1!" %comp% "!%~3!" ("%~0" %~4) else ("%~0" %~6)
-set dr_crnt_fldr1=
-set comp=
-echo off
-endlocal
-goto :EOF
-
-:int
-set _intvar_math_argv=%~2%~3%~4%~5%~6%~7%~8%~9
-set _intvar_math_argv=%_intvar_math_argv:{=(%
-set _intvar_math_argv=%_intvar_math_argv:}=)%
-
-set /a _intvar_math_=%_intvar_math_argv%
-set %~1=%_intvar_math_%
-set _intvar_math_=
-set _intvar_math_argv=
-goto :EOF
 
 :double
-set _doublevar_math_argv=%~2%~3%~4%~5%~6%~7%~8%~9
-set _doublevar_math_argv=%_doublevar_math_argv:{=(%
-set _doublevar_math_argv=%_doublevar_math_argv:}=)%
-set _doublevar_math_argv=%_doublevar_math_argv:,=.%
+set "_doublevar_math_argv=%~2%~3%~4%~5%~6%~7%~8%~9"
+set "_doublevar_math_argv=%_doublevar_math_argv:{=(%"
+set "_doublevar_math_argv=%_doublevar_math_argv:}=)%"
+set "_doublevar_math_argv=%_doublevar_math_argv:,=.%"
 
 set _doublevar_math_argv=%_doublevar_math_argv:pi=3.1415926535897932%
 set _doublevar_math_argv=%_doublevar_math_argv:phi=1.6180339887498948%
@@ -430,26 +398,286 @@ set _doublevar_math_argv=%_doublevar_math_argv:e=2.7182818284590452%
 set _double_math_=%_doublevar_math_argv%
 echo wscript.echo (%_double_math_%) > "%PATHSWH%\Temp\Double.vbs"
 
-for /f "tokens=* usebackq" %%a in (`cscript.exe //nologo "%PATHSWH%\Temp\Double.vbs"`) do (set _double_math_=%%a)
-set %~1=%_double_math_:,=.%
+for /f "delims=" %%a in ('cscript.exe //nologo "%PATHSWH%\Temp\Double.vbs"') do (set "_double_math_=%%a")
+set "%~1=%_double_math_:,=.%"
 set _double_math_=
 set _doublevar_math_argv=
-goto :EOF
+exit /B
+
+:gettitle
+
+set "_window_title__bin_=0"
+if not "%~1"=="" (set "_window_title__bin_=1") else (set "_window_title__rename_variable_=%~1")
+wmic process get parentprocessid,name|find "WMIC" > "%PATHSWH%\Temp\proc.lis"
+for /f "usebackq tokens=1* delims= " %%A in ("%PATHSWH%\Temp\proc.lis") do (set "__window_title_PID__=%%B")
 
 
-:string
-set string=%~1
-set "%string%=%~2 %~3 %~4 %~5 %~6 %~7 %~8 %~9"
-echo %string%
-goto :EOF
+For /f "tokens=1* delims=:" %%A In ('tasklist /fi "pid eq %__window_title_PID__%" /v /fo list') do (set "_windowtitle_=%%B")
+if "%_window_title__bin_%"=="1" (
+	set "%~1=%_windowtitle_:~2%"
+	exit /B
+)
 
+
+set _windowtitle_=%_windowtitle_:~2%
+echo %_windowtitle_%
+set _windowtitle_=
+exit /B
+
+
+
+For /f "tokens=1* delims=:" %%A In ('tasklist /fi "pid eq %__window_title_PID__%" /v /fo list') do (call :get_title_manipulate %%B)
+exit /B
+
+
+
+:get_title_manipulate
+set _badwintitle_=%1
+Set "_window_title__rename_variable_=%_badwintitle_:~1%
+if "!_window_title__bin_!"=="1" (
+	echo %_window_title__rename_variable_%
+	set __window_title_PID__=
+	set _window_title__bin_=
+	set _window_title__rename_variable_=
+	exit /B
+)
+set _window_title__bin_=
+set "%_window_title__rename_variable_%=%_window_title__rename_variable_%"
+exit /B
+
+
+
+
+:loadenv
+if "%~2"=="" call :full_loadenv & exit /B
+if /i "%~2"=="full" call :full_loadenv & exit /B
+
+if /i "%~2"=="args" call :args_loadenv & exit /B
+if /i "%~2"=="shell" call :shell_loadenv & exit /B
+if /i not "%~2"=="extended" (echo Invalid environment loading & exit /B) else call :full_loadenv & exit /B
+
+exit /B
+
+
+:full_loadenv
+
+for /f "tokens=3* delims= " %%A in ('reg query "HKLM\Software\Microsoft\Windows NT\CurrentVersion" /v "RegisteredOwner"') do set "$RegisteredOwner=%%A %%B"
+for /f "tokens=3* delims= " %%a in ('reg query "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v Desktop') do set "$Desktop=%%a"
+for /f "tokens=3* delims= " %%a in ('reg query "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v Startup') do set "$Startup=%%a"
+call :args_loadenv
+call :shell_loadenv
+exit /B
+
+
+:args_loadenv
+set "$Arg1_=%$Arg1:"=%"
+set "$Arg2_=%$Arg2:"=%"
+set "$Arg3_=%$Arg3:"=%"
+set "$Arg4_=%$Arg4:"=%"
+set "$Arg5_=%$Arg5:"=%"
+set "$Arg6_=%$Arg6:"=%"
+set "$Arg7_=%$Arg7:"=%"
+set "$Arg8_=%$Arg8:"=%"
+set "$Arg9_=%$Arg1:"=%"
+exit /B
+
+:shell_loadenv
+set $3DObjects=%USERPROFILE%\3D Objects
+set $Documents=%USERPROFILE%\Documents
+set $Downloads=%USERPROFILE%\Downloads
+set $LocalDisk=%HOMEDRIVE%\
+set $Music=%USERPROFILE%\Music
+set $Pictures=%USERPROFILE%\Pictures
+set $Videos=%USERPROFILE%\Videos
+set $System=%SYSTEMROOT%%\System32
+set $SysWOW64=%SYSTEMROOT%%\SysWOW64
+set $WinTemp=%SYSTEMROOT%\Temp
+set $Ver=2.1
+set $CPUArch=%PROCESSOR_ARCHITECTURE%
+set $CPUCount=%NUMBER_OF_PROCESSORS%
+set $FileName=%0
+set $FileName_=%~0
+set $WorkingDirectory=%~dp0
+set $CurrentDrive=%~d0
+set $CurrentHive=%~p0
+set $CurrentName=%~n1
+set $CurrentExt=%~x1
+set $CurrentSize=%~z1
+exit /B
+
+:reg
+echo off
+if /i "%~1"=="get" (
+	if "%~3"=="" (goto missing_param)
+	if "%~4"=="" (
+		for /f "tokens=3* delims= " %%r in ('reg query "%~3"') do (
+			if !errorlevel! equ 0 (
+				set "%~2=%%r"
+				exit /B
+			) else (
+				echo Could not find registry key '%3'
+			)
+		)
+	) else (
+		for /f "tokens=3* delims= " %%r in ('reg query "%~3" /v "%~4"') do (
+			if !errorlevel! equ 0 (
+				set "%~2=%%r"
+				exit /B
+			) else (
+				echo Could not find registry key '%3'
+			)
+		)
+	)
+)
+
+if /i "%~1"=="add" (
+
+
+%2 = "root\blah"
+%3 = keyname
+%4 = type
+%5 = data
+
+
+	if "%~3"=="" goto syntaxerror
+	if "%~4"=="" (
+		for /f "tokens=3* delims= " %%r in ('reg query "%~3"') do (
+			if !errorlevel! equ 0 (
+				set "%~2=%%r"
+				exit /B
+			) else (
+				echo Could not find registry key '%3'
+			)
+		)
+	) else (
+		for /f "tokens=3* delims= " %%r in ('reg query "%~3" /v "%~4"') do (
+			if !errorlevel! equ 0 (
+				set "%~2=%%r"
+				exit /B
+			) else (
+				echo Could not find registry key '%3'
+			)
+		)
+	)
+)
+
+
+rem reg query "%~2"
+exit /B
+
+:brackets_open
+
+
+
+echo All is: %*
+exit /B
+
+
+
+:: That will be functions for the program
+:function_%function1%-
+echo.
+exit /B
+
+:function_%function2%-
+exit /B
+
+:function_%function3%-
+exit /B
+
+:function_%function4%-
+exit /B
+
+:function_%function5%-
+exit /B
+
+:function_%function6%-
+exit /B
+
+:function_%function7%-
+exit /B
+
+:function_%function8%-
+exit /B
+
+:function_%function9%-
+exit /B
+
+:function_%function10%-
+exit /B
+
+:function_%function11%-
+exit /B
+
+:function_%function12%-
+exit /B
+
+:function_%function13%-
+exit /B
+
+:function_%function14%-
+exit /B
+
+:function_%function15%-
+exit /B
+
+:function_%function16%-
+exit /B
+
+
+
+
+
+
+
+
+
+:array
+
+
+
+:getsid
+::
+::Get user SID
+::
+::cd /d "%pathswh%\Temp"
+::wmic useraccount where name='%username%' get sid | findstr /c:"-"> "%PATHSWH%\Temp\user.sid"
+::for /f "delims=" %%S in (user.sid) do (set usersid=%%S)
+::cd /d "%CURDIR%"
+::
+
+:missing_param
+echo;Missing parameter.
+call :return 1
+exit /B
+
+:syntaxerror
+echo;Syntax error. %expected%
+call :return 1
+exit /B
+
+:failed
+echo;Failed.
+call :return 1
+exit /B
+
+:internal_error
+echo;Internal error.
+call :return 1
+exit /B
+
+:invalid_comparator
+echo Invalid comparator.
+call :return 1
+exit /B
 
 :help
 echo.
 echo Scripting Windows Host Interpreter
 echo.
 echo Type 'SWH commands /?' to view all commands available
-echo Type 'SWH syntax [command]'
+echo Type 'SWH syntax [command]' to get the syntax of a command
+echo Type 'SWH --command [command]' to run a command within an .swh file
 echo.
 echo To run an .swh file, type 'SWH [file.swh]'
 echo.
@@ -477,7 +705,7 @@ if /i "%~2"=="cd" goto syntax_cd
 
 if /i "%~2"=="search" goto syntax_search
 if /i "%~2"=="return" goto syntax_return
-if /i "%~2"=="say" goto syntax_say
+if /i "%~2"=="echo" goto syntax_echo
 if /i "%~2"=="title" goto syntax_title
 
 if /i "%~2"=="pause" goto syntax_pause
@@ -559,15 +787,15 @@ goto exit
 
 
 
-:syntax_say
+:syntax_echo
 echo.
 echo Syntax:
 echo.
-echo say "[text to print]"
+echo echo "[text to print]"
 echo.
 echo Example:
 echo.
-echo say "Hello world!"
+echo echo "Hello world!"
 echo Will print in the console 'Hello world!'
 goto exit
 
@@ -643,7 +871,7 @@ goto exit
 echo.
 echo Syntax:
 echo.
-echo file [create ^| open ^| overwrite] "[file]" "[content]"
+echo file [create ^| open ^| overwrite ^| blank] "[file]" "[content]"
 echo.
 echo Examples:
 echo.
@@ -658,6 +886,9 @@ echo file open "myfile.txt" "Second line"
 echo Will open the file 'myfile.txt' and it will add the content
 echo 'Second line'
 echo.
+echo file blank "myfile.txt"
+echo Will create the empty file 'myfile.txt'
+echo.
 echo To create a blank line, use 'file open "myfile.txt" ""' 
 goto exit
 
@@ -665,7 +896,7 @@ goto exit
 echo.
 echo Syntax:
 echo.
-echo input [variable] "[input text]"
+echo input [variable] = "[input text]"
 echo.
 echo Example:
 echo.
@@ -723,23 +954,23 @@ echo import "[library]" "{command}"
 echo.
 echo Examples:
 echo.
-echo import "lib.swhlib"
-echo Will import and run the library 'lib.swhlib'
+echo import "lib.cmd"
+echo Will import and run the library 'lib.cmd'
 echo.
-echo import "windows.swhlib" "osver"
-echo Will import the library 'windows.swhlib' the value 'osver'
+echo import "windows.cmd" "osver"
+echo Will import the library 'windows.cmd' the value 'osver'
 goto exit
 
 :syntax_colortext
 echo.
 echo Syntax:
 echo.
-echo color "background_foreground" "Text"
+echo color "background_foreground" "Text" [0 ^| 1]
 echo.
 echo Example:
 echo.
-echo colortext "41" "Colored text"
-echo Will set background color 4 and foreground color 1
+echo colortext "41" "Colored text" 0
+echo Will set background color 4 and foreground color 1, without a new line
 echo.
 echo Note: Scripting Windows Host sets hexadecimal colors
 echo       To view a list of hexadecimal color codes, please
@@ -851,6 +1082,15 @@ echo f: While
 goto exit
 
 :help_commandlist
+:: string
+:: int
+:: bool
+:: if
+:: echol
+:: loadenv
+:: gettitle
+:: double
+:: getlen
 echo.
 echo Scripting Windows Host commands:
 echo.
@@ -878,3 +1118,7 @@ echo square: Calculates the square of any number
 echo time: Changes system time
 echo title: Changes console title
 goto exit
+
+:runcommand
+call :command "%~2" "%~3" "%~4" "%~5" "%~6" "%~7" "%~8" "%~9"
+exit /B
