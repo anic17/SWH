@@ -109,7 +109,7 @@ Download [here](http://https://raw.githubusercontent.com/anic17/SWH/master/SWH_C
 
 ## Contact information
 
-Website: https://anic17.github.io/SWHConsole
+Website: https://swhconsole.org
 
 E-Mail: SWH.Console@gmail.com
 
