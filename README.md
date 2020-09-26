@@ -100,7 +100,7 @@ As first was released the console, the versions of the console are more.
 
 * 10.x - End of support 31 of June 2020
 
-* 11.x - End of support 31 of August 2020
+* 11.x - End of support 31 of October 2020
 
 
 Download [here](http://https://raw.githubusercontent.com/anic17/SWH/master/SWH_Console.zip) Scripting Windows Host Console Version 11.0
