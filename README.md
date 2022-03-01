@@ -73,7 +73,7 @@ To start Scripting Windows Host in the directory `C:\`
 
 As first was released the console, the versions of the console are more.
 
-* 1.x - End of supprot 31 June of 2020
+* 1.x - End of support 31 June of 2020
 
 * 2.x - End of support 31 July of 2020
 
@@ -103,7 +103,7 @@ As first was released the console, the versions of the console are more.
 * 11.x - End of support 31 of October 2020
 
 
-Download [here](http://https://raw.githubusercontent.com/anic17/SWH/master/SWH_Console.zip) Scripting Windows Host Console Version 11.0
+Download [here](https://raw.githubusercontent.com/anic17/SWH/master/SWH_Console.zip) Scripting Windows Host Console Version 11.0
 
 
 
