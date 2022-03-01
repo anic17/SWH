@@ -1,1 +1,3 @@
 # Here is the list of banned IP addresses
+
+67.218.251.204
