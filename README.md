@@ -71,7 +71,7 @@ To start Scripting Windows Host in the directory `C:\`
 
 ### Scripting Windows Host
 
-As first was released the console, the versions of the console are more.
+As the console was released the console, the are more console versions than scripting.
 
 * 1.x - End of support 31 June of 2020
 
@@ -117,3 +117,6 @@ If you have any problem, please use the command CONTACT to send a message (bug f
 
 
 ### Official contributors: [RazorRipzee](https://github.com/RazorRipzee)
+
+# Update March 2022
+#### This project will be no longer updated and the repository will be archived. Feel free to submit a pull request, but there won't be any future updates (at least coming in a short period of time).
