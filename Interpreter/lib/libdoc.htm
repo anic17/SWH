@@ -1,0 +1,100 @@
+<html>
+
+
+<head>
+<title>Scripting Windows Host Library documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+
+
+<style type="text/css">
+	body{
+		margin-top:40px;
+		margin-bottom:40px;
+		margin-left:75px;
+		margin-right:75px;
+		font-family: 'Nunito', sans-serif;
+	}
+	code{
+		background-color: #e5e5e5;
+	}
+</style>
+
+</head>
+
+
+<body>
+
+
+<h1 style="font-size: 26pt; font-family: Nunito:wght@400;">
+Scripting Windows Host libraries documentation
+</h1>
+
+
+<h2>
+What are Scripting Windows Host libraries?
+</h2>
+
+<p align="ltr">
+
+Scripting Windows Host libraries are extensions that allow you to do more things with it.
+<br>
+If you are experienced with Python, you should know that you need to import some libraries to make code extensions working. This is the case with Scripting Windows Host.
+<br>
+You can import them with <code>import library[.cmd] resource parameters</code>
+<br>
+<br>
+Here's a list of some official libraries. Click one library name to read his documentation.
+
+</p>
+
+<li>
+<a href="#windows">Windows.cmd</a>
+<li>
+<a href="#printer">Printer.cmd</a>
+
+<li>
+<a href="#bios">BIOS.cmd</a>
+
+<li>
+<a href="#hardware">Hardware.cmd</a>
+
+<li>
+<a href="#math">Math.cmd</a>
+
+
+<br>
+<br>
+
+<h3 id="windows">Windows.cmd</h3>
+
+This library displays Windows information and performs basic tasks.
+
+<br>
+<br>
+<b>
+Example:
+</b>
+<p style="margin-left:90px; margin-right:90px">
+<li><code>import Windows.cmd kernelversion variableKernelver</code>
+<br>
+Will save the Windows NT kernel version into the variable <code>variableKernelver</code> (You could call the result with <code>%variableKernelver%</code>)
+</p>
+
+
+<h3 id="printer">Printer.cmd</h3>
+This library displays and modified printer information
+<b>
+Example:
+</b>
+<p style="margin-left:90px; margin-right:90px">
+<li><code>import Printer.cmd default</code>
+<br>
+Will print the default printer into the screen
+</p>
+
+
+</body>
+
+
+</html>
