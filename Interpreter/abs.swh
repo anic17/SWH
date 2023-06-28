@@ -1,0 +1,3 @@
+input abs_var = "abs: "
+abs res_abs %abs_var%
+echo "%res_abs%"

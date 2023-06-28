@@ -1,0 +1,5 @@
+input var1 "First var?: "
+input var2 "Second var?: "
+if var1 equ var2 success.swh else error.swh
+colortext 5a "Text"
+return 10

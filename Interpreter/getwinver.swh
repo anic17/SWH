@@ -1,0 +1,5 @@
+import windows kernelversion kernelver_var
+import windows release release_var
+import windows build build_var
+import windows version ver
+echo "%ver% %release_var% [%kernelver_var%]"

@@ -1,0 +1,48 @@
+int Alpha = 123456789;
+int Beta = 123456789;
+int Calo = 123456789;
+echo "%Alpha%"
+echo "%Beta%"
+echo "%Calo%"
+int Alpha = 987654321;
+int Beta = 987654321;
+int Calo = 987654321;
+echo "%Alpha%"
+echo "%Beta%"
+echo "%Calo%"
+int Alpha = 123456789;
+int Beta = 123456789;
+int Calo = 123456789;
+echo "%Alpha%"
+echo "%Beta%"
+echo "%Calo%"
+int Alpha = 987654321;
+int Beta = 987654321;
+int Calo = 987654321;
+echo "%Alpha%"
+echo "%Beta%"
+echo "%Calo%"
+int Alpha = 123456789;
+int Beta = 123456789;
+int Calo = 123456789;
+echo "%Alpha%"
+echo "%Beta%"
+echo "%Calo%"
+int Alpha = 987654321;
+int Beta = 987654321;
+int Calo = 987654321;
+echo "%Alpha%"
+echo "%Beta%"
+echo "%Calo%"
+int Alpha = 123456789;
+int Beta = 123456789;
+int Calo = 123456789;
+echo "%Alpha%"
+echo "%Beta%"
+echo "%Calo%"
+int Alpha = 987654321;
+int Beta = 987654321;
+int Calo = 987654321;
+echo "%Alpha%"
+echo "%Beta%"
+echo "%Calo%"

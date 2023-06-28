@@ -1,0 +1,3 @@
+int Alpha = 10
+int Alpha = %Alpha%+1
+echo "Alpha is %alpha%"

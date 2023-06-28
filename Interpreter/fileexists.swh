@@ -1,0 +1,4 @@
+#!/bin/swh
+input checkfile = "What file do you want to check if it exists?: "
+fileexists %checkfile% res
+echo "%checkfile% exists? %res%"

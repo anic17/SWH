@@ -1,0 +1,3 @@
+#!/bin/swh
+gettitle titlevar
+echo "Window title is %TITLEVAR%"

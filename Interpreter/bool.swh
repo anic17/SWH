@@ -1,0 +1,7 @@
+bool isRed = true
+bool isBlue = false
+echo "Is that red?: %isRed%"
+echo "Is that blue?: %isBlue%"
+
+
+if %isRed% equ %isBlue% echo "Equal"

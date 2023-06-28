@@ -1,0 +1,5 @@
+file create myfile.txt "This is a line of text"
+file open myfile.txt "This is a second line"
+file open myfile.txt ""
+file open myfile.txt "This was a blank line"
+echo "Finished!"

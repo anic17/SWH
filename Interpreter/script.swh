@@ -1,0 +1,40 @@
+# This is a comment
+# This doesn't anything
+
+
+# This will print "Press any key..." (within quotes) on screen
+echo "Press any key..."
+
+
+# The typical pause command, in this case PAUSE>NUL
+pause
+
+# Clear the screen
+clear
+
+# Change title
+title "Example title"
+
+# Print more text
+echo "This is some text"
+
+# Blank line
+echo ""
+
+echo "Text after blank line"
+echo ""
+
+# Print colored text
+colortext 3e "This text is yellow with background cyan"
+
+# Take user input to the variable 'var_input' with text 'First number: '
+input var_input "First number: "
+
+# Substract 5 to 'var_input' variable
+int var_input %var_input%-5
+
+# Print result
+echo "Result is %var_input %"
+
+# Quit script with return code 10
+return 10

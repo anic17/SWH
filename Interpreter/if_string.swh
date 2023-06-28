@@ -1,0 +1,4 @@
+int var1 424
+int var2 424
+
+if %var1% equ %var2% echo "Igual"

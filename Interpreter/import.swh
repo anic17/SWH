@@ -1,0 +1,2 @@
+import windows kernelversion kernelver
+echo "Kernel version is %kernelver%"

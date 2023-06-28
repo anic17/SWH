@@ -1,0 +1,2 @@
+cube _cube_ 10;
+echo "Cube is %_cube_%";

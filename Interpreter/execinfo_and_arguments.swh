@@ -1,0 +1,5 @@
+say "Working directory: %$WorkingDirectory%"
+say "File size: %$CurrentSize%"
+say "Full name: %$FileName%"
+say "Extension: %$CurrentName%%$CurrentExt%"
+pause

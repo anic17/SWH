@@ -1,0 +1,3 @@
+loadenv full
+echo "Desktop is: %$Desktop%"
+echo "CPU Architecture is %$CPUArch%"

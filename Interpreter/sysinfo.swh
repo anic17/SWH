@@ -1,0 +1,4 @@
+import windows kernel kernelver;
+import windows ver winver;
+import windows rel release;
+echo "You are running %winver% release %release%, kernel version %kernelver%";

@@ -1,0 +1,4 @@
+#!/bin/swh
+
+double calc_var %$Args%;
+echo "Result: %calc_var%";

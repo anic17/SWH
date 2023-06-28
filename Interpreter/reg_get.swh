@@ -1,0 +1,5 @@
+reg get runkey "HKLM\Software\Microsoft\Windows\CurrentVersion\Run"
+echo "Run key is equal to '%runkey%'"
+echo ""
+reg get regkey HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\IME\Taiwan\imetc\Directories InstallDir
+echo "Reg key is equal to '%regkey%'"

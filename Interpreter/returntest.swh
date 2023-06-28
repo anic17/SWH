@@ -1,0 +1,4 @@
+int myvar = 10;
+echo "myvar is equal to %myvar%";
+return 10;
+echo "This should be not visible";

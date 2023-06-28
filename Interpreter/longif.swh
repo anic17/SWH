@@ -1,0 +1,5 @@
+int myvar = 10;
+int myvar2 = 11;
+if %myvar% equ %myvar2% {
+echo "Equal"
+}

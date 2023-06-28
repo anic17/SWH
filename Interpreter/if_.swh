@@ -1,0 +1,4 @@
+#!/bin/swh
+int var = 10;
+int var2 = %var% + 1;
+if %var% equ %var2% echo Lol

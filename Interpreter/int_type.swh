@@ -1,0 +1,3 @@
+#!/bin/swh
+int variable = 10;
+echo "Variable type is %variable_type%"

@@ -1,0 +1,4 @@
+input math1 "First number:"
+input math2 "Second number:"
+double result %math1% + %math2%
+say "Result is %result%"

@@ -1,0 +1,3 @@
+loadenv args
+strlen %$Arg1_% llargada
+echo "Lenght of '%$Arg1_%' is %llargada%" 

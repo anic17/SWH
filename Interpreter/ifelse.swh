@@ -1,0 +1,4 @@
+int var1 10
+int var2 12
+if var1 equ var2 say "Iguals"
+else say "Diferents"

@@ -1,0 +1,3 @@
+input isBoolInput = "Is bool?: ";
+bool isBool = %isBoolInput%;
+echo "Is boot? %isBool%"

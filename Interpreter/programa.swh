@@ -1,0 +1,3 @@
+int myvar 13
+int var2 13
+if myvar equ var2 echo "GG"

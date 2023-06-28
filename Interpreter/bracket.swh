@@ -1,0 +1,3 @@
+echo "Hello world!"
+{
+echo "This will not be shown"

@@ -1,0 +1,2 @@
+input cbrt_num "Number to calculate cube root: "
+cbrt %cbrt_num%

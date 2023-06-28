@@ -1,0 +1,2 @@
+input variable "This is a really long input with more than ^10 words: "
+echo "Variable is %variable%"

@@ -1,0 +1,4 @@
+int var = 10;
+echo "first var is %var%";
+int var--;
+echo "now var is %var%";

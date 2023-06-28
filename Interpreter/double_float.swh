@@ -1,0 +1,2 @@
+double mydouble 3*pi
+say "Result is %mydouble%"

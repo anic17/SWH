@@ -1,0 +1,2 @@
+bool isRed = TRUE
+echo "isRed = %isred%"

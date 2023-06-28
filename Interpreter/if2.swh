@@ -1,0 +1,4 @@
+int myvar = 10;
+int myvar = %myvar%+1;
+int var2 = 11;
+if %myvar% equ %var2%

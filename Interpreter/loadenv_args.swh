@@ -1,0 +1,2 @@
+loadenv args
+echo %$Arg1%

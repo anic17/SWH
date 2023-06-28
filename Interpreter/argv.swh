@@ -1,0 +1,4 @@
+loadenv args
+string argument1 %$Arg1_%
+input argument2 "Please enter a check: "
+if "%argument1%" equ "%argument2%" echo "Equals"

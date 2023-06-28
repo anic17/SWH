@@ -1,0 +1,2 @@
+string name = "anic17";
+echo "My name is %name%"

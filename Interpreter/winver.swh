@@ -1,0 +1,3 @@
+import windows kernelversion kernelver
+import windows version winver
+echo "%winver% [%kernelver%]"

@@ -1,0 +1,2 @@
+isnul var %$arg1%
+echo "isNul? %var%"
