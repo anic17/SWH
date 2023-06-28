@@ -1,0 +1,4 @@
+input String_var "String_var text: "
+say "String_var is: %String_var%"
+string String_var "This is a string text"
+say "String_var is: %String_var%"
